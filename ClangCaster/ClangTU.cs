@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace ClangCaster
@@ -28,7 +29,9 @@ namespace ClangCaster
             }
         }
 
-        public static ClangTU Parse(string path)
+        public static ClangTU Parse(
+            IReadOnlyList<string> headers,
+            IReadOnlyList<string> includes)
         {
             var index = libclang.index.clang_createIndex(0, 1);
             if (index == IntPtr.Zero)
@@ -36,7 +39,7 @@ namespace ClangCaster
                 return null;
             }
 
-            var source = Encoding.UTF8.GetBytes(path);
+            var source = Encoding.UTF8.GetBytes(headers[0]);
             var unsaved = new libclang.CXUnsavedFile
             {
             };
