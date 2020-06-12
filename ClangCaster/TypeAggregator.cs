@@ -1,10 +1,13 @@
 using System;
+using System.Collections.Generic;
 using libclang;
 
 namespace ClangCaster
 {
     public class TypeAggregator
     {
+        Dictionary<uint, Types.UserType> m_typeMap = new Dictionary<uint, Types.UserType>();
+
         public void Process(in CXCursor cursor)
         {
             TraverseChildren(cursor, default);
@@ -128,15 +131,18 @@ namespace ClangCaster
 
                 case CXCursorKind._StructDecl:
                 case CXCursorKind._ClassDecl:
-                    // parseStruct(cursor, context, false);
-                    break;
-
                 case CXCursorKind._UnionDecl:
-                    // parseStruct(cursor, context, true);
+                    {
+                        var type = Types.StructType.Parse(cursor);
+                        AddType(type);
+                    }
                     break;
 
                 case CXCursorKind._EnumDecl:
-                    ParseEnum(cursor);
+                    {
+                        var type = Types.EnumType.Parse(cursor);
+                        AddType(type);
+                    }
                     break;
 
                 case CXCursorKind._VarDecl:
@@ -149,36 +155,9 @@ namespace ClangCaster
             return CXChildVisitResult._Continue;
         }
 
-        void ParseEnum(CXCursor cursor)
+        void AddType(Types.UserType type)
         {
-            var hash = index.clang_hashCursor(cursor);
-            var location = ClangLocation.Create(cursor);
-            using (var spelling = ClangString.FromCursor(cursor))
-            {
-                Console.WriteLine($"enum {spelling}");
-                // auto decl = EnumDecl::create(hash, location.path(), location.line, spelling.str_view());
-                ClangVisitor.ProcessChildren(cursor, (in CXCursor child) =>
-                {
-                    switch (child.kind)
-                    {
-                        case CXCursorKind._EnumConstantDecl:
-                            using (var childName = ClangString.FromCursor(child))
-                            {
-                                var childValue = index.clang_getEnumConstantDeclUnsignedValue(child);
-                                Console.WriteLine($"    {childName} = {childValue};");
-                                // decl->values.emplace_back(
-                                //     EnumValue{ std::string(childName.str_view()), static_cast<uint32_t>(childValue)});
-                            }
-                            break;
-
-                        default:
-                            throw new NotImplementedException("parse enum unknown");
-                    }
-
-                    return CXChildVisitResult._Continue;
-                });
-            }
-            // pushDecl(cursor, decl);
+            m_typeMap.Add(type.Hash, type);
         }
     }
 }
