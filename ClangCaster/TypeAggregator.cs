@@ -33,10 +33,10 @@ namespace ClangCaster
 
         CXChildVisitResult Traverse(in CXCursor cursor, in Context context)
         {
-            using (var spelling = new ClangString(cursor))
-            {
-                Console.WriteLine($"{cursor.kind}: {spelling}");
-            }
+            // using (var spelling = ClangString.FromCursor(cursor))
+            // {
+            //     Console.WriteLine($"{cursor.kind}: {spelling}");
+            // }
 
             switch (cursor.kind)
             {
@@ -136,17 +136,49 @@ namespace ClangCaster
                     break;
 
                 case CXCursorKind._EnumDecl:
-                    // parseEnum(cursor);
+                    ParseEnum(cursor);
                     break;
 
                 case CXCursorKind._VarDecl:
                     break;
 
                 default:
-                    throw new Exception("unknown CXCursorKind");
+                    throw new NotImplementedException("unknown CXCursorKind");
             }
 
             return CXChildVisitResult._Continue;
+        }
+
+        void ParseEnum(CXCursor cursor)
+        {
+            var hash = index.clang_hashCursor(cursor);
+            var location = ClangLocation.Create(cursor);
+            using (var spelling = ClangString.FromCursor(cursor))
+            {
+                Console.WriteLine($"enum {spelling}");
+                // auto decl = EnumDecl::create(hash, location.path(), location.line, spelling.str_view());
+                ClangVisitor.ProcessChildren(cursor, (in CXCursor child) =>
+                {
+                    switch (child.kind)
+                    {
+                        case CXCursorKind._EnumConstantDecl:
+                            using (var childName = ClangString.FromCursor(child))
+                            {
+                                var childValue = index.clang_getEnumConstantDeclUnsignedValue(child);
+                                Console.WriteLine($"    {childName} = {childValue};");
+                                // decl->values.emplace_back(
+                                //     EnumValue{ std::string(childName.str_view()), static_cast<uint32_t>(childValue)});
+                            }
+                            break;
+
+                        default:
+                            throw new NotImplementedException("parse enum unknown");
+                    }
+
+                    return CXChildVisitResult._Continue;
+                });
+            }
+            // pushDecl(cursor, decl);
         }
     }
 }

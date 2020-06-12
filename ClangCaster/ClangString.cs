@@ -8,9 +8,20 @@ namespace ClangCaster
     {
         CXString m_str;
 
-        public ClangString(CXCursor cursor)
+        public static ClangString FromCursor(CXCursor cursor)
         {
-            m_str = index.clang_getCursorSpelling(cursor);
+            return new ClangString
+            {
+                m_str = index.clang_getCursorSpelling(cursor)
+            };
+        }
+
+        public static ClangString FromFile(IntPtr file)
+        {
+            return new ClangString
+            {
+                m_str = index.clang_getFileName(file)
+            };
         }
 
         public override string ToString()
