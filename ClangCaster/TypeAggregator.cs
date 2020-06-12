@@ -1,24 +1,34 @@
 using System;
-using System.Runtime.InteropServices;
 using libclang;
 
 namespace ClangCaster
 {
     public class TypeAggregator
     {
+        public void Process(in CXCursor cursor)
+        {
+            TraverseChildren(cursor, default);
+        }
+
         struct Context
         {
+            public readonly int Level;
+
+            public Context(int level)
+            {
+                Level = level;
+            }
+
+            public Context Child()
+            {
+                return new Context(Level + 1);
+            }
         }
 
         void TraverseChildren(in CXCursor cursor, in Context _context)
         {
             var context = _context;
             ClangVisitor.ProcessChildren(cursor, (in CXCursor c) => Traverse(c, context));
-        }
-
-        public void Process(in CXCursor cursor)
-        {
-            TraverseChildren(cursor, default);
         }
 
         CXChildVisitResult Traverse(in CXCursor cursor, in Context context)
@@ -88,8 +98,7 @@ namespace ClangCaster
                 case CXCursorKind._UnexposedDecl:
                     {
                         // ScopedCXTokens tokens(cursor);
-
-                        // auto child = context.createChild();
+                        var child = context.Child();
                         // if (tokens.size() >= 2)
                         // {
                         //     // extern C
@@ -98,8 +107,7 @@ namespace ClangCaster
                         //         child.isExternC = true;
                         //     }
                         // }
-
-                        // TraverseChildren(cursor, child);
+                        TraverseChildren(cursor, child);
                     }
                     break;
 
