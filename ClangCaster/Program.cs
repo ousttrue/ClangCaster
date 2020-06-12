@@ -7,7 +7,6 @@ namespace ClangCaster
     {
         public List<string> Headers = new List<string>();
         public List<string> Includes = new List<string>();
-
         public List<string> Defines = new List<string>();
 
         public static CommandLine Parse(string[] args)
@@ -48,12 +47,14 @@ namespace ClangCaster
             var cmd = CommandLine.Parse(args);
             using (var tu = ClangTU.Parse(cmd.Headers, cmd.Includes, cmd.Defines))
             {
-                if(tu is null)
+                if (tu is null)
                 {
                     Console.WriteLine("fail to parse");
                     return;
                 }
-                Console.WriteLine($"Parsed: {tu}");
+
+                var aggregator = new TypeAggregator();
+                aggregator.Process(tu.GetCursor());
             }
         }
     }

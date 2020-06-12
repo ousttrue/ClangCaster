@@ -149,5 +149,10 @@ namespace ClangCaster
             }
             return new ClangTU(index, tu);
         }
+
+        public CXCursor GetCursor()
+        {
+            return libclang.index.clang_getTranslationUnitCursor(m_tu.p);
+        }
     }
 }
