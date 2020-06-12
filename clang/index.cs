@@ -897,7 +897,7 @@ namespace libclang
             CXType T
         );
         [DllImport("libclang.dll")]
-        public static extern uint clang_isConstQualifiedType(
+        public static extern bool clang_isConstQualifiedType(
             CXType T
         );
         [DllImport("libclang.dll")]

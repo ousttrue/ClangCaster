@@ -121,7 +121,21 @@ namespace ClangCaster
                     break;
 
                 case CXCursorKind._TypedefDecl:
-                    // parseTypedef(cursor);
+                    {
+                        var type = TypedefType.Parse(cursor);
+                        var underlying = index.clang_getTypedefDeclUnderlyingType(cursor);
+                        var isConst = index.clang_isConstQualifiedType(underlying);
+                        if (Types.PrimitiveType.TryGetPrimitiveType(underlying, out Types.PrimitiveType primitive))
+                        {
+                            type.Ref = new TypeReference
+                            {
+                                IsConst = isConst,
+                                Type = primitive,
+                            };
+                        }
+                        Console.WriteLine(type);
+                        AddType(type);
+                    }
                     break;
 
                 case CXCursorKind._FunctionDecl:
@@ -147,7 +161,7 @@ namespace ClangCaster
                             type.IsUnion = cursor.kind == CXCursorKind._UnionDecl;
                             type.IsForwardDecl = StructType.IsForwardDeclaration(cursor);
                             AddType(type);
-                            Console.WriteLine(type);
+                            // Console.WriteLine(type);
 
                             if (type.IsForwardDecl)
                             {
