@@ -585,9 +585,9 @@ namespace libclang
             ref byte source_filename,
             ref IntPtr command_line_args,
             int num_command_line_args,
-            out CXUnsavedFile unsaved_files,
+            ref CXUnsavedFile unsaved_files,
             uint num_unsaved_files,
-            uint options
+            libclang.CXTranslationUnit_Flags options
         );
         [DllImport("libclang.dll")]
         public static extern CXErrorCode clang_parseTranslationUnit2(
