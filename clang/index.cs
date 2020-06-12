@@ -627,7 +627,7 @@ namespace libclang
         );
         [DllImport("libclang.dll")]
         public static extern void clang_disposeTranslationUnit(
-            out CXTranslationUnitImpl __param__1
+            IntPtr __param__1
         );
         [DllImport("libclang.dll")]
         public static extern uint clang_defaultReparseOptions(
