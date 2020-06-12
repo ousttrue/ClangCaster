@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
+using ClangCaster.Types;
 using libclang;
 
 namespace ClangCaster
 {
     public class TypeAggregator
     {
-        Dictionary<uint, Types.UserType> m_typeMap = new Dictionary<uint, Types.UserType>();
+        Dictionary<uint, UserType> m_typeMap = new Dictionary<uint, UserType>();
 
         public void Process(in CXCursor cursor)
         {
@@ -23,6 +24,11 @@ namespace ClangCaster
             }
 
             public Context Child()
+            {
+                return new Context(Level + 1);
+            }
+
+            public Context Enter(StructType type)
             {
                 return new Context(Level + 1);
             }
@@ -133,14 +139,54 @@ namespace ClangCaster
                 case CXCursorKind._ClassDecl:
                 case CXCursorKind._UnionDecl:
                     {
-                        var type = Types.StructType.Parse(cursor);
-                        AddType(type);
+                        var type = GetType(cursor) as StructType;
+                        if (type is null)
+                        {
+                            type = StructType.Parse(cursor);
+                            // decl.namespace = context.namespace;
+                            type.IsUnion = cursor.kind == CXCursorKind._UnionDecl;
+                            type.IsForwardDecl = StructType.IsForwardDeclaration(cursor);
+                            AddType(type);
+                            Console.WriteLine(type);
+
+                            if (type.IsForwardDecl)
+                            {
+                                var defCursor = index.clang_getCursorDefinition(cursor);
+                                if (index.clang_equalCursors(defCursor, index.clang_getNullCursor()))
+                                {
+                                    // not exists
+                                }
+                                else
+                                {
+                                    var defDecl = GetType(defCursor) as StructType;
+                                    if (defDecl is null)
+                                    {
+                                        // create
+                                        defDecl = StructType.Parse(defCursor);
+                                        AddType(defDecl);
+                                    }
+                                    type.Definition = defDecl;
+                                }
+                            }
+                            else
+                            {
+                                // push before fields
+                                // auto header = getOrCreateHeader(cursor);
+                                // header.types ~ = decl;
+
+                                // fields
+                                var child = context.Enter(type);
+                                // ProcessChildren(cursor, 
+                                //                 std::bind(&TraverserImpl::parseStructField, this, decl, std::placeholders::_1, childContext));
+                                TraverseChildren(cursor, child);
+                            }
+                        }
                     }
                     break;
 
                 case CXCursorKind._EnumDecl:
                     {
-                        var type = Types.EnumType.Parse(cursor);
+                        var type = EnumType.Parse(cursor);
                         AddType(type);
                     }
                     break;
@@ -155,7 +201,17 @@ namespace ClangCaster
             return CXChildVisitResult._Continue;
         }
 
-        void AddType(Types.UserType type)
+        UserType GetType(CXCursor cursor)
+        {
+            var hash = index.clang_hashCursor(cursor);
+            if (!m_typeMap.TryGetValue(hash, out UserType type))
+            {
+                return null;
+            }
+            return type;
+        }
+
+        void AddType(UserType type)
         {
             m_typeMap.Add(type.Hash, type);
         }

@@ -30,7 +30,7 @@ namespace ClangCaster.Types
             return $"enum {Name} {{{string.Join(", ", Values.Select(x => x.Name))}}}";
         }
 
-        public static EnumType Parse(CXCursor cursor)
+        public static EnumType Parse(in CXCursor cursor)
         {
             var hash = index.clang_hashCursor(cursor);
             var location = ClangLocation.Create(cursor);
