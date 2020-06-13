@@ -1247,7 +1247,7 @@ namespace libclang
             CXCursor C
         );
         [DllImport("libclang.dll")]
-        public static extern uint clang_Cursor_isVariadic(
+        public static extern bool clang_Cursor_isVariadic(
             CXCursor C
         );
         [DllImport("libclang.dll")]

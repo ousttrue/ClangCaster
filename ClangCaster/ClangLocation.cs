@@ -3,7 +3,7 @@ using libclang;
 
 namespace ClangCaster
 {
-    struct ClangLocation
+    public struct ClangLocation
     {
         IntPtr file;
         uint line;

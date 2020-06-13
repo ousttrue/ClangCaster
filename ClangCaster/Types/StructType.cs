@@ -9,7 +9,7 @@ namespace ClangCaster.Types
         public bool IsForwardDecl;
         public StructType Definition;
 
-        public StructType(uint hash, string name) : base(hash, name)
+        public StructType((uint, ClangLocation, string) args) : base(args)
         { }
 
         public override string ToString()
@@ -21,17 +21,6 @@ namespace ClangCaster.Types
             else
             {
                 return $"struct {Name} {{}}";
-            }
-        }
-
-        public static StructType Parse(in CXCursor cursor)
-        {
-            var hash = index.clang_hashCursor(cursor);
-            var location = ClangLocation.Create(cursor);
-            using (var spelling = ClangString.FromCursor(cursor))
-            {
-                var type = new StructType(hash, spelling.ToString());
-                return type;
             }
         }
 

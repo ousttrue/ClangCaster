@@ -40,6 +40,16 @@ namespace ClangCaster
             ClangVisitor.ProcessChildren(cursor, (in CXCursor c) => Traverse(c, context));
         }
 
+        static (uint, ClangLocation, string) CursorHashLocationSpelling(in CXCursor cursor)
+        {
+            var hash = index.clang_hashCursor(cursor);
+            var location = ClangLocation.Create(cursor);
+            using (var spelling = ClangString.FromCursor(cursor))
+            {
+                return (hash, location, spelling.ToString());
+            }
+        }
+
         CXChildVisitResult Traverse(in CXCursor cursor, in Context context)
         {
             // using (var spelling = ClangString.FromCursor(cursor))
@@ -122,17 +132,9 @@ namespace ClangCaster
 
                 case CXCursorKind._TypedefDecl:
                     {
-                        var type = TypedefType.Parse(cursor);
+                        var type = new TypedefType(CursorHashLocationSpelling(cursor));
                         var underlying = index.clang_getTypedefDeclUnderlyingType(cursor);
-                        var isConst = index.clang_isConstQualifiedType(underlying);
-                        if (Types.PrimitiveType.TryGetPrimitiveType(underlying, out Types.PrimitiveType primitive))
-                        {
-                            type.Ref = new TypeReference
-                            {
-                                IsConst = isConst,
-                                Type = primitive,
-                            };
-                        }
+                        type.Ref = CxTypeToType(underlying, cursor);
                         Console.WriteLine(type);
                         AddType(type);
                     }
@@ -156,7 +158,7 @@ namespace ClangCaster
                         var type = GetType(cursor) as StructType;
                         if (type is null)
                         {
-                            type = StructType.Parse(cursor);
+                            type = new StructType(CursorHashLocationSpelling(cursor));
                             // decl.namespace = context.namespace;
                             type.IsUnion = cursor.kind == CXCursorKind._UnionDecl;
                             type.IsForwardDecl = StructType.IsForwardDeclaration(cursor);
@@ -176,7 +178,7 @@ namespace ClangCaster
                                     if (defDecl is null)
                                     {
                                         // create
-                                        defDecl = StructType.Parse(defCursor);
+                                        defDecl = new StructType(CursorHashLocationSpelling(defCursor));
                                         AddType(defDecl);
                                     }
                                     type.Definition = defDecl;
@@ -200,7 +202,8 @@ namespace ClangCaster
 
                 case CXCursorKind._EnumDecl:
                     {
-                        var type = EnumType.Parse(cursor);
+                        var type = new EnumType(CursorHashLocationSpelling(cursor));
+                        type.Parse(cursor);
                         AddType(type);
                     }
                     break;
@@ -213,6 +216,108 @@ namespace ClangCaster
             }
 
             return CXChildVisitResult._Continue;
+        }
+
+        /// <summary>
+        /// cxType から 型を得る。
+        /// ポインター、参照等を再帰的に剥がす。
+        /// ユーザー定義型の場合は、cursor から参照を辿る。
+        /// </summary>
+        /// <param name="cxType"></param>
+        /// <param name="cursor"></param>
+        /// <returns></returns>
+        Types.TypeReference CxTypeToType(in CXType cxType, in CXCursor cursor)
+        {
+            var isConst = index.clang_isConstQualifiedType(cxType);
+            if (Types.PrimitiveType.TryGetPrimitiveType(cxType, out Types.PrimitiveType primitive))
+            {
+                return new TypeReference(primitive);
+            }
+
+            if (cxType.kind == CXTypeKind._Unexposed)
+            {
+                // nullptr_t
+                return new TypeReference(new PointerType(VoidType.Instance, false));
+            }
+
+            if (cxType.kind == CXTypeKind._Pointer)
+            {
+                return new TypeReference(new PointerType(CxTypeToType(index.clang_getPointeeType(cxType), cursor)));
+            }
+
+            {
+                // find reference from child cursors
+                BaseType type = default;
+                ClangVisitor.ProcessChildren(cursor, (in CXCursor child) =>
+                {
+                    switch (child.kind)
+                    {
+                        case CXCursorKind._TypeRef:
+                            {
+                                var referenced = index.clang_getCursorReferenced(child);
+                                type = GetType(referenced);
+                                return CXChildVisitResult._Break;
+                            }
+
+                        default:
+                            {
+                                return CXChildVisitResult._Continue;
+                            }
+                    }
+                });
+                if (type is null)
+                {
+                    // throw new NotImplementedException("Referenced not found");
+                }
+                else
+                {
+                    return new TypeReference(type);
+                }
+            }
+
+            if (cxType.kind == CXTypeKind._Elaborated)
+            {
+                // typedef struct {} Hoge;
+                Types.UserType type = default;
+                ClangVisitor.ProcessChildren(cursor, (in CXCursor child) =>
+                {
+                    switch (child.kind)
+                    {
+                        case CXCursorKind._StructDecl:
+                        case CXCursorKind._UnionDecl:
+                            {
+                                type = new StructType(CursorHashLocationSpelling(child));
+                                return CXChildVisitResult._Break;
+                            }
+
+                        case CXCursorKind._EnumDecl:
+                            {
+                                var enumType = new EnumType(CursorHashLocationSpelling(child));
+                                enumType.Parse(child);
+                                type = enumType;
+                                return CXChildVisitResult._Break;
+                            }
+
+                        default:
+                            return CXChildVisitResult._Continue;
+                    }
+                });
+                if (type is null)
+                {
+                    throw new NotImplementedException("Elaborated not found");
+                }
+                return new TypeReference(type);
+            }
+
+            if (cxType.kind == CXTypeKind._FunctionProto)
+            {
+                // var resultType = index.clang_getResultType(cxType);
+                // auto dummy = Context();
+                // auto decl = parseFunction(cursor, resultType);
+                return new TypeReference(new FunctionType(CursorHashLocationSpelling(cursor)));
+            }
+
+            throw new NotImplementedException("type not found");
         }
 
         UserType GetType(CXCursor cursor)

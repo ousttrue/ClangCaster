@@ -2,7 +2,13 @@ namespace ClangCaster.Types
 {
     public struct TypeReference
     {
-        public bool IsConst;
-        public BaseType Type;
+        public readonly bool IsConst;
+        public readonly BaseType Type;
+
+        public TypeReference(BaseType type, bool isConst = false)
+        {
+            Type = type;
+            IsConst = isConst;
+        }
     }
 }
