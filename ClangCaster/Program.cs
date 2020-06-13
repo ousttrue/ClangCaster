@@ -54,7 +54,12 @@ namespace ClangCaster
                 }
 
                 var aggregator = new TypeAggregator();
-                aggregator.Process(tu.GetCursor());
+                var map = aggregator.Process(tu.GetCursor());
+
+                foreach (var kv in map)
+                {
+                    Console.WriteLine(kv.Value);                    
+                }
             }
         }
     }

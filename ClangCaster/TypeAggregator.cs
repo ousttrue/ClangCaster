@@ -5,13 +5,17 @@ using libclang;
 
 namespace ClangCaster
 {
+    /// <summary>
+    /// CXCursorを辿って型を集める
+    /// </summary>
     public class TypeAggregator
     {
-        Dictionary<uint, UserType> m_typeMap = new Dictionary<uint, UserType>();
+        TypeMap m_typeMap = new TypeMap();
 
-        public void Process(in CXCursor cursor)
+        public TypeMap Process(in CXCursor cursor)
         {
             TraverseChildren(cursor, default);
+            return m_typeMap;
         }
 
         struct Context
@@ -52,11 +56,6 @@ namespace ClangCaster
 
         CXChildVisitResult Traverse(in CXCursor cursor, in Context context)
         {
-            // using (var spelling = ClangString.FromCursor(cursor))
-            // {
-            //     Console.WriteLine($"{cursor.kind}: {spelling}");
-            // }
-
             switch (cursor.kind)
             {
                 case CXCursorKind._InclusionDirective:
@@ -135,8 +134,7 @@ namespace ClangCaster
                         var type = new TypedefType(CursorHashLocationSpelling(cursor));
                         var underlying = index.clang_getTypedefDeclUnderlyingType(cursor);
                         type.Ref = CxTypeToType(underlying, cursor);
-                        Console.WriteLine(type);
-                        AddType(type);
+                        m_typeMap.Add(type);
                     }
                     break;
 
@@ -155,15 +153,14 @@ namespace ClangCaster
                 case CXCursorKind._ClassDecl:
                 case CXCursorKind._UnionDecl:
                     {
-                        var type = GetType(cursor) as StructType;
+                        var type = m_typeMap.Get(cursor) as StructType;
                         if (type is null)
                         {
                             type = new StructType(CursorHashLocationSpelling(cursor));
                             // decl.namespace = context.namespace;
                             type.IsUnion = cursor.kind == CXCursorKind._UnionDecl;
                             type.IsForwardDecl = StructType.IsForwardDeclaration(cursor);
-                            AddType(type);
-                            // Console.WriteLine(type);
+                            m_typeMap.Add(type);
 
                             if (type.IsForwardDecl)
                             {
@@ -174,12 +171,12 @@ namespace ClangCaster
                                 }
                                 else
                                 {
-                                    var defDecl = GetType(defCursor) as StructType;
+                                    var defDecl = m_typeMap.Get(defCursor) as StructType;
                                     if (defDecl is null)
                                     {
                                         // create
                                         defDecl = new StructType(CursorHashLocationSpelling(defCursor));
-                                        AddType(defDecl);
+                                        m_typeMap.Add(defDecl);
                                     }
                                     type.Definition = defDecl;
                                 }
@@ -204,7 +201,7 @@ namespace ClangCaster
                     {
                         var type = new EnumType(CursorHashLocationSpelling(cursor));
                         type.Parse(cursor);
-                        AddType(type);
+                        m_typeMap.Add(type);
                     }
                     break;
 
@@ -255,7 +252,7 @@ namespace ClangCaster
                         case CXCursorKind._TypeRef:
                             {
                                 var referenced = index.clang_getCursorReferenced(child);
-                                type = GetType(referenced);
+                                type = m_typeMap.Get(referenced);
                                 return CXChildVisitResult._Break;
                             }
 
@@ -318,21 +315,6 @@ namespace ClangCaster
             }
 
             throw new NotImplementedException("type not found");
-        }
-
-        UserType GetType(CXCursor cursor)
-        {
-            var hash = index.clang_hashCursor(cursor);
-            if (!m_typeMap.TryGetValue(hash, out UserType type))
-            {
-                return null;
-            }
-            return type;
-        }
-
-        void AddType(UserType type)
-        {
-            m_typeMap.Add(type.Hash, type);
         }
     }
 }
