@@ -21,7 +21,7 @@ namespace ClangCaster.Types
     {
         public List<EnumValue> Values = new List<EnumValue>();
 
-        public EnumType((uint, ClangLocation, string) args) : base(args)
+        EnumType((uint, ClangLocation, string) args) : base(args)
         {
         }
 
@@ -30,12 +30,10 @@ namespace ClangCaster.Types
             return $"enum {Name} {{{string.Join(", ", Values.Select(x => x.Name))}}}";
         }
 
-        /// <summary>
-        /// Parse cursor children and get values
-        /// </summary>
-        /// <param name="cursor"></param>
-        public void Parse(in CXCursor cursor)
+        public static EnumType Parse(in CXCursor cursor)
         {
+            var type = new EnumType(cursor.CursorHashLocationSpelling());
+
             ClangVisitor.ProcessChildren(cursor, (in CXCursor child) =>
             {
                 switch (child.kind)
@@ -48,7 +46,7 @@ namespace ClangCaster.Types
                             {
                                 throw new NotImplementedException();
                             }
-                            Values.Add(new EnumValue(childName.ToString(), (uint)childValue));
+                            type.Values.Add(new EnumValue(childName.ToString(), (uint)childValue));
                         }
                         break;
 
@@ -58,6 +56,8 @@ namespace ClangCaster.Types
 
                 return CXChildVisitResult._Continue;
             });
+
+            return type;
         }
     }
 }

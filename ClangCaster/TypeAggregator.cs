@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using ClangCaster.Types;
 using libclang;
 
@@ -130,12 +129,8 @@ namespace ClangCaster
 
                 case CXCursorKind._FunctionDecl:
                     {
-                        // auto decl = parseFunction(cursor, clang_getCursorResultType(cursor));
-                        // if (decl)
-                        {
-                            // auto header = getOrCreateHeader(cursor);
-                            // header.types ~ = decl;
-                        }
+                        var type = new FunctionType(cursor.CursorHashLocationSpelling());
+                        m_typeMap.Add(type);
                     }
                     break;
 
@@ -189,8 +184,7 @@ namespace ClangCaster
 
                 case CXCursorKind._EnumDecl:
                     {
-                        var type = new EnumType(cursor.CursorHashLocationSpelling());
-                        type.Parse(cursor);
+                        var type = EnumType.Parse(cursor);
                         m_typeMap.Add(type);
                     }
                     break;

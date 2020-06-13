@@ -112,9 +112,7 @@ namespace ClangCaster
 
                         case CXCursorKind._EnumDecl:
                             {
-                                var enumType = new EnumType(child.CursorHashLocationSpelling());
-                                enumType.Parse(child);
-                                type = enumType;
+                                type = EnumType.Parse(child);
                                 return CXChildVisitResult._Break;
                             }
 

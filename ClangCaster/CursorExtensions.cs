@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using libclang;
 
 namespace ClangCaster
@@ -12,6 +13,17 @@ namespace ClangCaster
             {
                 return (hash, location, spelling.ToString());
             }
+        }
+
+        public static List<CXCursor> Children(this in CXCursor cursor)
+        {
+            var list = new List<CXCursor>();
+            ClangVisitor.ProcessChildren(cursor, (in CXCursor child) =>
+            {
+                list.Add(child);
+                return CXChildVisitResult._Continue;
+            });
+            return list;
         }
     }
 }
