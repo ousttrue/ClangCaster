@@ -76,6 +76,10 @@ namespace ClangCaster
                             {
                                 var referenced = index.clang_getCursorReferenced(child);
                                 type = Get(referenced);
+                                if (type is null)
+                                {
+                                    throw new NotImplementedException();
+                                }
                                 return CXChildVisitResult._Break;
                             }
 
@@ -106,7 +110,7 @@ namespace ClangCaster
                         case CXCursorKind._StructDecl:
                         case CXCursorKind._UnionDecl:
                             {
-                                type = new StructType(child.CursorHashLocationSpelling());
+                                type = StructType.Parse(child, this);
                                 return CXChildVisitResult._Break;
                             }
 
@@ -122,6 +126,7 @@ namespace ClangCaster
                 });
                 if (type is null)
                 {
+                    var children = cursor.Children();
                     throw new NotImplementedException("Elaborated not found");
                 }
                 return new TypeReference(type);
@@ -129,10 +134,8 @@ namespace ClangCaster
 
             if (cxType.kind == CXTypeKind._FunctionProto)
             {
-                // var resultType = index.clang_getResultType(cxType);
-                // auto dummy = Context();
-                // auto decl = parseFunction(cursor, resultType);
-                return new TypeReference(new FunctionType(cursor.CursorHashLocationSpelling()));
+                var resultType = index.clang_getResultType(cxType);
+                return new TypeReference(FunctionType.Parse(cursor, this, resultType));
             }
 
             throw new NotImplementedException("type not found");

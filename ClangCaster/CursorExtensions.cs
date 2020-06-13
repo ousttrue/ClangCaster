@@ -5,6 +5,14 @@ namespace ClangCaster
 {
     public static class CursorExtensions
     {
+        public static string Spelling(this in CXCursor cursor)
+        {
+            using (var spelling = ClangString.FromCursor(cursor))
+            {
+                return spelling.ToString();
+            }
+        }
+
         public static (uint, ClangLocation, string) CursorHashLocationSpelling(this in CXCursor cursor)
         {
             var hash = index.clang_hashCursor(cursor);

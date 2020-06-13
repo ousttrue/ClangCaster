@@ -120,16 +120,14 @@ namespace ClangCaster
 
                 case CXCursorKind._TypedefDecl:
                     {
-                        var type = new TypedefType(cursor.CursorHashLocationSpelling());
-                        var underlying = index.clang_getTypedefDeclUnderlyingType(cursor);
-                        type.Ref = m_typeMap.CxTypeToType(underlying, cursor);
+                        var type = TypedefType.Parse(cursor, m_typeMap);
                         m_typeMap.Add(type);
                     }
                     break;
 
                 case CXCursorKind._FunctionDecl:
                     {
-                        var type = new FunctionType(cursor.CursorHashLocationSpelling());
+                        var type = FunctionType.Parse(cursor, m_typeMap);
                         m_typeMap.Add(type);
                     }
                     break;
@@ -141,43 +139,21 @@ namespace ClangCaster
                         var type = m_typeMap.Get(cursor) as StructType;
                         if (type is null)
                         {
-                            type = new StructType(cursor.CursorHashLocationSpelling());
+                            type = StructType.Parse(cursor, m_typeMap);
                             // decl.namespace = context.namespace;
-                            type.IsUnion = cursor.kind == CXCursorKind._UnionDecl;
-                            type.IsForwardDecl = StructType.IsForwardDeclaration(cursor);
                             m_typeMap.Add(type);
 
-                            if (type.IsForwardDecl)
+                            if (!type.IsForwardDecl)
                             {
-                                var defCursor = index.clang_getCursorDefinition(cursor);
-                                if (index.clang_equalCursors(defCursor, index.clang_getNullCursor()))
-                                {
-                                    // not exists
-                                }
-                                else
-                                {
-                                    var defDecl = m_typeMap.Get(defCursor) as StructType;
-                                    if (defDecl is null)
-                                    {
-                                        // create
-                                        defDecl = new StructType(defCursor.CursorHashLocationSpelling());
-                                        m_typeMap.Add(defDecl);
-                                    }
-                                    type.Definition = defDecl;
-                                }
+                                // var child = context.Enter(type);
+                                // // ProcessChildren(cursor, 
+                                // //                 std::bind(&TraverserImpl::parseStructField, this, decl, std::placeholders::_1, childContext));
+                                // TraverseChildren(cursor, child);
                             }
-                            else
-                            {
-                                // push before fields
-                                // auto header = getOrCreateHeader(cursor);
-                                // header.types ~ = decl;
-
-                                // fields
-                                var child = context.Enter(type);
-                                // ProcessChildren(cursor, 
-                                //                 std::bind(&TraverserImpl::parseStructField, this, decl, std::placeholders::_1, childContext));
-                                TraverseChildren(cursor, child);
-                            }
+                        }
+                        else
+                        {
+                            throw new NotImplementedException();
                         }
                     }
                     break;
