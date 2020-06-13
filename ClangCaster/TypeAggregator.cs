@@ -105,7 +105,7 @@ namespace ClangCaster
                 case CXCursorKind._UnexposedDecl:
                     {
                         // ScopedCXTokens tokens(cursor);
-                        var child = context.Child();
+                        var nested = context.Child();
                         // if (tokens.size() >= 2)
                         // {
                         //     // extern C
@@ -114,7 +114,7 @@ namespace ClangCaster
                         //         child.isExternC = true;
                         //     }
                         // }
-                        TraverseChildren(cursor, child);
+                        TraverseChildren(cursor, nested);
                     }
                     break;
 
@@ -145,10 +145,10 @@ namespace ClangCaster
 
                             if (!type.IsForwardDecl)
                             {
-                                // var child = context.Enter(type);
-                                // // ProcessChildren(cursor, 
-                                // //                 std::bind(&TraverserImpl::parseStructField, this, decl, std::placeholders::_1, childContext));
-                                // TraverseChildren(cursor, child);
+                                var nested = context.Child();
+                                TraverseChildren(cursor, nested);
+
+                                type.ParseFields(cursor, m_typeMap);
                             }
                         }
                         else
