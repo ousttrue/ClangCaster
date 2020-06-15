@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using ClangAggregator;
 
 namespace ClangCaster
 {
@@ -58,7 +59,7 @@ namespace ClangCaster
 
                 foreach (var kv in map)
                 {
-                    Console.WriteLine(kv.Value);                    
+                    Console.WriteLine(kv.Value);
                 }
             }
         }

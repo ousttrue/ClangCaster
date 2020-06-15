@@ -1,10 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using ClangCaster.Types;
+using ClangAggregator.Types;
 using libclang;
 
-namespace ClangCaster
+namespace ClangAggregator
 {
     /// <summary>
     /// libclangで解析した型を管理する

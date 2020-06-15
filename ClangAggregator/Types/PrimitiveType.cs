@@ -1,6 +1,6 @@
 using libclang;
 
-namespace ClangCaster.Types
+namespace ClangAggregator.Types
 {
     public class VoidType : PrimitiveType
     {

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using libclang;
 
-namespace ClangCaster
+namespace ClangAggregator
 {
     public static class CursorExtensions
     {

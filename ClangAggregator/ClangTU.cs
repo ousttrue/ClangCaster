@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using libclang;
 
-namespace ClangCaster
+namespace ClangAggregator
 {
     public class ClangTU : IDisposable
     {

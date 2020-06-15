@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\clang\clang.csproj" />
+    <ProjectReference Include="..\ClangAggregator\ClangAggregator.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

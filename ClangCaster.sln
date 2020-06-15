@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "clang", "clang\clang.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClangCaster", "ClangCaster\ClangCaster.csproj", "{FC0F42C8-A485-4EFD-B0BF-491351CDB733}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClangAggregator", "ClangAggregator\ClangAggregator.csproj", "{BE0A6624-ABEE-4525-A7F6-94436309E421}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,5 +46,17 @@ Global
 		{FC0F42C8-A485-4EFD-B0BF-491351CDB733}.Release|x64.Build.0 = Release|Any CPU
 		{FC0F42C8-A485-4EFD-B0BF-491351CDB733}.Release|x86.ActiveCfg = Release|Any CPU
 		{FC0F42C8-A485-4EFD-B0BF-491351CDB733}.Release|x86.Build.0 = Release|Any CPU
+		{BE0A6624-ABEE-4525-A7F6-94436309E421}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE0A6624-ABEE-4525-A7F6-94436309E421}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE0A6624-ABEE-4525-A7F6-94436309E421}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{BE0A6624-ABEE-4525-A7F6-94436309E421}.Debug|x64.Build.0 = Debug|Any CPU
+		{BE0A6624-ABEE-4525-A7F6-94436309E421}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{BE0A6624-ABEE-4525-A7F6-94436309E421}.Debug|x86.Build.0 = Debug|Any CPU
+		{BE0A6624-ABEE-4525-A7F6-94436309E421}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE0A6624-ABEE-4525-A7F6-94436309E421}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE0A6624-ABEE-4525-A7F6-94436309E421}.Release|x64.ActiveCfg = Release|Any CPU
+		{BE0A6624-ABEE-4525-A7F6-94436309E421}.Release|x64.Build.0 = Release|Any CPU
+		{BE0A6624-ABEE-4525-A7F6-94436309E421}.Release|x86.ActiveCfg = Release|Any CPU
+		{BE0A6624-ABEE-4525-A7F6-94436309E421}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

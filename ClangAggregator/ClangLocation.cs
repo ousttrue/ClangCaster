@@ -1,7 +1,7 @@
 using System;
 using libclang;
 
-namespace ClangCaster
+namespace ClangAggregator
 {
     public struct ClangLocation
     {

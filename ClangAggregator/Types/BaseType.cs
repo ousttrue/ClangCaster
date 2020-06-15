@@ -1,4 +1,4 @@
-namespace ClangCaster.Types
+namespace ClangAggregator.Types
 {
     public class BaseType
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using libclang;
 
-namespace ClangCaster.Types
+namespace ClangAggregator.Types
 {
     public struct EnumValue
     {

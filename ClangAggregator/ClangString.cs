@@ -2,7 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using libclang;
 
-namespace ClangCaster
+namespace ClangAggregator
 {
     class ClangString : IDisposable
     {

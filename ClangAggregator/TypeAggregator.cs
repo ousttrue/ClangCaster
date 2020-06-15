@@ -1,8 +1,8 @@
 using System;
-using ClangCaster.Types;
+using ClangAggregator.Types;
 using libclang;
 
-namespace ClangCaster
+namespace ClangAggregator
 {
     /// <summary>
     /// CXCursorを辿って型を集める
