@@ -11,24 +11,6 @@ namespace ClangCaster
         public List<string> Includes = new List<string>();
         public List<string> Defines = new List<string>();
 
-        NormalizedFilePath[] m_normalizedHeaders;
-        NormalizedFilePath[] NormalizedHeaders
-        {
-            get
-            {
-                if (m_normalizedHeaders is null)
-                {
-                    m_normalizedHeaders = Headers.Select(x => new NormalizedFilePath(x)).ToArray();
-                }
-                return m_normalizedHeaders;
-            }
-        }
-
-        public bool HeadersContains(ClangAggregator.Types.UserType type)
-        {
-            return NormalizedHeaders.Contains(type.Location.Path);
-        }
-
         public static CommandLine Parse(string[] args)
         {
             var cmd = new CommandLine();
@@ -60,29 +42,71 @@ namespace ClangCaster
         }
     }
 
+    class ExportHeader
+    {
+        readonly NormalizedFilePath m_path;
+        readonly List<ClangAggregator.Types.UserType> m_types = new List<ClangAggregator.Types.UserType>();
+
+        public ExportHeader(string path)
+        {
+            m_path = new NormalizedFilePath(path);
+        }
+
+        public override string ToString()
+        {
+            return $"{m_path} ({m_types.Count}types)";
+        }
+
+        public bool Contains(ClangAggregator.Types.UserType type)
+        {
+            return m_path.Equals(type.Location.Path);
+        }
+
+        public void Push(ClangAggregator.Types.UserType type)
+        {
+            m_types.Add(type);
+        }
+    }
+
     class Program
     {
-        static void Main(string[] args)
+        static TypeMap Parse(in CommandLine cmd)
         {
-            var cmd = CommandLine.Parse(args);
             using (var tu = ClangTU.Parse(cmd.Headers, cmd.Includes, cmd.Defines))
             {
                 if (tu is null)
                 {
                     Console.WriteLine("fail to parse");
-                    return;
+                    return null;
                 }
 
                 var aggregator = new TypeAggregator();
                 var map = aggregator.Process(tu.GetCursor());
+                return map;
+            }
+        }
 
-                foreach (var kv in map)
+        static void Main(string[] args)
+        {
+            var cmd = CommandLine.Parse(args);
+            var map = Parse(cmd);
+            var exports = cmd.Headers.Select(x => new ExportHeader(x)).ToArray();
+
+            foreach (var kv in map)
+            {
+                foreach (var export in exports)
                 {
-                    if (cmd.HeadersContains(kv.Value))
+                    if (export.Contains(kv.Value))
                     {
-                        Console.WriteLine(kv.Value);
+                        export.Push(kv.Value);
+                        break;
                     }
                 }
+            }
+
+            foreach (var export in exports)
+            {
+                Console.WriteLine(export);
             }
         }
     }

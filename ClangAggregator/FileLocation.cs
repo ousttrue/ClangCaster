@@ -10,6 +10,11 @@ namespace ClangAggregator
             Path = System.IO.Path.GetFullPath(pathString).Replace("\\", "/");
         }
 
+        public override string ToString()
+        {
+            return Path;
+        }
+
         public bool Equals(NormalizedFilePath other)
         {
             return String.Equals(Path, other.Path, StringComparison.OrdinalIgnoreCase);
