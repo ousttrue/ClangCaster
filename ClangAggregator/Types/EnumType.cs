@@ -7,8 +7,8 @@ namespace ClangAggregator.Types
 {
     public struct EnumValue
     {
-        public readonly string Name;
-        public readonly uint Value;
+        public string Name { get; private set; }
+        public uint Value { get; private set; }
 
         public EnumValue(string name, uint value)
         {
@@ -19,10 +19,11 @@ namespace ClangAggregator.Types
 
     public class EnumType : UserType
     {
-        public List<EnumValue> Values = new List<EnumValue>();
+        public List<EnumValue> Values { get; private set; }
 
         EnumType((uint, ClangLocation, string) args) : base(args)
         {
+            Values = new List<EnumValue>();
         }
 
         public override string ToString()
