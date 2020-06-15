@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using ClangAggregator;
 
 namespace ClangCaster
@@ -9,6 +10,24 @@ namespace ClangCaster
         public List<string> Headers = new List<string>();
         public List<string> Includes = new List<string>();
         public List<string> Defines = new List<string>();
+
+        NormalizedFilePath[] m_normalizedHeaders;
+        NormalizedFilePath[] NormalizedHeaders
+        {
+            get
+            {
+                if (m_normalizedHeaders is null)
+                {
+                    m_normalizedHeaders = Headers.Select(x => new NormalizedFilePath(x)).ToArray();
+                }
+                return m_normalizedHeaders;
+            }
+        }
+
+        public bool HeadersContains(ClangAggregator.Types.UserType type)
+        {
+            return NormalizedHeaders.Contains(type.Location.Path);
+        }
 
         public static CommandLine Parse(string[] args)
         {
@@ -59,7 +78,10 @@ namespace ClangCaster
 
                 foreach (var kv in map)
                 {
-                    Console.WriteLine(kv.Value);
+                    if (cmd.HeadersContains(kv.Value))
+                    {
+                        Console.WriteLine(kv.Value);
+                    }
                 }
             }
         }

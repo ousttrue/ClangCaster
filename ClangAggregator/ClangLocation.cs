@@ -5,13 +5,13 @@ namespace ClangAggregator
 {
     public struct ClangLocation
     {
-        IntPtr file;
-        uint line;
-        uint column;
-        uint offset;
+        public IntPtr file;
+        public uint line;
+        public uint column;
+        public uint offset;
 
-        uint begin;
-        uint end;
+        public uint begin;
+        public uint end;
 
         public static ClangLocation Create(in CXCursor cursor)
         {
