@@ -10,6 +10,8 @@ namespace ClangAggregator.Types
         public string Name { get; private set; }
         public uint Value { get; private set; }
 
+        public string Hex => $"0x{Value.ToString("x")}";
+
         public EnumValue(string name, uint value)
         {
             Name = name;
@@ -59,6 +61,54 @@ namespace ClangAggregator.Types
             });
 
             return type;
+        }
+
+        static string GetShared(string l, string r)
+        {
+            var lLen = l.Length;
+            var rLen = r.Length;
+            var len = Math.Min(lLen, rLen);
+            int i = 0;
+            for (; i < len; ++i)
+            {
+                if (l[i] != r[i])
+                {
+                    break;
+                }
+            }
+
+            return l.Substring(0, i);
+        }
+
+        /// <summary>
+        /// 値の共通部分を除去する
+        /// </summary>
+        public void PreparePrefix()
+        {
+            if (Values.Count == 0)
+            {
+                return;
+            }
+
+            string shared = Values[0].Name;
+            for (int i = 0; i < Values.Count; ++i)
+            {
+                shared = GetShared(Values[i].Name, shared);
+            }
+
+            if (shared.Length == 0)
+            {
+                return;
+            }
+
+            var len = shared.LastIndexOf('_');
+            if (len == -1)
+            {
+                return;
+            }
+
+            // replace values
+            Values = Values.Select(x => new EnumValue(x.Name.Substring(len), x.Value)).ToList();
         }
     }
 }

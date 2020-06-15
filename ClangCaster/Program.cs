@@ -13,6 +13,8 @@ namespace ClangCaster
 
         public string Dst;
 
+        public string Namespace;
+
         public static CommandLine Parse(string[] args)
         {
             var cmd = new CommandLine();
@@ -20,6 +22,11 @@ namespace ClangCaster
             {
                 switch (args[i])
                 {
+                    case "-n":
+                        cmd.Namespace = args[i + 1];
+                        ++i;
+                        break;
+
                     case "-d":
                         // dst
                         cmd.Dst = args[i + 1];
@@ -94,7 +101,7 @@ namespace ClangCaster
                 }
                 Directory.CreateDirectory(dst.FullName);
 
-                exporter.Export(dst);
+                exporter.Export(dst, cmd.Namespace);
             }
         }
     }

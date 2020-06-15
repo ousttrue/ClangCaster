@@ -6,6 +6,8 @@ namespace ClangAggregator.Types
 
         public FileLocation Location { get; set; }
 
+        public uint Count { get; set; }
+
         protected UserType(uint hash, ClangLocation location, string name) : base(name)
         {
             Hash = hash;
