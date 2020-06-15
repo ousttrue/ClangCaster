@@ -5,9 +5,11 @@ namespace ClangAggregator
     public struct NormalizedFilePath : IEquatable<NormalizedFilePath>
     {
         public readonly string Path;
+        readonly int m_hash;
         public NormalizedFilePath(string pathString)
         {
             Path = System.IO.Path.GetFullPath(pathString).Replace("\\", "/");
+            m_hash = Path.ToLower().GetHashCode();
         }
 
         public override string ToString()
@@ -18,6 +20,23 @@ namespace ClangAggregator
         public bool Equals(NormalizedFilePath other)
         {
             return String.Equals(Path, other.Path, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is NormalizedFilePath)
+            {
+                return Equals((NormalizedFilePath)obj);
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public override int GetHashCode()
+        {
+            return m_hash;
         }
     }
 

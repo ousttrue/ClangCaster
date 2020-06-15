@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using ClangAggregator;
 
 namespace ClangCaster
@@ -47,9 +48,13 @@ namespace ClangCaster
         readonly NormalizedFilePath m_path;
         readonly List<ClangAggregator.Types.UserType> m_types = new List<ClangAggregator.Types.UserType>();
 
-        public ExportHeader(string path)
+        public ExportHeader(NormalizedFilePath path)
         {
-            m_path = new NormalizedFilePath(path);
+            m_path = path;
+        }
+
+        public ExportHeader(string path) : this(new NormalizedFilePath(path))
+        {
         }
 
         public override string ToString()
@@ -64,7 +69,63 @@ namespace ClangCaster
 
         public void Push(ClangAggregator.Types.UserType type)
         {
+            if (m_types.Contains(type))
+            {
+                return;
+            }
             m_types.Add(type);
+        }
+    }
+
+    class Exporter
+    {
+        List<NormalizedFilePath> m_rootHeaders;
+
+        Dictionary<NormalizedFilePath, ExportHeader> m_headerMap = new Dictionary<NormalizedFilePath, ExportHeader>();
+
+        public Exporter(IEnumerable<string> headers)
+        {
+            m_rootHeaders = headers.Select(x => new NormalizedFilePath(x)).ToList();
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            foreach(var kv in m_headerMap)
+            {
+                sb.AppendLine(kv.Value.ToString());
+            }
+            return sb.ToString();
+        }
+
+        public void Push(ClangAggregator.Types.UserType type)
+        {
+            foreach (var root in m_rootHeaders)
+            {
+                if (root.Equals(type.Location.Path))
+                {
+                    Add(type);
+                    return;
+                }
+            }
+            // skip
+        }
+
+        void Add(ClangAggregator.Types.UserType type)
+        {
+            if (!m_headerMap.TryGetValue(type.Location.Path, out ExportHeader export))
+            {
+                export = new ExportHeader(type.Location.Path);
+                m_headerMap.Add(type.Location.Path, export);
+            }
+
+            export.Push(type);
+
+            // 依存する型を再帰的にAddする
+
+            // typedef
+            // struct
+            // function
         }
     }
 
@@ -90,24 +151,14 @@ namespace ClangCaster
         {
             var cmd = CommandLine.Parse(args);
             var map = Parse(cmd);
-            var exports = cmd.Headers.Select(x => new ExportHeader(x)).ToArray();
+            var exporter = new Exporter(cmd.Headers);
 
             foreach (var kv in map)
             {
-                foreach (var export in exports)
-                {
-                    if (export.Contains(kv.Value))
-                    {
-                        export.Push(kv.Value);
-                        break;
-                    }
-                }
+                exporter.Push(kv.Value);
             }
 
-            foreach (var export in exports)
-            {
-                Console.WriteLine(export);
-            }
+            Console.WriteLine(exporter);
         }
     }
 }
