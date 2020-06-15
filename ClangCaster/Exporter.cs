@@ -11,9 +11,9 @@ namespace ClangCaster
     class Exporter
     {
         List<NormalizedFilePath> m_rootHeaders;
-        Dictionary<NormalizedFilePath, ExportHeader> m_headerMap = new Dictionary<NormalizedFilePath, ExportHeader>();
+        Dictionary<NormalizedFilePath, ExportSource> m_headerMap = new Dictionary<NormalizedFilePath, ExportSource>();
 
-        public IDictionary<NormalizedFilePath, ExportHeader> HeaderMap => m_headerMap;
+        public IDictionary<NormalizedFilePath, ExportSource> HeaderMap => m_headerMap;
 
         public Exporter(IEnumerable<string> headers)
         {
@@ -36,34 +36,74 @@ namespace ClangCaster
             {
                 if (root.Equals(type.Location.Path))
                 {
-                    Add(type);
+                    Add(type, new UserType[] { });
                     return;
                 }
             }
             // skip
         }
 
-        void Add(ClangAggregator.Types.UserType type)
+        void Add(ClangAggregator.Types.UserType type, ClangAggregator.Types.UserType[] stack)
         {
-            if (!m_headerMap.TryGetValue(type.Location.Path, out ExportHeader export))
+            if (type is null)
             {
-                export = new ExportHeader(type.Location.Path);
+                return;
+            }
+            if (stack.Contains(type))
+            {
+                // avoid recursive loop
+                return;
+            }
+
+            // Add
+            if (!m_headerMap.TryGetValue(type.Location.Path, out ExportSource export))
+            {
+                export = new ExportSource(type.Location.Path);
                 m_headerMap.Add(type.Location.Path, export);
             }
 
+            if (string.IsNullOrEmpty(type.Name))
+            {
+                // 名無し。stack を辿って typedef があればその名前をいただく
+                if (stack.Any() && stack.Last() is TypedefType stackTypedef)
+                {
+                    type.Name = stackTypedef.Name;
+                }
+                else
+                {
+                    var a = 0;
+                }
+            }
             export.Push(type);
 
             // 依存する型を再帰的にAddする
+            if (type is EnumType)
+            {
+                // end
+            }
+            else if (type is TypedefType typedefType)
+            {
+                Add(typedefType.Ref.Type as UserType, stack.Concat(new[] { type }).ToArray());
+            }
+            else if (type is StructType structType)
+            {
 
-            // typedef
-            // struct
-            // function
+            }
+            else if (type is FunctionType functionType)
+            {
+
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
         }
 
         const string TEMPLATE = @"
 namespace {{ ns }}
 {
 {% for enum in enums %}
+    // {{ enum.Location.Path.Path }}: {{ enum.Location.Line }}
     enum {{ enum.Name }}
     {
 
@@ -80,7 +120,10 @@ namespace {{ ns }}
 
         public void Export(DirectoryInfo dst)
         {
-            DotLiquid.Template.RegisterSafeType(typeof(EnumType), new string[] { "Name" });
+            DotLiquid.Template.RegisterSafeType(typeof(EnumType), new string[] { "Hash", "Name", "Location" });
+            DotLiquid.Template.RegisterSafeType(typeof(FileLocation), new string[] { "Path", "Line" });
+            DotLiquid.Template.RegisterSafeType(typeof(NormalizedFilePath), new string[] { "Path" });
+
             var template = DotLiquid.Template.Parse(TEMPLATE);
             foreach (var kv in HeaderMap)
             {

@@ -65,6 +65,7 @@ namespace ClangAggregator
                 return new TypeReference(new PointerType(CxTypeToType(index.clang_getPointeeType(cxType), cursor)));
             }
 
+            if (cxType.kind == CXTypeKind._Typedef)
             {
                 // find reference from child cursors
                 BaseType type = default;
@@ -91,7 +92,8 @@ namespace ClangAggregator
                 });
                 if (type is null)
                 {
-                    // throw new NotImplementedException("Referenced not found");
+                    var children = cursor.Children();
+                    throw new NotImplementedException("Referenced not found");
                 }
                 else
                 {
@@ -110,13 +112,32 @@ namespace ClangAggregator
                         case CXCursorKind._StructDecl:
                         case CXCursorKind._UnionDecl:
                             {
-                                type = StructType.Parse(child, this);
+                                type = Get(child);
+                                if (type is null)
+                                {
+                                    throw new NotImplementedException();
+                                }
                                 return CXChildVisitResult._Break;
                             }
 
                         case CXCursorKind._EnumDecl:
                             {
-                                type = EnumType.Parse(child);
+                                type = Get(child);
+                                if (type is null)
+                                {
+                                    throw new NotImplementedException();
+                                }
+                                return CXChildVisitResult._Break;
+                            }
+
+                        case CXCursorKind._TypeRef:
+                            {
+                                var referenced = index.clang_getCursorReferenced(child);
+                                type = Get(referenced);
+                                if (type is null)
+                                {
+                                    throw new NotImplementedException();
+                                }
                                 return CXChildVisitResult._Break;
                             }
 

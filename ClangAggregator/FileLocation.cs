@@ -4,7 +4,7 @@ namespace ClangAggregator
 {
     public struct NormalizedFilePath : IEquatable<NormalizedFilePath>
     {
-        public readonly string Path;
+        public string Path { get; private set; }
         readonly int m_hash;
         public NormalizedFilePath(string pathString)
         {
@@ -42,10 +42,10 @@ namespace ClangAggregator
 
     public struct FileLocation
     {
-        public readonly NormalizedFilePath Path;
+        public NormalizedFilePath Path { get; private set; }
 
         // text position
-        public readonly uint Line;
+        public uint Line { get; private set; }
         public readonly uint Column;
 
         // byte offset

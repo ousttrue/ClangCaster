@@ -1,22 +1,23 @@
 using System.Collections.Generic;
+using System.Linq;
 using ClangAggregator;
 using ClangAggregator.Types;
 
 namespace ClangCaster
 {
-    class ExportHeader
+    class ExportSource
     {
         readonly NormalizedFilePath m_path;
 
         readonly List<EnumType> m_enumTypes = new List<EnumType>();
         public List<EnumType> EnumTypes => m_enumTypes;
 
-        public ExportHeader(NormalizedFilePath path)
+        public ExportSource(NormalizedFilePath path)
         {
             m_path = path;
         }
 
-        public ExportHeader(string path) : this(new NormalizedFilePath(path))
+        public ExportSource(string path) : this(new NormalizedFilePath(path))
         {
         }
 
@@ -34,7 +35,7 @@ namespace ClangCaster
         {
             if (type is EnumType enumType)
             {
-                if (m_enumTypes.Contains(enumType))
+                if (m_enumTypes.Any(x => x.Hash == type.Hash))
                 {
                     return;
                 }

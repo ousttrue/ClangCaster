@@ -2,9 +2,9 @@ namespace ClangAggregator.Types
 {
     public class UserType : BaseType
     {
-        public uint Hash;
+        public uint Hash { get; private set; }
 
-        public FileLocation Location;
+        public FileLocation Location { get; set; }
 
         protected UserType(uint hash, ClangLocation location, string name) : base(name)
         {
