@@ -11,6 +11,8 @@
             "preLaunchTask": "build",
             "program": "${workspaceFolder}/ClangCaster/bin/Debug/netcoreapp3.1/ClangCaster.dll",
             "args": [
+                "-d",
+                "${workspaceFolder}/generated",
                 "-h",
                 "C:/Program Files/LLVM/include/clang-c/Index.h",
                 "-I",

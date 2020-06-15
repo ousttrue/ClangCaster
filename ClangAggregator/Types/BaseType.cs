@@ -2,7 +2,8 @@ namespace ClangAggregator.Types
 {
     public class BaseType
     {
-        public string Name;
+        public string Name { get; set; }
+
         protected BaseType(string name)
         {
             Name = name;
