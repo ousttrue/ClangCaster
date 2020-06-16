@@ -202,67 +202,14 @@ namespace {{ ns }}
             return false;
         }
 
-        /// <summary>
-        /// ClangCaster.Types.BaseType から CSharp の型を表す文字列と属性(struct用)を返す
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        static (string, string) ToCSType(BaseType type)
-        {
-            if (type is PrimitiveType primitiveType)
-            {
-                switch (primitiveType)
-                {
-                    case Int8Type int8Type: return ("sbyte", null);
-                    case Int16Type int16Type: return ("short", null);
-                    case Int32Type int32Type: return ("int", null);
-                    case Int64Type int64Type: return ("long", null);
-                    case UInt8Type uint8Type: return ("byte", null);
-                    case UInt16Type uint16Type: return ("ushort", null);
-                    case UInt32Type uint32Type: return ("uint", null);
-                    case UInt64Type uint64Type: return ("ulong", null);
-                    case Float32Type float32Type: return ("float", null);
-                    case Float64Type float64Type: return ("double", null);
-                    case VoidType voidType: return ("void", null);
-                }
-
-                throw new NotImplementedException();
-            }
-            if (type is EnumType enumType)
-            {
-                return (enumType.Name, null);
-            }
-            if (type is StructType structType)
-            {
-                return (structType.Name, null);
-            }
-
-            if (type is PointerType pointerType)
-            {
-                return ("IntPtr", null);
-            }
-
-            if (type is ArrayType arrayType)
-            {
-                var elementType = ToCSType(arrayType.Element.Type).Item1;
-                return ($"{elementType}[]", $"[MarshalAs(UnmanagedType.ByValArray, SizeConst = {arrayType.Size})]");
-            }
-
-            if (type is TypedefType typedefType)
-            {
-                return ToCSType(typedefType.Ref.Type);
-            }
-
-            throw new NotImplementedException();
-        }
-
         public void Export(DirectoryInfo dst, string ns)
         {
+            var fieldTypes = new FieldType();
             Func<Object, Object> FieldFunc = (Object src) =>
             {
                 var field = (StructField)src;
 
-                var (type, attribute) = ToCSType(field.Ref.Type);
+                var (type, attribute) = fieldTypes.ToCSType(field.Ref.Type);
 
                 // name
                 var name = field.Name;
@@ -278,11 +225,13 @@ namespace {{ ns }}
                     Render = $"public {type} {name};",
                 };
             };
+
+            var returnTypes = new ReturnType();
             Func<Object, Object> FunctionFunc = (Object src) =>
             {
                 var function = (FunctionType)src;
 
-                var csType = ToCSType(function.Result.Type).Item1;
+                var csType = returnTypes.ToCSType(function.Result.Type).Item1;
 
                 return new
                 {
@@ -291,6 +240,8 @@ namespace {{ ns }}
                     Params = function.Params,
                 };
             };
+
+            var paramTypes = new ParamType();
             Func<Object, Object> ParamFunc = (Object src) =>
             {
                 var param = (FunctionParam)src;
@@ -300,12 +251,13 @@ namespace {{ ns }}
                 {
                     name = $"__param__{param.Index + 1}";
                 }
-                var csType = ToCSType(param.Ref.Type).Item1;
+                var csType = paramTypes.ToCSType(param.Ref.Type).Item1;
                 return new
                 {
                     Render = $"{csType} {name}{comma}",
                 };
             };
+            
             DotLiquid.Template.RegisterSafeType(typeof(StructType), new string[] { "Name", "Hash", "Location", "Count", "Fields" });
             DotLiquid.Template.RegisterSafeType(typeof(StructField), FieldFunc);
             DotLiquid.Template.RegisterSafeType(typeof(FunctionType), FunctionFunc);
