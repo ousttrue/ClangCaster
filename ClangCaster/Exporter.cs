@@ -167,6 +167,24 @@ namespace {{ ns }}
             return false;
         }
 
+        static string ToCSType(PrimitiveType type)
+        {
+            switch (type)
+            {
+                case Int8Type int8Type: return "sbyte";
+                case Int16Type int16Type: return "short";
+                case Int32Type int32Type: return "int";
+                case Int64Type int64Type: return "long";
+                case UInt8Type uint8Type: return "byte";
+                case UInt16Type uint16Type: return "ushort";
+                case UInt32Type uint32Type: return "uint";
+                case UInt64Type uint64Type: return "ulong";
+                case VoidType voidType: return "void";
+            }
+
+            throw new NotImplementedException();
+        }
+
         public void Export(DirectoryInfo dst, string ns)
         {
             Func<Object, Object> FieldFunc = (Object src) =>
@@ -176,7 +194,7 @@ namespace {{ ns }}
                 var type = "int";
                 if (GetPrimitive(field.Ref.Type, out PrimitiveType primitive))
                 {
-                    type = primitive.Name;
+                    type = ToCSType(primitive);
                 }
 
                 // name
