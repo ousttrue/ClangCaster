@@ -12,6 +12,9 @@ namespace ClangCaster
         readonly List<EnumType> m_enumTypes = new List<EnumType>();
         public List<EnumType> EnumTypes => m_enumTypes;
 
+        readonly List<StructType> m_structTypes = new List<StructType>();
+        public List<StructType> StructTypes => m_structTypes;
+
         public ExportSource(NormalizedFilePath path)
         {
             m_path = path;
@@ -40,6 +43,14 @@ namespace ClangCaster
                     return;
                 }
                 m_enumTypes.Add(enumType);
+            }
+            else if (type is StructType structType)
+            {
+                if (m_structTypes.Any(x => x.Hash == type.Hash))
+                {
+                    return;
+                }
+                m_structTypes.Add(structType);
             }
             else
             {
