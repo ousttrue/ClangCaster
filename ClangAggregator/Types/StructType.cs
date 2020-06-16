@@ -241,7 +241,7 @@ namespace ClangAggregator.Types
 
             // If the definition is null, then there is no definition in this translation
             // unit, so this cursor must be a forward declaration.
-            if (index.clang_equalCursors(definition, index.clang_getNullCursor()))
+            if (index.clang_equalCursors(definition, index.clang_getNullCursor())!=0)
             {
                 return true;
             }
@@ -249,7 +249,7 @@ namespace ClangAggregator.Types
             // If there is a definition, then the forward declaration and the definition
             // are in the same translation unit. This cursor is the forward declaration if
             // it is _not_ the definition.
-            return index.clang_equalCursors(cursor, definition);
+            return index.clang_equalCursors(cursor, definition)!=0;
         }
     }
 }

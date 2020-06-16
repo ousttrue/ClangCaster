@@ -676,7 +676,7 @@ namespace libclang
             IntPtr __param__1
         );
         [DllImport("libclang.dll")]
-        public static extern bool clang_equalCursors(
+        public static extern uint clang_equalCursors(
             CXCursor __param__1,
             CXCursor __param__2
         );
