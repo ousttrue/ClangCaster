@@ -127,7 +127,7 @@ namespace libclang
         public IntPtr Results;
         public uint NumResults;
     }
-    public delegate void CXInclusionVisitor(IntPtr included_file, out CXSourceLocation inclusion_stack, uint include_len, IntPtr client_data);
+    public delegate void CXInclusionVisitor(IntPtr included_file, ref CXSourceLocation inclusion_stack, uint include_len, IntPtr client_data);
     [StructLayout(LayoutKind.Sequential)]
     public struct CXCursorAndRangeVisitor // 1
     {
@@ -323,23 +323,23 @@ namespace libclang
         [DllImport("libclang.dll")]
         public static extern int clang_getFileUniqueID(
             IntPtr file,
-            out CXFileUniqueID outID
+            ref CXFileUniqueID outID
         );
         [DllImport("libclang.dll")]
         public static extern uint clang_isFileMultipleIncludeGuarded(
-            out CXTranslationUnitImpl tu,
+            ref CXTranslationUnitImpl tu,
             IntPtr file
         );
         [DllImport("libclang.dll")]
         public static extern IntPtr clang_getFile(
-            out CXTranslationUnitImpl tu,
+            ref CXTranslationUnitImpl tu,
             ref sbyte file_name
         );
         [DllImport("libclang.dll")]
         public static extern IntPtr clang_getFileContents(
-            out CXTranslationUnitImpl tu,
+            ref CXTranslationUnitImpl tu,
             IntPtr file,
-            out ulong size
+            ref ulong size
         );
         [DllImport("libclang.dll")]
         public static extern int clang_File_isEqual(
@@ -360,14 +360,14 @@ namespace libclang
         );
         [DllImport("libclang.dll")]
         public static extern CXSourceLocation clang_getLocation(
-            out CXTranslationUnitImpl tu,
+            ref CXTranslationUnitImpl tu,
             IntPtr file,
             uint line,
             uint column
         );
         [DllImport("libclang.dll")]
         public static extern CXSourceLocation clang_getLocationForOffset(
-            out CXTranslationUnitImpl tu,
+            ref CXTranslationUnitImpl tu,
             IntPtr file,
             uint offset
         );
@@ -399,41 +399,41 @@ namespace libclang
         [DllImport("libclang.dll")]
         public static extern void clang_getExpansionLocation(
             CXSourceLocation location,
-            out IntPtr file,
-            out uint line,
-            out uint column,
-            out uint offset
+            ref IntPtr file,
+            ref uint line,
+            ref uint column,
+            ref uint offset
         );
         [DllImport("libclang.dll")]
         public static extern void clang_getPresumedLocation(
             CXSourceLocation location,
-            out CXString filename,
-            out uint line,
-            out uint column
+            ref CXString filename,
+            ref uint line,
+            ref uint column
         );
         [DllImport("libclang.dll")]
         public static extern void clang_getInstantiationLocation(
             CXSourceLocation location,
-            out IntPtr file,
-            out uint line,
-            out uint column,
-            out uint offset
+            ref IntPtr file,
+            ref uint line,
+            ref uint column,
+            ref uint offset
         );
         [DllImport("libclang.dll")]
         public static extern void clang_getSpellingLocation(
             CXSourceLocation location,
-            out IntPtr file,
-            out uint line,
-            out uint column,
-            out uint offset
+            ref IntPtr file,
+            ref uint line,
+            ref uint column,
+            ref uint offset
         );
         [DllImport("libclang.dll")]
         public static extern void clang_getFileLocation(
             CXSourceLocation location,
-            out IntPtr file,
-            out uint line,
-            out uint column,
-            out uint offset
+            ref IntPtr file,
+            ref uint line,
+            ref uint column,
+            ref uint offset
         );
         [DllImport("libclang.dll")]
         public static extern CXSourceLocation clang_getRangeStart(
@@ -445,16 +445,16 @@ namespace libclang
         );
         [DllImport("libclang.dll")]
         public static extern IntPtr clang_getSkippedRanges(
-            out CXTranslationUnitImpl tu,
+            ref CXTranslationUnitImpl tu,
             IntPtr file
         );
         [DllImport("libclang.dll")]
         public static extern IntPtr clang_getAllSkippedRanges(
-            out CXTranslationUnitImpl tu
+            ref CXTranslationUnitImpl tu
         );
         [DllImport("libclang.dll")]
         public static extern void clang_disposeSourceRangeList(
-            out CXSourceRangeList ranges
+            ref CXSourceRangeList ranges
         );
         [DllImport("libclang.dll")]
         public static extern uint clang_getNumDiagnosticsInSet(
@@ -468,8 +468,8 @@ namespace libclang
         [DllImport("libclang.dll")]
         public static extern IntPtr clang_loadDiagnostics(
             ref sbyte file,
-            out CXLoadDiag_Error error,
-            out CXString errorString
+            ref CXLoadDiag_Error error,
+            ref CXString errorString
         );
         [DllImport("libclang.dll")]
         public static extern void clang_disposeDiagnosticSet(
@@ -481,16 +481,16 @@ namespace libclang
         );
         [DllImport("libclang.dll")]
         public static extern uint clang_getNumDiagnostics(
-            out CXTranslationUnitImpl Unit
+            ref CXTranslationUnitImpl Unit
         );
         [DllImport("libclang.dll")]
         public static extern IntPtr clang_getDiagnostic(
-            out CXTranslationUnitImpl Unit,
+            ref CXTranslationUnitImpl Unit,
             uint Index
         );
         [DllImport("libclang.dll")]
         public static extern IntPtr clang_getDiagnosticSetFromTU(
-            out CXTranslationUnitImpl Unit
+            ref CXTranslationUnitImpl Unit
         );
         [DllImport("libclang.dll")]
         public static extern void clang_disposeDiagnostic(
@@ -519,7 +519,7 @@ namespace libclang
         [DllImport("libclang.dll")]
         public static extern CXString clang_getDiagnosticOption(
             IntPtr Diag,
-            out CXString Disable
+            ref CXString Disable
         );
         [DllImport("libclang.dll")]
         public static extern uint clang_getDiagnosticCategory(
@@ -550,11 +550,11 @@ namespace libclang
         public static extern CXString clang_getDiagnosticFixIt(
             IntPtr Diagnostic,
             uint FixIt,
-            out CXSourceRange ReplacementRange
+            ref CXSourceRange ReplacementRange
         );
         [DllImport("libclang.dll")]
         public static extern CXString clang_getTranslationUnitSpelling(
-            out CXTranslationUnitImpl CTUnit
+            ref CXTranslationUnitImpl CTUnit
         );
         [DllImport("libclang.dll")]
         public static extern IntPtr clang_createTranslationUnitFromSourceFile(
@@ -563,7 +563,7 @@ namespace libclang
             int num_clang_command_line_args,
             ref IntPtr clang_command_line_args,
             uint num_unsaved_files,
-            out CXUnsavedFile unsaved_files
+            ref CXUnsavedFile unsaved_files
         );
         [DllImport("libclang.dll")]
         public static extern IntPtr clang_createTranslationUnit(
@@ -574,7 +574,7 @@ namespace libclang
         public static extern CXErrorCode clang_createTranslationUnit2(
             IntPtr CIdx,
             ref sbyte ast_filename,
-            out IntPtr out_TU
+            ref IntPtr out_TU
         );
         [DllImport("libclang.dll")]
         public static extern uint clang_defaultEditingTranslationUnitOptions(
@@ -595,10 +595,10 @@ namespace libclang
             ref sbyte source_filename,
             ref IntPtr command_line_args,
             int num_command_line_args,
-            out CXUnsavedFile unsaved_files,
+            ref CXUnsavedFile unsaved_files,
             uint num_unsaved_files,
             uint options,
-            out IntPtr out_TU
+            ref IntPtr out_TU
         );
         [DllImport("libclang.dll")]
         public static extern CXErrorCode clang_parseTranslationUnit2FullArgv(
@@ -606,24 +606,24 @@ namespace libclang
             ref sbyte source_filename,
             ref IntPtr command_line_args,
             int num_command_line_args,
-            out CXUnsavedFile unsaved_files,
+            ref CXUnsavedFile unsaved_files,
             uint num_unsaved_files,
             uint options,
-            out IntPtr out_TU
+            ref IntPtr out_TU
         );
         [DllImport("libclang.dll")]
         public static extern uint clang_defaultSaveOptions(
-            out CXTranslationUnitImpl TU
+            ref CXTranslationUnitImpl TU
         );
         [DllImport("libclang.dll")]
         public static extern int clang_saveTranslationUnit(
-            out CXTranslationUnitImpl TU,
+            ref CXTranslationUnitImpl TU,
             ref sbyte FileName,
             uint options
         );
         [DllImport("libclang.dll")]
         public static extern uint clang_suspendTranslationUnit(
-            out CXTranslationUnitImpl __param__1
+            ref CXTranslationUnitImpl __param__1
         );
         [DllImport("libclang.dll")]
         public static extern void clang_disposeTranslationUnit(
@@ -631,13 +631,13 @@ namespace libclang
         );
         [DllImport("libclang.dll")]
         public static extern uint clang_defaultReparseOptions(
-            out CXTranslationUnitImpl TU
+            ref CXTranslationUnitImpl TU
         );
         [DllImport("libclang.dll")]
         public static extern int clang_reparseTranslationUnit(
-            out CXTranslationUnitImpl TU,
+            ref CXTranslationUnitImpl TU,
             uint num_unsaved_files,
-            out CXUnsavedFile unsaved_files,
+            ref CXUnsavedFile unsaved_files,
             uint options
         );
         [DllImport("libclang.dll")]
@@ -646,7 +646,7 @@ namespace libclang
         );
         [DllImport("libclang.dll")]
         public static extern CXTUResourceUsage clang_getCXTUResourceUsage(
-            out CXTranslationUnitImpl TU
+            ref CXTranslationUnitImpl TU
         );
         [DllImport("libclang.dll")]
         public static extern void clang_disposeCXTUResourceUsage(
@@ -654,19 +654,19 @@ namespace libclang
         );
         [DllImport("libclang.dll")]
         public static extern IntPtr clang_getTranslationUnitTargetInfo(
-            out CXTranslationUnitImpl CTUnit
+            ref CXTranslationUnitImpl CTUnit
         );
         [DllImport("libclang.dll")]
         public static extern void clang_TargetInfo_dispose(
-            out CXTargetInfoImpl Info
+            ref CXTargetInfoImpl Info
         );
         [DllImport("libclang.dll")]
         public static extern CXString clang_TargetInfo_getTriple(
-            out CXTargetInfoImpl Info
+            ref CXTargetInfoImpl Info
         );
         [DllImport("libclang.dll")]
         public static extern int clang_TargetInfo_getPointerWidth(
-            out CXTargetInfoImpl Info
+            ref CXTargetInfoImpl Info
         );
         [DllImport("libclang.dll")]
         public static extern CXCursor clang_getNullCursor(
@@ -751,16 +751,16 @@ namespace libclang
         [DllImport("libclang.dll")]
         public static extern int clang_getCursorPlatformAvailability(
             CXCursor cursor,
-            out int always_deprecated,
-            out CXString deprecated_message,
-            out int always_unavailable,
-            out CXString unavailable_message,
-            out CXPlatformAvailability availability,
+            ref int always_deprecated,
+            ref CXString deprecated_message,
+            ref int always_unavailable,
+            ref CXString unavailable_message,
+            ref CXPlatformAvailability availability,
             int availability_size
         );
         [DllImport("libclang.dll")]
         public static extern void clang_disposeCXPlatformAvailability(
-            out CXPlatformAvailability availability
+            ref CXPlatformAvailability availability
         );
         [DllImport("libclang.dll")]
         public static extern CXLanguageKind clang_getCursorLanguage(
@@ -779,16 +779,16 @@ namespace libclang
         );
         [DllImport("libclang.dll")]
         public static extern void clang_disposeCXCursorSet(
-            out CXCursorSetImpl cset
+            ref CXCursorSetImpl cset
         );
         [DllImport("libclang.dll")]
         public static extern uint clang_CXCursorSet_contains(
-            out CXCursorSetImpl cset,
+            ref CXCursorSetImpl cset,
             CXCursor cursor
         );
         [DllImport("libclang.dll")]
         public static extern uint clang_CXCursorSet_insert(
-            out CXCursorSetImpl cset,
+            ref CXCursorSetImpl cset,
             CXCursor cursor
         );
         [DllImport("libclang.dll")]
@@ -802,12 +802,12 @@ namespace libclang
         [DllImport("libclang.dll")]
         public static extern void clang_getOverriddenCursors(
             CXCursor cursor,
-            out IntPtr overridden,
-            out uint num_overridden
+            ref IntPtr overridden,
+            ref uint num_overridden
         );
         [DllImport("libclang.dll")]
         public static extern void clang_disposeOverriddenCursors(
-            out CXCursor overridden
+            ref CXCursor overridden
         );
         [DllImport("libclang.dll")]
         public static extern IntPtr clang_getIncludedFile(
@@ -815,7 +815,7 @@ namespace libclang
         );
         [DllImport("libclang.dll")]
         public static extern CXCursor clang_getCursor(
-            out CXTranslationUnitImpl __param__1,
+            ref CXTranslationUnitImpl __param__1,
             CXSourceLocation __param__2
         );
         [DllImport("libclang.dll")]
@@ -1253,9 +1253,9 @@ namespace libclang
         [DllImport("libclang.dll")]
         public static extern uint clang_Cursor_isExternalSymbol(
             CXCursor C,
-            out CXString language,
-            out CXString definedIn,
-            out uint isGenerated
+            ref CXString language,
+            ref CXString definedIn,
+            ref uint isGenerated
         );
         [DllImport("libclang.dll")]
         public static extern CXSourceRange clang_Cursor_getCommentRange(
@@ -1287,7 +1287,7 @@ namespace libclang
         );
         [DllImport("libclang.dll")]
         public static extern IntPtr clang_getModuleForFile(
-            out CXTranslationUnitImpl __param__1,
+            ref CXTranslationUnitImpl __param__1,
             IntPtr __param__2
         );
         [DllImport("libclang.dll")]
@@ -1312,12 +1312,12 @@ namespace libclang
         );
         [DllImport("libclang.dll")]
         public static extern uint clang_Module_getNumTopLevelHeaders(
-            out CXTranslationUnitImpl __param__1,
+            ref CXTranslationUnitImpl __param__1,
             IntPtr Module
         );
         [DllImport("libclang.dll")]
         public static extern IntPtr clang_Module_getTopLevelHeader(
-            out CXTranslationUnitImpl __param__1,
+            ref CXTranslationUnitImpl __param__1,
             IntPtr Module,
             uint Index
         );
@@ -1385,7 +1385,7 @@ namespace libclang
         );
         [DllImport("libclang.dll")]
         public static extern IntPtr clang_getToken(
-            out CXTranslationUnitImpl TU,
+            ref CXTranslationUnitImpl TU,
             CXSourceLocation Location
         );
         [DllImport("libclang.dll")]
@@ -1394,37 +1394,37 @@ namespace libclang
         );
         [DllImport("libclang.dll")]
         public static extern CXString clang_getTokenSpelling(
-            out CXTranslationUnitImpl __param__1,
+            ref CXTranslationUnitImpl __param__1,
             CXToken __param__2
         );
         [DllImport("libclang.dll")]
         public static extern CXSourceLocation clang_getTokenLocation(
-            out CXTranslationUnitImpl __param__1,
+            ref CXTranslationUnitImpl __param__1,
             CXToken __param__2
         );
         [DllImport("libclang.dll")]
         public static extern CXSourceRange clang_getTokenExtent(
-            out CXTranslationUnitImpl __param__1,
+            ref CXTranslationUnitImpl __param__1,
             CXToken __param__2
         );
         [DllImport("libclang.dll")]
         public static extern void clang_tokenize(
-            out CXTranslationUnitImpl TU,
+            ref CXTranslationUnitImpl TU,
             CXSourceRange Range,
-            out IntPtr Tokens,
-            out uint NumTokens
+            ref IntPtr Tokens,
+            ref uint NumTokens
         );
         [DllImport("libclang.dll")]
         public static extern void clang_annotateTokens(
-            out CXTranslationUnitImpl TU,
-            out CXToken Tokens,
+            ref CXTranslationUnitImpl TU,
+            ref CXToken Tokens,
             uint NumTokens,
-            out CXCursor Cursors
+            ref CXCursor Cursors
         );
         [DllImport("libclang.dll")]
         public static extern void clang_disposeTokens(
-            out CXTranslationUnitImpl TU,
-            out CXToken Tokens,
+            ref CXTranslationUnitImpl TU,
+            ref CXToken Tokens,
             uint NumTokens
         );
         [DllImport("libclang.dll")]
@@ -1436,17 +1436,17 @@ namespace libclang
             CXCursor __param__1,
             ref IntPtr startBuf,
             ref IntPtr endBuf,
-            out uint startLine,
-            out uint startColumn,
-            out uint endLine,
-            out uint endColumn
+            ref uint startLine,
+            ref uint startColumn,
+            ref uint endLine,
+            ref uint endColumn
         );
         [DllImport("libclang.dll")]
         public static extern void clang_enableStackTraces(
         );
         [DllImport("libclang.dll")]
         public static extern void clang_executeOnThread(
-            out IntPtr fn,
+            ref IntPtr fn,
             IntPtr user_data,
             uint stack_size
         );
@@ -1493,7 +1493,7 @@ namespace libclang
         [DllImport("libclang.dll")]
         public static extern CXString clang_getCompletionParent(
             IntPtr completion_string,
-            out CXCursorKind kind
+            ref CXCursorKind kind
         );
         [DllImport("libclang.dll")]
         public static extern CXString clang_getCompletionBriefComment(
@@ -1505,63 +1505,63 @@ namespace libclang
         );
         [DllImport("libclang.dll")]
         public static extern uint clang_getCompletionNumFixIts(
-            out CXCodeCompleteResults results,
+            ref CXCodeCompleteResults results,
             uint completion_index
         );
         [DllImport("libclang.dll")]
         public static extern CXString clang_getCompletionFixIt(
-            out CXCodeCompleteResults results,
+            ref CXCodeCompleteResults results,
             uint completion_index,
             uint fixit_index,
-            out CXSourceRange replacement_range
+            ref CXSourceRange replacement_range
         );
         [DllImport("libclang.dll")]
         public static extern uint clang_defaultCodeCompleteOptions(
         );
         [DllImport("libclang.dll")]
         public static extern IntPtr clang_codeCompleteAt(
-            out CXTranslationUnitImpl TU,
+            ref CXTranslationUnitImpl TU,
             ref sbyte complete_filename,
             uint complete_line,
             uint complete_column,
-            out CXUnsavedFile unsaved_files,
+            ref CXUnsavedFile unsaved_files,
             uint num_unsaved_files,
             uint options
         );
         [DllImport("libclang.dll")]
         public static extern void clang_sortCodeCompletionResults(
-            out CXCompletionResult Results,
+            ref CXCompletionResult Results,
             uint NumResults
         );
         [DllImport("libclang.dll")]
         public static extern void clang_disposeCodeCompleteResults(
-            out CXCodeCompleteResults Results
+            ref CXCodeCompleteResults Results
         );
         [DllImport("libclang.dll")]
         public static extern uint clang_codeCompleteGetNumDiagnostics(
-            out CXCodeCompleteResults Results
+            ref CXCodeCompleteResults Results
         );
         [DllImport("libclang.dll")]
         public static extern IntPtr clang_codeCompleteGetDiagnostic(
-            out CXCodeCompleteResults Results,
+            ref CXCodeCompleteResults Results,
             uint Index
         );
         [DllImport("libclang.dll")]
         public static extern ulong clang_codeCompleteGetContexts(
-            out CXCodeCompleteResults Results
+            ref CXCodeCompleteResults Results
         );
         [DllImport("libclang.dll")]
         public static extern CXCursorKind clang_codeCompleteGetContainerKind(
-            out CXCodeCompleteResults Results,
-            out uint IsIncomplete
+            ref CXCodeCompleteResults Results,
+            ref uint IsIncomplete
         );
         [DllImport("libclang.dll")]
         public static extern CXString clang_codeCompleteGetContainerUSR(
-            out CXCodeCompleteResults Results
+            ref CXCodeCompleteResults Results
         );
         [DllImport("libclang.dll")]
         public static extern CXString clang_codeCompleteGetObjCSelector(
-            out CXCodeCompleteResults Results
+            ref CXCodeCompleteResults Results
         );
         [DllImport("libclang.dll")]
         public static extern CXString clang_getClangVersion(
@@ -1573,13 +1573,13 @@ namespace libclang
         [DllImport("libclang.dll")]
         public static extern void CXInclusionVisitor(
             IntPtr included_file,
-            out CXSourceLocation inclusion_stack,
+            ref CXSourceLocation inclusion_stack,
             uint include_len,
             IntPtr client_data
         );
         [DllImport("libclang.dll")]
         public static extern void clang_getInclusions(
-            out CXTranslationUnitImpl tu,
+            ref CXTranslationUnitImpl tu,
             CXInclusionVisitor visitor,
             IntPtr client_data
         );
@@ -1636,8 +1636,8 @@ namespace libclang
         public static extern void clang_remap_getFilenames(
             IntPtr __param__1,
             uint index,
-            out CXString original,
-            out CXString transformed
+            ref CXString original,
+            ref CXString transformed
         );
         [DllImport("libclang.dll")]
         public static extern void clang_remap_dispose(
@@ -1657,7 +1657,7 @@ namespace libclang
         );
         [DllImport("libclang.dll")]
         public static extern CXResult clang_findIncludesInFile(
-            out CXTranslationUnitImpl TU,
+            ref CXTranslationUnitImpl TU,
             IntPtr file,
             CXCursorAndRangeVisitor visitor
         );
@@ -1765,49 +1765,49 @@ namespace libclang
         public static extern int clang_indexSourceFile(
             IntPtr __param__1,
             IntPtr client_data,
-            out IndexerCallbacks index_callbacks,
+            ref IndexerCallbacks index_callbacks,
             uint index_callbacks_size,
             uint index_options,
             ref sbyte source_filename,
             ref IntPtr command_line_args,
             int num_command_line_args,
-            out CXUnsavedFile unsaved_files,
+            ref CXUnsavedFile unsaved_files,
             uint num_unsaved_files,
-            out IntPtr out_TU,
+            ref IntPtr out_TU,
             uint TU_options
         );
         [DllImport("libclang.dll")]
         public static extern int clang_indexSourceFileFullArgv(
             IntPtr __param__1,
             IntPtr client_data,
-            out IndexerCallbacks index_callbacks,
+            ref IndexerCallbacks index_callbacks,
             uint index_callbacks_size,
             uint index_options,
             ref sbyte source_filename,
             ref IntPtr command_line_args,
             int num_command_line_args,
-            out CXUnsavedFile unsaved_files,
+            ref CXUnsavedFile unsaved_files,
             uint num_unsaved_files,
-            out IntPtr out_TU,
+            ref IntPtr out_TU,
             uint TU_options
         );
         [DllImport("libclang.dll")]
         public static extern int clang_indexTranslationUnit(
             IntPtr __param__1,
             IntPtr client_data,
-            out IndexerCallbacks index_callbacks,
+            ref IndexerCallbacks index_callbacks,
             uint index_callbacks_size,
             uint index_options,
-            out CXTranslationUnitImpl __param__6
+            ref CXTranslationUnitImpl __param__6
         );
         [DllImport("libclang.dll")]
         public static extern void clang_indexLoc_getFileLocation(
             CXIdxLoc loc,
-            out IntPtr indexFile,
-            out IntPtr file,
-            out uint line,
-            out uint column,
-            out uint offset
+            ref IntPtr indexFile,
+            ref IntPtr file,
+            ref uint line,
+            ref uint column,
+            ref uint offset
         );
         [DllImport("libclang.dll")]
         public static extern CXSourceLocation clang_indexLoc_getCXSourceLocation(

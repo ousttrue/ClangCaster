@@ -19,15 +19,15 @@ namespace ClangAggregator
             ClangLocation l = default;
             if (index.clang_equalLocations(location, index.clang_getNullLocation()) == 0)
             {
-                index.clang_getInstantiationLocation(location, out l.file, out l.line, out l.column, out l.offset);
+                index.clang_getInstantiationLocation(location, ref l.file, ref l.line, ref l.column, ref l.offset);
                 var extent = index.clang_getCursorExtent(cursor);
                 var begin = index.clang_getRangeStart(extent);
-                index.clang_getInstantiationLocation(begin, out l.file, out l.line, out l.column, out l.begin);
+                index.clang_getInstantiationLocation(begin, ref l.file, ref l.line, ref l.column, ref l.begin);
                 var end = index.clang_getRangeEnd(extent);
                 IntPtr _p = default;
-                uint line;
-                uint column;
-                index.clang_getInstantiationLocation(end, out _p, out line, out column, out l.end);
+                uint line = default;
+                uint column = default;
+                index.clang_getInstantiationLocation(end, ref _p, ref line, ref column, ref l.end);
             }
             return l;
         }
