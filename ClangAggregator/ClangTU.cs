@@ -119,6 +119,8 @@ namespace ClangAggregator
             }
             else
             {
+                // 複数の #include をまとめる include をメモリ上に作成 => CXUnsavedFile
+
                 var sb = "";
                 foreach (var header in headers)
                 {
@@ -138,7 +140,7 @@ namespace ClangAggregator
                     Length = (uint)contentsBytes.Length,
                 };
 
-                // files.push_back(CXUnsavedFile{ "__tmp__dclangen__.h", sb.c_str(), static_cast < unsigned long> (sb.size())});
+                // CXUnsavedFileをエントリポイントとしてパースする
                 tu = libclang.index.clang_parseTranslationUnit(index,
                     ref filenameBytes[0],
                     ref ptrs[0], ptrs.Length,
