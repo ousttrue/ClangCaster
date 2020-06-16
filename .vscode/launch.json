@@ -14,7 +14,7 @@
                 "-n",
                 "libclang",
                 "-d",
-                "${workspaceFolder}/generated",
+                "${workspaceFolder}/clang",
                 "-h",
                 "C:/Program Files/LLVM/include/clang-c/Index.h",
                 "-I",

@@ -10,7 +10,20 @@ namespace ClangAggregator.Types
         public string Name { get; private set; }
         public uint Value { get; private set; }
 
-        public string Hex => $"0x{Value.ToString("x")}";
+        public string Hex
+        {
+            get
+            {
+                if (Value < int.MaxValue)
+                {
+                    return $"0x{Value.ToString("x")}";
+                }
+                else
+                {
+                    return $"unchecked((int)0x{Value.ToString("x")})";
+                }
+            }
+        }
 
         public EnumValue(string name, uint value)
         {

@@ -120,8 +120,7 @@ namespace ClangCaster
 using System;
 using System.Runtime.InteropServices;
 
-namespace {{ ns }}
-{
+namespace {{ ns }} {
     public enum {{ type.Name }} // {{ type.Count }}
     {
 {% for value in type.Values -%}
@@ -144,7 +143,7 @@ namespace {{ ns }}
 
         const string STRUCT_TEMPLATE = @"
 {% for type in types -%}
-    [StructLayout(LayoutKind.Sequential)]    
+    [StructLayout(LayoutKind.Sequential)]
     public struct {{ type.Name }} // {{ type.Count }}
     {
 {% for field in type.Fields -%}
@@ -346,6 +345,7 @@ namespace {{ ns }}
                     }
                 }
 
+                if (exportSource.StructTypes.Any() || exportSource.FunctionTypes.Any())
                 {
                     var path = ExportFile(dst, sourcePath);
                     using (var s = new FileStream(path, FileMode.Create))

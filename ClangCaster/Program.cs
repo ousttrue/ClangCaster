@@ -94,11 +94,11 @@ namespace ClangCaster
             {
                 Console.WriteLine(cmd.Dst);
                 var dst = new DirectoryInfo(cmd.Dst);
-                if (dst.Exists)
-                {
-                    // clear dst
-                    Directory.Delete(dst.FullName, true);
-                }
+                // if (dst.Exists)
+                // {
+                //     // clear dst
+                //     Directory.Delete(dst.FullName, true);
+                // }
                 Directory.CreateDirectory(dst.FullName);
 
                 exporter.Export(dst, cmd.Namespace);
