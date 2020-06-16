@@ -17,6 +17,8 @@
                 "${workspaceFolder}/clang",
                 "-h",
                 "C:/Program Files/LLVM/include/clang-c/Index.h",
+                "-h",
+                "C:/Program Files/LLVM/include/clang-c/CXString.h",
                 "-I",
                 "C:/Program Files/LLVM/include",
             ],

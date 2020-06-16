@@ -124,18 +124,29 @@ namespace ClangAggregator
                 {
                     sb += $"#include \"{header}\"\n";
                 }
+                var contentsBytes = Encoding.UTF8.GetBytes(sb.ToString());
+                var contentsHandle = GCHandle.Alloc(contentsBytes, GCHandleType.Pinned);
+
+                var filenameBytes = Encoding.UTF8.GetBytes("__tmp__ClangCaster__.h").Concat(new byte[] { 0 }).ToArray();
+                var filenameHandle = GCHandle.Alloc(filenameBytes, GCHandleType.Pinned);
 
                 // use unsaved files
-                throw new NotImplementedException();
                 var unsaved = new CXUnsavedFile
                 {
+                    Filename = filenameHandle.AddrOfPinnedObject(),
+                    Contents = contentsHandle.AddrOfPinnedObject(),
+                    Length = (uint)contentsBytes.Length,
                 };
+
                 // files.push_back(CXUnsavedFile{ "__tmp__dclangen__.h", sb.c_str(), static_cast < unsigned long> (sb.size())});
-                var source = Encoding.UTF8.GetBytes("__tmp__dclangen__.h");
                 tu = libclang.index.clang_parseTranslationUnit(index,
-                    ref source[0],
+                    ref filenameBytes[0],
                     ref ptrs[0], ptrs.Length,
-                    ref unsaved, 1, options);
+                    ref unsaved, 1,
+                    options);
+
+                filenameHandle.Free();
+                contentsHandle.Free();
             }
 
             foreach (var buffer in buffers)
