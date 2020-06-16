@@ -11,11 +11,22 @@ namespace ClangAggregator.Types
         public readonly string Name;
         public readonly TypeReference Ref;
 
+        public bool IsLast { get; private set; }
+
         public FunctionParam(int index, string name, TypeReference typeRef)
         {
             Index = index;
             Name = name;
             Ref = typeRef;
+            IsLast = false;
+        }
+
+        public FunctionParam MakeLast()
+        {
+            return new FunctionParam(Index, Name, Ref)
+            {
+                IsLast = true
+            };
         }
     }
 
@@ -86,6 +97,10 @@ namespace ClangAggregator.Types
                 return CXChildVisitResult._Continue;
             });
 
+            if (type.Params.Any())
+            {
+                type.Params[type.Params.Count - 1] = type.Params[type.Params.Count - 1].MakeLast();
+            }
             return type;
         }
 

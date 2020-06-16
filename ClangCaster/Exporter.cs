@@ -69,10 +69,6 @@ namespace ClangCaster
                 {
                     type.Name = stackTypedef.Name;
                 }
-                else
-                {
-                    var a = 0;
-                }
             }
             export.Push(type);
 
@@ -91,14 +87,28 @@ namespace ClangCaster
                 {
                     if (field.Ref.Type is UserType userType)
                     {
-                        ++userType.Count;
                         Add(userType, stack.Concat(new[] { type }).ToArray());
                     }
                 }
             }
             else if (type is FunctionType functionType)
             {
+                // ret
+                {
+                    if (functionType.Result.Type is UserType userType)
+                    {
+                        Add(functionType.Result.Type as UserType, stack.Concat(new[] { type }).ToArray());
+                    }
+                }
 
+                // args
+                foreach (var param in functionType.Params)
+                {
+                    if (param.Ref.Type is UserType userType)
+                    {
+                        Add(userType, stack.Concat(new[] { type }).ToArray());
+                    }
+                }
             }
             else
             {
@@ -139,7 +149,7 @@ namespace {{ ns }}
     public static class {{ name }}
     {
 {% for function in functions -%}
-        {{ function.Attribute }}
+        [DllImport(""{{ dll }}"")]
         public static extern {{ function.Return }} {{function.Name}}(
 {% for param in function.Params -%}
             {{ param.Render }}
@@ -261,7 +271,6 @@ namespace {{ ns }}
 
                 return new
                 {
-                    Attribute = "[DllImport(\"libclang.dll\")]",
                     Return = "void",
                     Name = function.Name,
                     Params = function.Params,
@@ -270,16 +279,16 @@ namespace {{ ns }}
             Func<Object, Object> ParamFunc = (Object src) =>
             {
                 var param = (FunctionParam)src;
-                var comma = param.Index == 0 ? "" : ", ";
+                var comma = param.IsLast ? "" : ",";
                 var name = param.Name;
                 if (string.IsNullOrEmpty(name))
                 {
-                    name = $"__param__{param.Index+1}";
+                    name = $"__param__{param.Index + 1}";
                 }
                 var csType = ToCSType(param.Ref.Type).Item1;
                 return new
                 {
-                    Render = $"{comma}{csType} {name}",
+                    Render = $"{csType} {name}{comma}",
                 };
             };
             DotLiquid.Template.RegisterSafeType(typeof(StructType), new string[] { "Name", "Hash", "Location", "Count", "Fields" });
@@ -331,6 +340,7 @@ namespace {{ ns }}
                                 types = exportSource.StructTypes.Where(x => x.Fields.Any()),
                                 functions = exportSource.FunctionTypes,
                                 name = Path.GetFileNameWithoutExtension(sourcePath.Path),
+                                dll = ns + ".dll",
                             }
                         ));
                         w.Write(rendered);

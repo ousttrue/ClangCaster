@@ -20,6 +20,7 @@ namespace ClangAggregator
             {
                 return null;
             }
+            ++type.Count;
             return type;
         }
 
