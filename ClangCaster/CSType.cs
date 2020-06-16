@@ -1,11 +1,12 @@
 using System;
+using System.Linq;
 using ClangAggregator.Types;
 
 namespace ClangCaster
 {
     public abstract class CSType
     {
-        protected abstract string WithRef { get; }
+        protected abstract string PointerType(string src);
 
         /// <summary>
         /// ClangCaster.Types.BaseType から CSharp の型を表す文字列と属性(struct用)を返す
@@ -14,6 +15,8 @@ namespace ClangCaster
         /// <returns></returns>
         public (string, string) ToCSType(BaseType type)
         {
+            // FIXME: もうちょっと場合分けを整理する
+            // FIXME: IntPtr でごまかしたところ
             if (type is PrimitiveType primitiveType)
             {
                 switch (primitiveType)
@@ -47,29 +50,32 @@ namespace ClangCaster
                 if (pointerType.Pointee.Type is PointerType)
                 {
                     // double pointer
-                    return ($"{WithRef}IntPtr", null);
+                    return (PointerType("IntPtr"), null);
                 }
                 else if (pointerType.Pointee.Type is VoidType)
                 {
                     return ("IntPtr", null);
                 }
+                else if (pointerType.Pointee.Type is Int8Type)
+                {
+                    // avoid ref sbyte
+                    return (PointerType("byte"), null);
+                }
+                else if (pointerType.Pointee.Type is StructType structPointee && structPointee.Fields.Any())
+                {
+                    // not forward decl
+                    return (PointerType(structPointee.Name), null);
+                }
                 else if (pointerType.Pointee.Type is PrimitiveType primitivePointee)
                 {
-                    if (string.IsNullOrEmpty(WithRef))
-                    {
-                        return ("IntPtr", null);
-                    }
-                    else
-                    {
-                        var (tmp, _) = ToCSType(primitivePointee);
-                        return ($"{WithRef}{tmp}", null);
-                    }
+                    var (tmp, _) = ToCSType(primitivePointee);
+                    return (PointerType(tmp), null);
                 }
                 else if (pointerType.Pointee.Type is TypedefType typedefPointee)
                 {
                     if (typedefPointee.Ref.Type is PointerType)
                     {
-                        return ($"{WithRef}IntPtr", null);
+                        return (PointerType("IntPtr"), null);
                     }
                     else
                     {
@@ -99,14 +105,25 @@ namespace ClangCaster
 
     class FieldType : CSType
     {
-        protected override string WithRef => "";
+        protected override string PointerType(string src)
+        {
+            return "IntPtr";
+        }
     }
+
     class ReturnType : CSType
     {
-        protected override string WithRef => "";
+        protected override string PointerType(string src)
+        {
+            return "IntPtr";
+        }
     }
+
     class ParamType : CSType
     {
-        protected override string WithRef => "ref ";
+        protected override string PointerType(string src)
+        {
+            return $"ref {src}";
+        }
     }
 }

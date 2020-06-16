@@ -2,7 +2,9 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace libclang {
+namespace libclang
+{
+
     [StructLayout(LayoutKind.Sequential)]
     public struct CXString // 1
     {
@@ -15,7 +17,9 @@ namespace libclang {
         public IntPtr Strings;
         public uint Count;
     }
-    public static partial class index {
+
+    public static partial class index
+    {
         [DllImport("libclang.dll")]
         public static extern IntPtr clang_getCString(
             CXString _string
@@ -26,7 +30,7 @@ namespace libclang {
         );
         [DllImport("libclang.dll")]
         public static extern void clang_disposeStringSet(
-            out CXStringSet set
+            IntPtr set
         );
     }
 }

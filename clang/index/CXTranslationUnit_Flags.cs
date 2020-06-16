@@ -21,5 +21,6 @@ namespace libclang {
         _IncludeAttributedTypes = 0x1000,
         _VisitImplicitAttributes = 0x2000,
         _IgnoreNonErrorsFromIncludedFiles = 0x4000,
+        _RetainExcludedConditionalBlocks = 0x8000,
     }
 }

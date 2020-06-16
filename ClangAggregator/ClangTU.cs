@@ -102,7 +102,7 @@ namespace ClangAggregator
             var buffers = args.Select(x => AllocBuffer.FromString(x)).ToArray();
             var ptrs = buffers.Select(x => x.Ptr).ToArray();
 
-            var options = CXTranslationUnit_Flags._DetailedPreprocessingRecord
+            var options = (uint)CXTranslationUnit_Flags._DetailedPreprocessingRecord
                 // | CXTranslationUnit_SkipFunctionBodies
                 ;
 

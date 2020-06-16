@@ -5,6 +5,6 @@ using System.Runtime.InteropServices;
 namespace libclang {
     public enum CXReparse_Flags // 0
     {
-        CXReparse_None = 0x0,
+        _None = 0x0,
     }
 }

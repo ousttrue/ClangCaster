@@ -5,6 +5,6 @@ using System.Runtime.InteropServices;
 namespace libclang {
     public enum CXIdxDeclInfoFlags // 1
     {
-        CXIdxDeclFlag_Skipped = 0x1,
+        _Skipped = 0x1,
     }
 }
