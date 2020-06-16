@@ -26,14 +26,17 @@ namespace ClangAggregator.Types
 
     public class ArrayType : BaseType
     {
-        public TypeReference Element;
+        public readonly TypeReference Element;
 
-        public ArrayType(in TypeReference element) : base("Array")
+        public readonly int Size;
+
+        public ArrayType(in TypeReference element, int size) : base("Array")
         {
             Element = element;
+            Size = size;
         }
 
-        public ArrayType(BaseType type, bool isConst) : this(new TypeReference(type, isConst))
+        public ArrayType(BaseType type, bool isConst, int size) : this(new TypeReference(type, isConst), size)
         {
         }
     }

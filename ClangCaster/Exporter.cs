@@ -87,7 +87,14 @@ namespace ClangCaster
             }
             else if (type is StructType structType)
             {
-
+                foreach (var field in structType.Fields)
+                {
+                    if (field.Ref.Type is UserType userType)
+                    {
+                        ++userType.Count;
+                        Add(userType, stack.Concat(new[] { type }).ToArray());
+                    }
+                }
             }
             else if (type is FunctionType functionType)
             {
@@ -125,7 +132,7 @@ namespace {{ ns }}
     public struct {{ type.Name }} // {{ type.Count }}
     {
 {% for field in type.Fields -%}
-        {{ field.Render }}
+        {% if field.Attribute %}{{ field.Attribute }} {% endif %}{{ field.Render }}
 {%- endfor -%}
     }
 {%- endfor -%}
@@ -167,19 +174,49 @@ namespace {{ ns }}
             return false;
         }
 
-        static string ToCSType(PrimitiveType type)
+        static (string, string) ToCSType(BaseType type)
         {
+            if (type is EnumType enumType)
+            {
+                return (enumType.Name, null);
+            }
+            if (type is StructType structType)
+            {
+                return (structType.Name, null);
+            }
+
+            if (type is PointerType pointerType)
+            {
+                return ("IntPtr", null);
+            }
+
+            if (type is ArrayType arrayType)
+            {
+                var elementType = ToCSType(arrayType.Element.Type).Item1;
+                return ($"{elementType}[]", $"[MarshalAs(UnmanagedType.ByValArray, SizeConst = {arrayType.Size})]");
+            }
+
             switch (type)
             {
-                case Int8Type int8Type: return "sbyte";
-                case Int16Type int16Type: return "short";
-                case Int32Type int32Type: return "int";
-                case Int64Type int64Type: return "long";
-                case UInt8Type uint8Type: return "byte";
-                case UInt16Type uint16Type: return "ushort";
-                case UInt32Type uint32Type: return "uint";
-                case UInt64Type uint64Type: return "ulong";
-                case VoidType voidType: return "void";
+                case Int8Type int8Type: return ("sbyte", null);
+                case Int16Type int16Type: return ("short", null);
+                case Int32Type int32Type: return ("int", null);
+                case Int64Type int64Type: return ("long", null);
+                case UInt8Type uint8Type: return ("byte", null);
+                case UInt16Type uint16Type: return ("ushort", null);
+                case UInt32Type uint32Type: return ("uint", null);
+                case UInt64Type uint64Type: return ("ulong", null);
+                case VoidType voidType: return ("void", null);
+            }
+
+            if (GetPrimitive(type, out PrimitiveType primitive))
+            {
+                return ToCSType(primitive);
+            }
+
+            if (type is TypedefType typedefType)
+            {
+                return ToCSType(typedefType.Ref.Type);
             }
 
             throw new NotImplementedException();
@@ -191,11 +228,7 @@ namespace {{ ns }}
             {
                 var field = (StructField)src;
 
-                var type = "int";
-                if (GetPrimitive(field.Ref.Type, out PrimitiveType primitive))
-                {
-                    type = ToCSType(primitive);
-                }
+                var (type, attribute) = ToCSType(field.Ref.Type);
 
                 // name
                 var name = field.Name;
@@ -207,6 +240,7 @@ namespace {{ ns }}
 
                 return new
                 {
+                    Attribute = attribute,
                     Render = $"public {type} {name};",
                 };
             };

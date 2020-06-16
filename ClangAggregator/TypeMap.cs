@@ -67,7 +67,9 @@ namespace ClangAggregator
 
             if (cxType.kind == CXTypeKind._ConstantArray)
             {
-                return new TypeReference(new ArrayType(CxTypeToType(index.clang_getArrayElementType(cxType), cursor)));
+                var arraySize = (int)index.clang_getArraySize(cxType);
+                var elementType = CxTypeToType(index.clang_getArrayElementType(cxType), cursor);
+                return new TypeReference(new ArrayType(elementType, arraySize));
             }
 
             if (cxType.kind == CXTypeKind._Typedef)
