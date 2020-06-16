@@ -15,7 +15,7 @@ namespace libclang {
         public IntPtr Strings;
         public uint Count;
     }
-    public static class cxstring {
+    public static partial class index {
         [DllImport("libclang.dll")]
         public static extern IntPtr clang_getCString(
             CXString _string

@@ -26,13 +26,13 @@ namespace ClangAggregator
 
         public override string ToString()
         {
-            var p = cxstring.clang_getCString(m_str);
+            var p = index.clang_getCString(m_str);
             return Marshal.PtrToStringUTF8(p);
         }
 
         public void Dispose()
         {
-            cxstring.clang_disposeString(m_str);
+            index.clang_disposeString(m_str);
         }
     }
 }

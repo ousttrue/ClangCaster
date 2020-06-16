@@ -287,7 +287,7 @@ namespace libclang
         public IntPtr indexEntityReference;
     }
     public delegate CXVisitorResult CXFieldVisitor(CXCursor C, IntPtr client_data);
-    public static class index
+    public static partial class index
     {
         [DllImport("libclang.dll")]
         public static extern IntPtr clang_createIndex(
