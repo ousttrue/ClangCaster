@@ -10,20 +10,20 @@ namespace ClangAggregator
     public class ClangTU : IDisposable
     {
         IntPtr m_index;
-        CXTranslationUnitImpl m_tu;
+        IntPtr m_tu;
 
         ClangTU(IntPtr index, IntPtr tu)
         {
             m_index = index;
-            m_tu.p = tu;
+            m_tu = tu;
         }
 
         public void Dispose()
         {
-            if (m_tu.p != IntPtr.Zero)
+            if (m_tu != IntPtr.Zero)
             {
-                index.clang_disposeTranslationUnit(m_tu.p);
-                m_tu.p = IntPtr.Zero;
+                index.clang_disposeTranslationUnit(m_tu);
+                m_tu = IntPtr.Zero;
             }
             if (m_index != IntPtr.Zero)
             {
@@ -165,7 +165,7 @@ namespace ClangAggregator
 
         public CXCursor GetCursor()
         {
-            return libclang.index.clang_getTranslationUnitCursor(m_tu.p);
+            return libclang.index.clang_getTranslationUnitCursor(m_tu);
         }
     }
 }

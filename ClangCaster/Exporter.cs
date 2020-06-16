@@ -154,7 +154,7 @@ namespace {{ ns }}
 ";
 
         const string FUNCTION_TEMPLATE = @"
-    public static class {{ name }}
+    public static partial class index
     {
 {% for function in functions -%}
         [DllImport(""{{ dll }}"")]
@@ -183,7 +183,16 @@ namespace {{ ns }}
         static string[] EscapeSymbols = new string[]
         {
             "base",
+            "string",
         };
+        static string EscapeSymbol(string src)
+        {
+            if (!EscapeSymbols.Contains(src))
+            {
+                return src;
+            }
+            return $"_{src}";
+        }
 
         static bool GetPrimitive(BaseType type, out PrimitiveType primitive)
         {
@@ -212,12 +221,7 @@ namespace {{ ns }}
                 var (type, attribute) = fieldTypes.ToCSType(field.Ref.Type);
 
                 // name
-                var name = field.Name;
-                if (EscapeSymbols.Contains(field.Name))
-                {
-                    // name = $"@{name}";
-                    name = $"_{name}";
-                }
+                var name = EscapeSymbol(field.Name);
 
                 return new
                 {
@@ -251,13 +255,15 @@ namespace {{ ns }}
                 {
                     name = $"__param__{param.Index + 1}";
                 }
+                name = EscapeSymbol(name);
+
                 var csType = paramTypes.ToCSType(param.Ref.Type).Item1;
                 return new
                 {
                     Render = $"{csType} {name}{comma}",
                 };
             };
-            
+
             DotLiquid.Template.RegisterSafeType(typeof(StructType), new string[] { "Name", "Hash", "Location", "Count", "Fields" });
             DotLiquid.Template.RegisterSafeType(typeof(StructField), FieldFunc);
             DotLiquid.Template.RegisterSafeType(typeof(FunctionType), FunctionFunc);
@@ -330,7 +336,7 @@ namespace {{ ns }}
                                 new
                                 {
                                     functions = exportSource.FunctionTypes,
-                                    name = Path.GetFileNameWithoutExtension(sourcePath.Path),
+                                    // name = Path.GetFileNameWithoutExtension(sourcePath.Path),
                                     dll = ns + ".dll",
                                 }
                             ));
