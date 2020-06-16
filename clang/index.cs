@@ -1123,7 +1123,7 @@ namespace libclang
         [DllImport("libclang.dll")]
         public static extern uint clang_visitChildren(
             CXCursor parent,
-            CXCursorVisitor visitor,
+            IntPtr visitor,
             IntPtr client_data
         );
         [DllImport("libclang.dll")]

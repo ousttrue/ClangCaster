@@ -5,7 +5,7 @@ namespace ClangCaster
 {
     public abstract class CSType
     {
-        protected abstract string DoublePointer { get; }
+        protected abstract string WithRef { get; }
 
         /// <summary>
         /// ClangCaster.Types.BaseType から CSharp の型を表す文字列と属性(struct用)を返す
@@ -47,9 +47,39 @@ namespace ClangCaster
                 if (pointerType.Pointee.Type is PointerType)
                 {
                     // double pointer
-                    return (DoublePointer, null);
+                    return ($"{WithRef}IntPtr", null);
                 }
-                return ("IntPtr", null);
+                else if (pointerType.Pointee.Type is VoidType)
+                {
+                    return ("IntPtr", null);
+                }
+                else if (pointerType.Pointee.Type is PrimitiveType primitivePointee)
+                {
+                    if (string.IsNullOrEmpty(WithRef))
+                    {
+                        return ("IntPtr", null);
+                    }
+                    else
+                    {
+                        var (tmp, _) = ToCSType(primitivePointee);
+                        return ($"{WithRef}{tmp}", null);
+                    }
+                }
+                else if (pointerType.Pointee.Type is TypedefType typedefPointee)
+                {
+                    if (typedefPointee.Ref.Type is PointerType)
+                    {
+                        return ($"{WithRef}IntPtr", null);
+                    }
+                    else
+                    {
+                        return ("IntPtr", null);
+                    }
+                }
+                else
+                {
+                    return ("IntPtr", null);
+                }
             }
 
             if (type is ArrayType arrayType)
@@ -69,14 +99,14 @@ namespace ClangCaster
 
     class FieldType : CSType
     {
-        protected override string DoublePointer => "IntPtr";
+        protected override string WithRef => "";
     }
     class ReturnType : CSType
     {
-        protected override string DoublePointer => "IntPtr";
+        protected override string WithRef => "";
     }
     class ParamType : CSType
     {
-        protected override string DoublePointer => "ref IntPtr";
+        protected override string WithRef => "ref ";
     }
 }
