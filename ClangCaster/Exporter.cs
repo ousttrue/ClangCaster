@@ -150,11 +150,34 @@ namespace {{ ns }}
             "base",
         };
 
+        static bool GetPrimitive(BaseType type, out PrimitiveType primitive)
+        {
+            if (type is PrimitiveType)
+            {
+                primitive = type as PrimitiveType;
+                return true;
+            }
+
+            if (type is TypedefType typedefType)
+            {
+                return GetPrimitive(typedefType.Ref.Type, out primitive);
+            }
+
+            primitive = null;
+            return false;
+        }
+
         public void Export(DirectoryInfo dst, string ns)
         {
             Func<Object, Object> FieldFunc = (Object src) =>
             {
                 var field = (StructField)src;
+
+                var type = "int";
+                if (GetPrimitive(field.Ref.Type, out PrimitiveType primitive))
+                {
+                    type = primitive.Name;
+                }
 
                 // name
                 var name = field.Name;
@@ -166,7 +189,7 @@ namespace {{ ns }}
 
                 return new
                 {
-                    Render = $"public int {name};",
+                    Render = $"public {type} {name};",
                 };
             };
             DotLiquid.Template.RegisterSafeType(typeof(StructType), new string[] { "Name", "Hash", "Location", "Count", "Fields" });
