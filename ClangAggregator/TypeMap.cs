@@ -65,6 +65,11 @@ namespace ClangAggregator
                 return new TypeReference(new PointerType(CxTypeToType(index.clang_getPointeeType(cxType), cursor)));
             }
 
+            if (cxType.kind == CXTypeKind._ConstantArray)
+            {
+                return new TypeReference(new ArrayType(CxTypeToType(index.clang_getArrayElementType(cxType), cursor)));
+            }
+
             if (cxType.kind == CXTypeKind._Typedef)
             {
                 // find reference from child cursors
@@ -112,11 +117,14 @@ namespace ClangAggregator
                         case CXCursorKind._StructDecl:
                         case CXCursorKind._UnionDecl:
                             {
-                                type = Get(child);
+                                var structType = Get(child) as StructType;
+                                type = structType;
                                 if (type is null)
                                 {
                                     throw new NotImplementedException();
                                 }
+                                structType.ParseFields(child, this);
+
                                 return CXChildVisitResult._Break;
                             }
 

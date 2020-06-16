@@ -53,6 +53,7 @@ namespace ClangAggregator
                 case CXCursorKind._FunctionTemplate:
                 case CXCursorKind._UsingDeclaration:
                 case CXCursorKind._StaticAssert:
+                case CXCursorKind._FieldDecl:
                     // skip
                     break;
 
@@ -120,6 +121,9 @@ namespace ClangAggregator
 
                 case CXCursorKind._TypedefDecl:
                     {
+                        // first
+                        // TraverseChildren(cursor, context);
+
                         var type = TypedefType.Parse(cursor, m_typeMap);
                         m_typeMap.Add(type);
                     }
@@ -143,7 +147,7 @@ namespace ClangAggregator
                             // decl.namespace = context.namespace;
                             m_typeMap.Add(type);
 
-                            if (!type.IsForwardDecl)
+                            // if (!type.IsForwardDecl)
                             {
                                 var nested = context.Child();
                                 TraverseChildren(cursor, nested);
@@ -153,7 +157,7 @@ namespace ClangAggregator
                         }
                         else
                         {
-                            throw new NotImplementedException();
+                            // throw new NotImplementedException();
                         }
                     }
                     break;

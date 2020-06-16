@@ -7,12 +7,14 @@ namespace ClangAggregator.Types
 {
     public struct StructField
     {
+        public readonly int Index;
         public readonly string Name;
         public readonly TypeReference Ref;
         public readonly uint Offset;
 
-        public StructField(string name, TypeReference typeRef, uint offset)
+        public StructField(int index, string name, TypeReference typeRef, uint offset)
         {
+            Index = index;
             Name = name;
             Ref = typeRef;
             Offset = offset;
@@ -25,10 +27,12 @@ namespace ClangAggregator.Types
         public bool IsForwardDecl;
         // public StructType Definition;
 
-        public List<StructField> Fields = new List<StructField>();
+        public List<StructField> Fields { get; private set; }
 
         StructType((uint, ClangLocation, string) args) : base(args)
-        { }
+        {
+            Fields = new List<StructField>();
+        }
 
         public override string ToString()
         {
@@ -95,7 +99,7 @@ namespace ClangAggregator.Types
                             var fieldName = child.Spelling();
                             var fieldOffset = (uint)index.clang_Cursor_getOffsetOfField(child);
                             var fieldType = index.clang_getCursorType(child);
-                            Fields.Add(new StructField(fieldName, typeMap.CxTypeToType(fieldType, child), fieldOffset));
+                            Fields.Add(new StructField(Fields.Count, fieldName, typeMap.CxTypeToType(fieldType, child), fieldOffset));
                             break;
                         }
 

@@ -124,8 +124,8 @@ namespace {{ ns }}
     [StructLayout(LayoutKind.Sequential)]    
     public struct {{ type.Name }} // {{ type.Count }}
     {
-{% for value in type.Values -%}
-        {{ value.Name }} = {{ value.Hex }},
+{% for field in type.Fields -%}
+        {{ field.Render }}
 {%- endfor -%}
     }
 {%- endfor -%}
@@ -145,9 +145,30 @@ namespace {{ ns }}
             return Path.Combine(Path.Combine(directory.FullName, stem));
         }
 
+        static string[] EscapeSymbols = new string[]
+        {
+            "base",
+        };
+
         public void Export(DirectoryInfo dst, string ns)
         {
+            Func<Object, Object> FieldFunc = (Object src) =>
+            {
+                var field = (StructField)src;
+                var name = field.Name;
+                if (EscapeSymbols.Contains(field.Name))
+                {
+                    // name = $"@{name}";
+                    name = $"_{name}";
+                }
+                return new
+                {
+                    Render = $"int {name};",
+                };
+            };
             DotLiquid.Template.RegisterSafeType(typeof(StructType), new string[] { "Name", "Hash", "Location", "Count", "Fields" });
+            DotLiquid.Template.RegisterSafeType(typeof(StructField), FieldFunc);
+            DotLiquid.Template.RegisterSafeType(typeof(TypeReference), new string[] { "Type" });
             DotLiquid.Template.RegisterSafeType(typeof(EnumType), new string[] { "Name", "Hash", "Location", "Count", "Values" });
             DotLiquid.Template.RegisterSafeType(typeof(EnumValue), new string[] { "Name", "Value", "Hex" });
             DotLiquid.Template.RegisterSafeType(typeof(FileLocation), new string[] { "Path", "Line" });
