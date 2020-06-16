@@ -24,7 +24,7 @@ namespace ClangAggregator.Types
     public class StructType : UserType
     {
         public bool IsUnion;
-        public bool IsForwardDecl;
+        // public bool IsForwardDecl;
         // public StructType Definition;
 
         public List<StructField> Fields { get; private set; }
@@ -36,11 +36,11 @@ namespace ClangAggregator.Types
 
         public override string ToString()
         {
-            if (IsForwardDecl)
-            {
-                return $"struct {Name};";
-            }
-            else
+            // if (IsForwardDecl)
+            // {
+            //     return $"struct {Name};";
+            // }
+            // else
             {
                 var fields = string.Join(", ", Fields.Select(x => x.Ref.Type));
                 return $"struct {Name} {{}}";
@@ -57,27 +57,27 @@ namespace ClangAggregator.Types
         {
             var type = new StructType(cursor.CursorHashLocationSpelling());
             type.IsUnion = cursor.kind == CXCursorKind._UnionDecl;
-            type.IsForwardDecl = IsForwardDeclaration(cursor);
+            // type.IsForwardDecl = IsForwardDeclaration(cursor);
 
-            if (type.IsForwardDecl)
-            {
-                var defCursor = index.clang_getCursorDefinition(cursor);
-                if (index.clang_equalCursors(defCursor, index.clang_getNullCursor()))
-                {
-                    // not exists
-                }
-                else
-                {
-                    // var defDecl = typeMap.Get(defCursor) as StructType;
-                    // if (defDecl is null)
-                    // {
-                    //     // create
-                    //     defDecl = StructType.Parse(defCursor, typeMap);
-                    //     typeMap.Add(defDecl);
-                    // }
-                    // type.Definition = defDecl;
-                }
-            }
+            // if (type.IsForwardDecl)
+            // {
+            //     var defCursor = index.clang_getCursorDefinition(cursor);
+            //     if (index.clang_equalCursors(defCursor, index.clang_getNullCursor()))
+            //     {
+            //         // not exists
+            //     }
+            //     else
+            //     {
+            //         // var defDecl = typeMap.Get(defCursor) as StructType;
+            //         // if (defDecl is null)
+            //         // {
+            //         //     // create
+            //         //     defDecl = StructType.Parse(defCursor, typeMap);
+            //         //     typeMap.Add(defDecl);
+            //         // }
+            //         // type.Definition = defDecl;
+            //     }
+            // }
 
             return type;
         }
@@ -99,6 +99,10 @@ namespace ClangAggregator.Types
                             var fieldName = child.Spelling();
                             var fieldOffset = (uint)index.clang_Cursor_getOffsetOfField(child);
                             var fieldType = index.clang_getCursorType(child);
+                            if (Fields.Any(x => x.Name == fieldName))
+                            {
+                                throw new Exception();
+                            }
                             Fields.Add(new StructField(Fields.Count, fieldName, typeMap.CxTypeToType(fieldType, child), fieldOffset));
                             break;
                         }
@@ -231,7 +235,7 @@ namespace ClangAggregator.Types
         }
 
         // https://joshpeterson.github.io/identifying-a-forward-declaration-with-libclang
-        static bool IsForwardDeclaration(in CXCursor cursor)
+        public static bool IsForwardDeclaration(in CXCursor cursor)
         {
             var definition = index.clang_getCursorDefinition(cursor);
 

@@ -155,15 +155,18 @@ namespace {{ ns }}
             Func<Object, Object> FieldFunc = (Object src) =>
             {
                 var field = (StructField)src;
+
+                // name
                 var name = field.Name;
                 if (EscapeSymbols.Contains(field.Name))
                 {
                     // name = $"@{name}";
                     name = $"_{name}";
                 }
+
                 return new
                 {
-                    Render = $"int {name};",
+                    Render = $"public int {name};",
                 };
             };
             DotLiquid.Template.RegisterSafeType(typeof(StructType), new string[] { "Name", "Hash", "Location", "Count", "Fields" });
@@ -211,7 +214,7 @@ namespace {{ ns }}
                             new
                             {
                                 ns = ns,
-                                types = exportSource.StructTypes,
+                                types = exportSource.StructTypes.Where(x => x.Fields.Any()),
                             }
                         ));
                         w.Write(rendered);

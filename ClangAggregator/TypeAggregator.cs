@@ -147,7 +147,7 @@ namespace ClangAggregator
                             // decl.namespace = context.namespace;
                             m_typeMap.Add(type);
 
-                            // if (!type.IsForwardDecl)
+                            // if (!StructType.IsForwardDeclaration(cursor))
                             {
                                 var nested = context.Child();
                                 TraverseChildren(cursor, nested);
