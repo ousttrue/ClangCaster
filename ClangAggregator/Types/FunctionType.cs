@@ -7,11 +7,13 @@ namespace ClangAggregator.Types
 {
     public struct FunctionParam
     {
+        public readonly int Index;
         public readonly string Name;
         public readonly TypeReference Ref;
 
-        public FunctionParam(string name, TypeReference typeRef)
+        public FunctionParam(int index, string name, TypeReference typeRef)
         {
+            Index = index;
             Name = name;
             Ref = typeRef;
         }
@@ -65,7 +67,7 @@ namespace ClangAggregator.Types
                         {
                             var childType = index.clang_getCursorType(child);
                             var typeRef = typeMap.CxTypeToType(childType, child);
-                            type.Params.Add(new FunctionParam(childName, typeRef));
+                            type.Params.Add(new FunctionParam(type.Params.Count, childName, typeRef));
                         }
                         break;
 

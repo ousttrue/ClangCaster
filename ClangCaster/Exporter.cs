@@ -142,6 +142,7 @@ namespace {{ ns }}
         {{ function.Attribute }}
         public static extern {{ function.Return }} {{function.Name}}(
 {% for param in function.Params -%}
+            {{ param.Render }}
 {%- endfor -%}
         );
 {%- endfor -%}
@@ -266,9 +267,25 @@ namespace {{ ns }}
                     Params = function.Params,
                 };
             };
+            Func<Object, Object> ParamFunc = (Object src) =>
+            {
+                var param = (FunctionParam)src;
+                var comma = param.Index == 0 ? "" : ", ";
+                var name = param.Name;
+                if (string.IsNullOrEmpty(name))
+                {
+                    name = $"__param__{param.Index+1}";
+                }
+                var csType = ToCSType(param.Ref.Type).Item1;
+                return new
+                {
+                    Render = $"{comma}{csType} {name}",
+                };
+            };
             DotLiquid.Template.RegisterSafeType(typeof(StructType), new string[] { "Name", "Hash", "Location", "Count", "Fields" });
             DotLiquid.Template.RegisterSafeType(typeof(StructField), FieldFunc);
             DotLiquid.Template.RegisterSafeType(typeof(FunctionType), FunctionFunc);
+            DotLiquid.Template.RegisterSafeType(typeof(FunctionParam), ParamFunc);
             DotLiquid.Template.RegisterSafeType(typeof(TypeReference), new string[] { "Type" });
             DotLiquid.Template.RegisterSafeType(typeof(EnumType), new string[] { "Name", "Hash", "Location", "Count", "Values" });
             DotLiquid.Template.RegisterSafeType(typeof(EnumValue), new string[] { "Name", "Value", "Hex" });
