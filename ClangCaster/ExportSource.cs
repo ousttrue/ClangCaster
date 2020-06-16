@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ClangAggregator;
@@ -14,6 +15,9 @@ namespace ClangCaster
 
         readonly List<StructType> m_structTypes = new List<StructType>();
         public List<StructType> StructTypes => m_structTypes;
+
+        readonly List<FunctionType> m_functionTypes = new List<FunctionType>();
+        public List<FunctionType> FunctionTypes => m_functionTypes;
 
         public ExportSource(NormalizedFilePath path)
         {
@@ -52,9 +56,21 @@ namespace ClangCaster
                 }
                 m_structTypes.Add(structType);
             }
-            else
+            else if (type is FunctionType functionType)
+            {
+                if (m_functionTypes.Any(x => x.Hash == type.Hash))
+                {
+                    return;
+                }
+                m_functionTypes.Add(functionType);
+            }
+            else if (type is TypedefType typedefType)
             {
                 // TODO:
+            }
+            else
+            {
+                throw new NotImplementedException();
             }
         }
     }

@@ -136,6 +136,16 @@ namespace {{ ns }}
 {%- endfor -%}
     }
 {%- endfor -%}
+    public static class {{ name }}
+    {
+{% for function in functions -%}
+        {{ function.Attribute }}
+        public static extern {{ function.Return }} {{function.Name}}(
+{% for param in function.Params -%}
+{%- endfor -%}
+        );
+{%- endfor -%}
+    }
 }
 ";
 
@@ -244,8 +254,21 @@ namespace {{ ns }}
                     Render = $"public {type} {name};",
                 };
             };
+            Func<Object, Object> FunctionFunc = (Object src) =>
+            {
+                var function = (FunctionType)src;
+
+                return new
+                {
+                    Attribute = "[DllImport(\"libclang.dll\")]",
+                    Return = "void",
+                    Name = function.Name,
+                    Params = function.Params,
+                };
+            };
             DotLiquid.Template.RegisterSafeType(typeof(StructType), new string[] { "Name", "Hash", "Location", "Count", "Fields" });
             DotLiquid.Template.RegisterSafeType(typeof(StructField), FieldFunc);
+            DotLiquid.Template.RegisterSafeType(typeof(FunctionType), FunctionFunc);
             DotLiquid.Template.RegisterSafeType(typeof(TypeReference), new string[] { "Type" });
             DotLiquid.Template.RegisterSafeType(typeof(EnumType), new string[] { "Name", "Hash", "Location", "Count", "Values" });
             DotLiquid.Template.RegisterSafeType(typeof(EnumValue), new string[] { "Name", "Value", "Hex" });
@@ -279,7 +302,6 @@ namespace {{ ns }}
                     }
                 }
 
-                // foreach (var structType in exportSource.StructTypes)
                 {
                     var path = ExportFile(dst, sourcePath);
                     using (var s = new FileStream(path, FileMode.Create))
@@ -290,6 +312,8 @@ namespace {{ ns }}
                             {
                                 ns = ns,
                                 types = exportSource.StructTypes.Where(x => x.Fields.Any()),
+                                functions = exportSource.FunctionTypes,
+                                name = Path.GetFileNameWithoutExtension(sourcePath.Path),
                             }
                         ));
                         w.Write(rendered);
