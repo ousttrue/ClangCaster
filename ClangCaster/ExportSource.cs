@@ -58,6 +58,10 @@ namespace ClangCaster
             }
             else if (type is FunctionType functionType)
             {
+                if(!functionType.DllExport)
+                {
+                    return;
+                }
                 if (m_functionTypes.Any(x => x.Hash == type.Hash))
                 {
                     return;
