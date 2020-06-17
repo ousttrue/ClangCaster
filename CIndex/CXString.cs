@@ -5,19 +5,6 @@ using System.Runtime.InteropServices;
 namespace CIndex
 {
 
-    [StructLayout(LayoutKind.Sequential)]
-    public struct CXString // 1
-    {
-        public IntPtr data;
-        public uint private_flags;
-    }
-    [StructLayout(LayoutKind.Sequential)]
-    public struct CXStringSet // 1
-    {
-        public IntPtr Strings;
-        public uint Count;
-    }
-
     public static partial class libclang
     {
         [DllImport("libclang.dll")]
