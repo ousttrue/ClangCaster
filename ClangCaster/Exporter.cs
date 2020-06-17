@@ -287,9 +287,9 @@ namespace {{ ns }}
                     enumType.PreparePrefix();
 
                     var dir = ExportDir(dst, sourcePath);
-                    Directory.CreateDirectory(dir);
-                    var path = Path.Combine(dir, $"{enumType.Name}.cs");
-                    using (var s = new FileStream(path, FileMode.Create))
+                    var path = new FileInfo(Path.Combine(dir, $"enums/{enumType.Name}.cs"));
+                    Directory.CreateDirectory(path.Directory.FullName);
+                    using (var s = new FileStream(path.FullName, FileMode.Create))
                     using (var w = new StreamWriter(s))
                     {
                         var rendered = enumTemplate.Render(DotLiquid.Hash.FromAnonymousObject(
