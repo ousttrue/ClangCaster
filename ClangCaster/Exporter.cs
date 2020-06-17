@@ -182,14 +182,15 @@ namespace {{ ns }} {
             return Path.Combine(Path.Combine(directory.FullName, stem));
         }
 
-        static string[] EscapeSymbols = new string[]
+        static string[] CSSymbols = new string[]
         {
             "base",
             "string",
+            "event",
         };
         static string EscapeSymbol(string src)
         {
-            if (!EscapeSymbols.Contains(src))
+            if (!CSSymbols.Contains(src))
             {
                 return src;
             }

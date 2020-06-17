@@ -89,6 +89,12 @@ namespace ClangAggregator.Types
         /// <param name="typeMap"></param>
         public void ParseFields(in CXCursor cursor, TypeMap typeMap)
         {
+            if (Fields.Any())
+            {
+                // not reach here
+                throw new Exception();
+            }
+
             ClangVisitor.ProcessChildren(cursor, (in CXCursor child) =>
             {
 
@@ -99,7 +105,7 @@ namespace ClangAggregator.Types
                             var fieldName = child.Spelling();
                             var fieldOffset = (uint)libclang.clang_Cursor_getOffsetOfField(child);
                             var fieldType = libclang.clang_getCursorType(child);
-                            if (Fields.Any(x => x.Name == fieldName))
+                            if (!string.IsNullOrEmpty(fieldName) && Fields.Any(x => x.Name == fieldName))
                             {
                                 throw new Exception();
                             }
@@ -241,7 +247,7 @@ namespace ClangAggregator.Types
 
             // If the definition is null, then there is no definition in this translation
             // unit, so this cursor must be a forward declaration.
-            if (libclang.clang_equalCursors(definition, libclang.clang_getNullCursor())!=0)
+            if (libclang.clang_equalCursors(definition, libclang.clang_getNullCursor()) != 0)
             {
                 return true;
             }
@@ -249,7 +255,7 @@ namespace ClangAggregator.Types
             // If there is a definition, then the forward declaration and the definition
             // are in the same translation unit. This cursor is the forward declaration if
             // it is _not_ the definition.
-            return libclang.clang_equalCursors(cursor, definition)!=0;
+            return libclang.clang_equalCursors(cursor, definition) != 0;
         }
     }
 }

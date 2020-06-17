@@ -96,6 +96,10 @@ namespace ClangCaster
 
             if (type is TypedefType typedefType)
             {
+                if (typedefType.Ref.Type is PointerType)
+                {
+                    return ("IntPtr", null);
+                }
                 return ToCSType(typedefType.Ref.Type);
             }
 

@@ -66,6 +66,16 @@ namespace ClangAggregator
                 return new TypeReference(new PointerType(CxTypeToType(libclang.clang_getPointeeType(cxType), cursor)));
             }
 
+            if (cxType.kind == CXTypeKind._LValueReference)
+            {
+                return new TypeReference(new PointerType(CxTypeToType(libclang.clang_getPointeeType(cxType), cursor)));
+            }
+
+            if (cxType.kind == CXTypeKind._IncompleteArray)
+            {
+                return new TypeReference(new PointerType(CxTypeToType(libclang.clang_getArrayElementType(cxType), cursor)));
+            }
+
             if (cxType.kind == CXTypeKind._ConstantArray)
             {
                 var arraySize = (int)libclang.clang_getArraySize(cxType);
@@ -73,7 +83,7 @@ namespace ClangAggregator
                 return new TypeReference(new ArrayType(elementType, arraySize));
             }
 
-            if (cxType.kind == CXTypeKind._Typedef)
+            if (cxType.kind == CXTypeKind._Typedef || cxType.kind == CXTypeKind._Record)
             {
                 // find reference from child cursors
                 BaseType type = default;
@@ -151,7 +161,7 @@ namespace ClangAggregator
                                 type = Get(referenced);
                                 if (type is null)
                                 {
-                                    throw new NotImplementedException();
+                                    type = new HashReference(referenced.CursorHashLocationSpelling());
                                 }
                                 return CXChildVisitResult._Break;
                             }

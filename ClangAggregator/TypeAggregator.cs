@@ -54,6 +54,12 @@ namespace ClangAggregator
                 case CXCursorKind._UsingDeclaration:
                 case CXCursorKind._StaticAssert:
                 case CXCursorKind._FieldDecl:
+                case CXCursorKind._FirstExpr:
+                case CXCursorKind._FirstAttr:
+                case CXCursorKind._AlignedAttr:
+                case CXCursorKind._CXXBaseSpecifier:
+                case CXCursorKind._CXXAccessSpecifier:
+                case CXCursorKind._CXXMethod:
                     // skip
                     break;
 

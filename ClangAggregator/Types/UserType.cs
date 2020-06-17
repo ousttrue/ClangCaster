@@ -18,4 +18,11 @@ namespace ClangAggregator.Types
         {
         }
     }
+
+    public class HashReference : UserType
+    {
+        public HashReference((uint, ClangLocation, string) args) : base(args)
+        {
+        }
+    }
 }
