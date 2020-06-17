@@ -1,6 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
-using libclang;
+using CIndex;
 
 namespace ClangAggregator
 {
@@ -12,7 +12,7 @@ namespace ClangAggregator
         {
             return new ClangString
             {
-                m_str = index.clang_getCursorSpelling(cursor)
+                m_str = libclang.clang_getCursorSpelling(cursor)
             };
         }
 
@@ -20,19 +20,19 @@ namespace ClangAggregator
         {
             return new ClangString
             {
-                m_str = index.clang_getFileName(file)
+                m_str = libclang.clang_getFileName(file)
             };
         }
 
         public override string ToString()
         {
-            var p = index.clang_getCString(m_str);
+            var p = libclang.clang_getCString(m_str);
             return Marshal.PtrToStringUTF8(p);
         }
 
         public void Dispose()
         {
-            index.clang_disposeString(m_str);
+            libclang.clang_disposeString(m_str);
         }
     }
 }

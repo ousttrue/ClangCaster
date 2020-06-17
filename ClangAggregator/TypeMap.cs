@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using ClangAggregator.Types;
-using libclang;
+using CIndex;
 
 namespace ClangAggregator
 {
@@ -15,7 +15,7 @@ namespace ClangAggregator
 
         public UserType Get(CXCursor cursor)
         {
-            var hash = index.clang_hashCursor(cursor);
+            var hash = libclang.clang_hashCursor(cursor);
             if (!m_typeMap.TryGetValue(hash, out UserType type))
             {
                 return null;
@@ -49,7 +49,7 @@ namespace ClangAggregator
         /// <returns></returns>
         public Types.TypeReference CxTypeToType(in CXType cxType, in CXCursor cursor)
         {
-            var isConst = index.clang_isConstQualifiedType(cxType);
+            var isConst = libclang.clang_isConstQualifiedType(cxType);
             if (Types.PrimitiveType.TryGetPrimitiveType(cxType, out Types.PrimitiveType primitive))
             {
                 return new TypeReference(primitive);
@@ -63,13 +63,13 @@ namespace ClangAggregator
 
             if (cxType.kind == CXTypeKind._Pointer)
             {
-                return new TypeReference(new PointerType(CxTypeToType(index.clang_getPointeeType(cxType), cursor)));
+                return new TypeReference(new PointerType(CxTypeToType(libclang.clang_getPointeeType(cxType), cursor)));
             }
 
             if (cxType.kind == CXTypeKind._ConstantArray)
             {
-                var arraySize = (int)index.clang_getArraySize(cxType);
-                var elementType = CxTypeToType(index.clang_getArrayElementType(cxType), cursor);
+                var arraySize = (int)libclang.clang_getArraySize(cxType);
+                var elementType = CxTypeToType(libclang.clang_getArrayElementType(cxType), cursor);
                 return new TypeReference(new ArrayType(elementType, arraySize));
             }
 
@@ -83,7 +83,7 @@ namespace ClangAggregator
                     {
                         case CXCursorKind._TypeRef:
                             {
-                                var referenced = index.clang_getCursorReferenced(child);
+                                var referenced = libclang.clang_getCursorReferenced(child);
                                 type = Get(referenced);
                                 if (type is null)
                                 {
@@ -147,7 +147,7 @@ namespace ClangAggregator
 
                         case CXCursorKind._TypeRef:
                             {
-                                var referenced = index.clang_getCursorReferenced(child);
+                                var referenced = libclang.clang_getCursorReferenced(child);
                                 type = Get(referenced);
                                 if (type is null)
                                 {
@@ -170,7 +170,7 @@ namespace ClangAggregator
 
             if (cxType.kind == CXTypeKind._FunctionProto)
             {
-                var resultType = index.clang_getResultType(cxType);
+                var resultType = libclang.clang_getResultType(cxType);
                 return new TypeReference(FunctionType.Parse(cursor, this, resultType));
             }
 

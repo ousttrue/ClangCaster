@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using libclang;
+using CIndex;
 
 namespace ClangAggregator
 {
@@ -15,7 +15,7 @@ namespace ClangAggregator
 
         public static (uint, ClangLocation, string) CursorHashLocationSpelling(this in CXCursor cursor)
         {
-            var hash = index.clang_hashCursor(cursor);
+            var hash = libclang.clang_hashCursor(cursor);
             var location = ClangLocation.Create(cursor);
             using (var spelling = ClangString.FromCursor(cursor))
             {

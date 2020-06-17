@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using libclang;
+using CIndex;
 
 namespace ClangAggregator.Types
 {
@@ -57,7 +57,7 @@ namespace ClangAggregator.Types
                     case CXCursorKind._EnumConstantDecl:
                         using (var childName = ClangString.FromCursor(child))
                         {
-                            var childValue = index.clang_getEnumConstantDeclUnsignedValue(child);
+                            var childValue = libclang.clang_getEnumConstantDeclUnsignedValue(child);
                             if (childValue > uint.MaxValue)
                             {
                                 throw new NotImplementedException();

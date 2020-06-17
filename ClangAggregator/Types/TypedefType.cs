@@ -1,4 +1,4 @@
-using libclang;
+using CIndex;
 
 namespace ClangAggregator.Types
 {
@@ -17,7 +17,7 @@ namespace ClangAggregator.Types
         public static TypedefType Parse(in CXCursor cursor, TypeMap typeMap)
         {
             var type = new TypedefType(cursor.CursorHashLocationSpelling());
-            var underlying = index.clang_getTypedefDeclUnderlyingType(cursor);
+            var underlying = libclang.clang_getTypedefDeclUnderlyingType(cursor);
             type.Ref = typeMap.CxTypeToType(underlying, cursor);
             return type;
         }

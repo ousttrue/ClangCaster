@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using libclang;
+using CIndex;
 
 namespace ClangAggregator.Types
 {
@@ -61,8 +61,8 @@ namespace ClangAggregator.Types
 
             // if (type.IsForwardDecl)
             // {
-            //     var defCursor = index.clang_getCursorDefinition(cursor);
-            //     if (index.clang_equalCursors(defCursor, index.clang_getNullCursor()))
+            //     var defCursor = libclang.clang_getCursorDefinition(cursor);
+            //     if (libclang.clang_equalCursors(defCursor, libclang.clang_getNullCursor()))
             //     {
             //         // not exists
             //     }
@@ -97,8 +97,8 @@ namespace ClangAggregator.Types
                     case CXCursorKind._FieldDecl:
                         {
                             var fieldName = child.Spelling();
-                            var fieldOffset = (uint)index.clang_Cursor_getOffsetOfField(child);
-                            var fieldType = index.clang_getCursorType(child);
+                            var fieldOffset = (uint)libclang.clang_Cursor_getOffsetOfField(child);
+                            var fieldType = libclang.clang_getCursorType(child);
                             if (Fields.Any(x => x.Name == fieldName))
                             {
                                 throw new Exception();
@@ -237,11 +237,11 @@ namespace ClangAggregator.Types
         // https://joshpeterson.github.io/identifying-a-forward-declaration-with-libclang
         public static bool IsForwardDeclaration(in CXCursor cursor)
         {
-            var definition = index.clang_getCursorDefinition(cursor);
+            var definition = libclang.clang_getCursorDefinition(cursor);
 
             // If the definition is null, then there is no definition in this translation
             // unit, so this cursor must be a forward declaration.
-            if (index.clang_equalCursors(definition, index.clang_getNullCursor())!=0)
+            if (libclang.clang_equalCursors(definition, libclang.clang_getNullCursor())!=0)
             {
                 return true;
             }
@@ -249,7 +249,7 @@ namespace ClangAggregator.Types
             // If there is a definition, then the forward declaration and the definition
             // are in the same translation unit. This cursor is the forward declaration if
             // it is _not_ the definition.
-            return index.clang_equalCursors(cursor, definition)!=0;
+            return libclang.clang_equalCursors(cursor, definition)!=0;
         }
     }
 }

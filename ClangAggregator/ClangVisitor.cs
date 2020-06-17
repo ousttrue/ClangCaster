@@ -1,6 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
-using libclang;
+using CIndex;
 
 namespace ClangAggregator
 {
@@ -30,7 +30,7 @@ namespace ClangAggregator
         public static void ProcessChildren(in CXCursor cursor, CallbackFunc callback)
         {
             var p = Marshal.GetFunctionPointerForDelegate(callback);            
-            index.clang_visitChildren(cursor, VisitorPtr, p);
+            libclang.clang_visitChildren(cursor, VisitorPtr, p);
         }
     }
 }

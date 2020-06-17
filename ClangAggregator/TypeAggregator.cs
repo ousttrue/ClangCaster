@@ -1,6 +1,6 @@
 using System;
 using ClangAggregator.Types;
-using libclang;
+using CIndex;
 
 namespace ClangAggregator
 {

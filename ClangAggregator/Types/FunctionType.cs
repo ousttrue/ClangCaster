@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using libclang;
+using CIndex;
 
 namespace ClangAggregator.Types
 {
@@ -76,7 +76,7 @@ namespace ClangAggregator.Types
 
                     case CXCursorKind._ParmDecl:
                         {
-                            var childType = index.clang_getCursorType(child);
+                            var childType = libclang.clang_getCursorType(child);
                             var typeRef = typeMap.CxTypeToType(childType, child);
                             type.Params.Add(new FunctionParam(type.Params.Count, childName, typeRef));
                         }
@@ -106,7 +106,7 @@ namespace ClangAggregator.Types
 
         public static FunctionType Parse(in CXCursor cursor, TypeMap typeMap)
         {
-            var result = index.clang_getCursorResultType(cursor);
+            var result = libclang.clang_getCursorResultType(cursor);
             return Parse(cursor, typeMap, result);
         }
     }

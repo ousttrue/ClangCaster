@@ -154,10 +154,10 @@ namespace {{ ns }}
 ";
 
         const string FUNCTION_TEMPLATE = @"
-    public static partial class index
+    public static partial class {{ dll }}
     {
 {% for function in functions -%}
-        [DllImport(""{{ dll }}"")]
+        [DllImport(""{{ dll }}.dll"")]
         public static extern {{ function.Return }} {{function.Name}}(
 {% for param in function.Params -%}
             {{ param.Render }}
@@ -211,7 +211,7 @@ namespace {{ ns }}
             return false;
         }
 
-        public void Export(DirectoryInfo dst, string ns)
+        public void Export(DirectoryInfo dst, string ns, string dll)
         {
             var fieldTypes = new FieldType();
             Func<Object, Object> FieldFunc = (Object src) =>
@@ -337,7 +337,7 @@ namespace {{ ns }}
                                 {
                                     functions = exportSource.FunctionTypes,
                                     // name = Path.GetFileNameWithoutExtension(sourcePath.Path),
-                                    dll = ns + ".dll",
+                                    dll = dll,
                                 }
                             ));
                             w.Write(rendered);
@@ -353,6 +353,23 @@ namespace {{ ns }}
                     }
                 }
             }
+
+            // csproj
+            {
+                var csproj = Path.Combine(dst.FullName, $"{ns}.csproj");
+                using (var s = new FileStream(csproj, FileMode.Create))
+                using (var w = new StreamWriter(s))
+                {
+                    w.WriteLine(@"<Project Sdk=""Microsoft.NET.Sdk"">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+  </PropertyGroup>
+
+</Project>");
+                }
+            }
+
         }
     }
 }

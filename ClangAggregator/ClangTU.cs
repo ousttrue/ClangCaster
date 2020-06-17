@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using libclang;
+using CIndex;
 
 namespace ClangAggregator
 {
@@ -22,12 +22,12 @@ namespace ClangAggregator
         {
             if (m_tu != IntPtr.Zero)
             {
-                index.clang_disposeTranslationUnit(m_tu);
+                libclang.clang_disposeTranslationUnit(m_tu);
                 m_tu = IntPtr.Zero;
             }
             if (m_index != IntPtr.Zero)
             {
-                index.clang_disposeIndex(m_index);
+                libclang.clang_disposeIndex(m_index);
                 m_index = IntPtr.Zero;
             }
         }
@@ -93,7 +93,7 @@ namespace ClangAggregator
             IReadOnlyList<string> headers,
             IReadOnlyList<string> args)
         {
-            var index = libclang.index.clang_createIndex(0, 1);
+            var index = libclang.clang_createIndex(0, 1);
             if (index == IntPtr.Zero)
             {
                 return null;
@@ -111,7 +111,7 @@ namespace ClangAggregator
             {
                 var source = Encoding.UTF8.GetBytes(headers[0]);
                 CXUnsavedFile unsaved = default;
-                tu = libclang.index.clang_parseTranslationUnit(index,
+                tu = libclang.clang_parseTranslationUnit(index,
                     ref source[0],
                     ref ptrs[0], ptrs.Length,
                     ref unsaved, 0,
@@ -141,7 +141,7 @@ namespace ClangAggregator
                 };
 
                 // CXUnsavedFileをエントリポイントとしてパースする
-                tu = libclang.index.clang_parseTranslationUnit(index,
+                tu = libclang.clang_parseTranslationUnit(index,
                     ref filenameBytes[0],
                     ref ptrs[0], ptrs.Length,
                     ref unsaved, 1,
@@ -165,7 +165,7 @@ namespace ClangAggregator
 
         public CXCursor GetCursor()
         {
-            return libclang.index.clang_getTranslationUnitCursor(m_tu);
+            return libclang.clang_getTranslationUnitCursor(m_tu);
         }
     }
 }

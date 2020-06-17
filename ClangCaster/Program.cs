@@ -15,6 +15,8 @@ namespace ClangCaster
 
         public string Namespace;
 
+        public string DllName;
+
         public static CommandLine Parse(string[] args)
         {
             var cmd = new CommandLine();
@@ -22,8 +24,13 @@ namespace ClangCaster
             {
                 switch (args[i])
                 {
-                    case "-n":
+                    case "-ns":
                         cmd.Namespace = args[i + 1];
+                        ++i;
+                        break;
+
+                    case "-dll":
+                        cmd.DllName = args[i + 1];
                         ++i;
                         break;
 
@@ -94,14 +101,14 @@ namespace ClangCaster
             {
                 Console.WriteLine(cmd.Dst);
                 var dst = new DirectoryInfo(cmd.Dst);
-                // if (dst.Exists)
-                // {
-                //     // clear dst
-                //     Directory.Delete(dst.FullName, true);
-                // }
+                if (dst.Exists)
+                {
+                    // clear dst
+                    Directory.Delete(dst.FullName, true);
+                }
                 Directory.CreateDirectory(dst.FullName);
 
-                exporter.Export(dst, cmd.Namespace);
+                exporter.Export(dst, cmd.Namespace, cmd.DllName);
             }
         }
     }

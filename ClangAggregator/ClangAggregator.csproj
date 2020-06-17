@@ -5,6 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\clang\clang.csproj" />
+    <ProjectReference Include="..\CIndex\CIndex.csproj" />
   </ItemGroup>
 </Project>

@@ -1,5 +1,5 @@
 using System;
-using libclang;
+using CIndex;
 
 namespace ClangAggregator
 {
@@ -15,19 +15,19 @@ namespace ClangAggregator
 
         public static ClangLocation Create(in CXCursor cursor)
         {
-            var location = index.clang_getCursorLocation(cursor);
+            var location = libclang.clang_getCursorLocation(cursor);
             ClangLocation l = default;
-            if (index.clang_equalLocations(location, index.clang_getNullLocation()) == 0)
+            if (libclang.clang_equalLocations(location, libclang.clang_getNullLocation()) == 0)
             {
-                index.clang_getInstantiationLocation(location, ref l.file, ref l.line, ref l.column, ref l.offset);
-                var extent = index.clang_getCursorExtent(cursor);
-                var begin = index.clang_getRangeStart(extent);
-                index.clang_getInstantiationLocation(begin, ref l.file, ref l.line, ref l.column, ref l.begin);
-                var end = index.clang_getRangeEnd(extent);
+                libclang.clang_getInstantiationLocation(location, ref l.file, ref l.line, ref l.column, ref l.offset);
+                var extent = libclang.clang_getCursorExtent(cursor);
+                var begin = libclang.clang_getRangeStart(extent);
+                libclang.clang_getInstantiationLocation(begin, ref l.file, ref l.line, ref l.column, ref l.begin);
+                var end = libclang.clang_getRangeEnd(extent);
                 IntPtr _p = default;
                 uint line = default;
                 uint column = default;
-                index.clang_getInstantiationLocation(end, ref _p, ref line, ref column, ref l.end);
+                libclang.clang_getInstantiationLocation(end, ref _p, ref line, ref column, ref l.end);
             }
             return l;
         }

@@ -1,4 +1,4 @@
-using libclang;
+using CIndex;
 
 namespace ClangAggregator.Types
 {
