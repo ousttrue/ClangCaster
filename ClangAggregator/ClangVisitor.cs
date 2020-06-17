@@ -15,13 +15,14 @@ namespace ClangAggregator
         }
 
         delegate CXChildVisitResult VisitorFunc(CXCursor cursor, CXCursor parent, IntPtr data);
+        static VisitorFunc s_func = new VisitorFunc(Visitor);
         static IntPtr s_visitorPtr;
         static IntPtr VisitorPtr
         {
             get{
                 if(s_visitorPtr==IntPtr.Zero)
                 {
-                    s_visitorPtr = Marshal.GetFunctionPointerForDelegate(new VisitorFunc(Visitor));
+                    s_visitorPtr = Marshal.GetFunctionPointerForDelegate(s_func);
                 }
                 return s_visitorPtr;                
             }
