@@ -47,12 +47,21 @@ namespace ClangAggregator
             // skip
         }
 
-        void Add(ClangAggregator.Types.UserType type, ClangAggregator.Types.UserType[] stack)
+        void Add(ClangAggregator.Types.BaseType t, ClangAggregator.Types.UserType[] stack)
         {
+            if(t is PointerType pointerType)
+            {
+                // pointer
+                Add(pointerType.Pointee.Type, stack);
+                return;
+            }
+
+            var type = t as UserType;
             if (type is null)
             {
                 return;
             }
+
             if (stack.Contains(type))
             {
                 // avoid recursive loop
@@ -83,36 +92,33 @@ namespace ClangAggregator
             }
             else if (type is TypedefType typedefType)
             {
-                Add(typedefType.Ref.Type as UserType, stack.Concat(new[] { type }).ToArray());
+                if (typedefType.Ref.Type is UserType userType)
+                {
+                    userType.Name = typedefType.Name;
+                }
+                Add(typedefType.Ref.Type, stack.Concat(new[] { type }).ToArray());
             }
             else if (type is StructType structType)
             {
                 foreach (var field in structType.Fields)
                 {
-                    if (field.Ref.Type is UserType userType)
-                    {
-                        Add(userType, stack.Concat(new[] { type }).ToArray());
-                    }
+                    Add(field.Ref.Type, stack.Concat(new[] { type }).ToArray());
                 }
             }
             else if (type is FunctionType functionType)
             {
                 // ret
-                {
-                    if (functionType.Result.Type is UserType userType)
-                    {
-                        Add(functionType.Result.Type as UserType, stack.Concat(new[] { type }).ToArray());
-                    }
-                }
+                Add(functionType.Result.Type as UserType, stack.Concat(new[] { type }).ToArray());
 
                 // args
                 foreach (var param in functionType.Params)
                 {
-                    if (param.Ref.Type is UserType userType)
-                    {
-                        Add(userType, stack.Concat(new[] { type }).ToArray());
-                    }
+                    Add(param.Ref.Type, stack.Concat(new[] { type }).ToArray());
                 }
+            }
+            else if(type is HashReference hashReference)
+            {
+                // TODO:
             }
             else
             {
