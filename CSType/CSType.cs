@@ -4,16 +4,42 @@ using ClangAggregator.Types;
 
 namespace CSType
 {
-    public abstract class ConverterBase
+    public enum TypeContext
     {
-        protected abstract string PointerType(string src);
+        Field,
+        Param,
+        Return,
+    }
 
+    static class TypeContextExtensions
+    {
+        public static string PointerType(this TypeContext context, string src)
+        {
+            switch (context)
+            {
+                case TypeContext.Field:
+                    return "IntPtr";
+
+                case TypeContext.Return:
+
+                    return "IntPtr";
+
+                case TypeContext.Param:
+                    return $"ref {src}";
+            }
+
+            throw new NotImplementedException();
+        }
+    }
+
+    public static class Converter
+    {
         /// <summary>
         /// ClangCaster.Types.BaseType から CSharp の型を表す文字列と属性(struct用)を返す
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public (string, string) ToCSType(BaseType type)
+        public static (string, string) Convert(TypeContext context, BaseType type)
         {
             // FIXME: もうちょっと場合分けを整理する
             // FIXME: IntPtr でごまかしたところ
@@ -50,7 +76,7 @@ namespace CSType
                 if (pointerType.Pointee.Type is PointerType)
                 {
                     // double pointer
-                    return (PointerType("IntPtr"), null);
+                    return (context.PointerType("IntPtr"), null);
                 }
                 else if (pointerType.Pointee.Type is VoidType)
                 {
@@ -59,23 +85,23 @@ namespace CSType
                 else if (pointerType.Pointee.Type is Int8Type)
                 {
                     // avoid ref sbyte
-                    return (PointerType("byte"), null);
+                    return (context.PointerType("byte"), null);
                 }
                 else if (pointerType.Pointee.Type is StructType structPointee && structPointee.Fields.Any())
                 {
                     // not forward decl
-                    return (PointerType(structPointee.Name), null);
+                    return (context.PointerType(structPointee.Name), null);
                 }
                 else if (pointerType.Pointee.Type is PrimitiveType primitivePointee)
                 {
-                    var (tmp, _) = ToCSType(primitivePointee);
-                    return (PointerType(tmp), null);
+                    var (tmp, _) = Convert(context, primitivePointee);
+                    return (context.PointerType(tmp), null);
                 }
                 else if (pointerType.Pointee.Type is TypedefType typedefPointee)
                 {
                     if (typedefPointee.Ref.Type is PointerType)
                     {
-                        return (PointerType("IntPtr"), null);
+                        return (context.PointerType("IntPtr"), null);
                     }
                     else
                     {
@@ -90,7 +116,7 @@ namespace CSType
 
             if (type is ArrayType arrayType)
             {
-                var elementType = ToCSType(arrayType.Element.Type).Item1;
+                var elementType = Convert(context, arrayType.Element.Type).Item1;
                 return ($"{elementType}[]", $"[MarshalAs(UnmanagedType.ByValArray, SizeConst = {arrayType.Size})]");
             }
 
@@ -100,34 +126,10 @@ namespace CSType
                 {
                     return ("IntPtr", null);
                 }
-                return ToCSType(typedefType.Ref.Type);
+                return Convert(context, typedefType.Ref.Type);
             }
 
             throw new NotImplementedException();
-        }
-    }
-
-    public class FieldType : ConverterBase
-    {
-        protected override string PointerType(string src)
-        {
-            return "IntPtr";
-        }
-    }
-
-    public class ReturnType : ConverterBase
-    {
-        protected override string PointerType(string src)
-        {
-            return "IntPtr";
-        }
-    }
-
-    public class ParamType : ConverterBase
-    {
-        protected override string PointerType(string src)
-        {
-            return $"ref {src}";
         }
     }
 }

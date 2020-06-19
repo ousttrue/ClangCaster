@@ -112,12 +112,11 @@ namespace {{ ns }} {
 
         public void Export(IDictionary<NormalizedFilePath, ExportSource> map, DirectoryInfo dst, string ns, string dll)
         {
-            var fieldTypes = new FieldType();
             Func<Object, Object> FieldFunc = (Object src) =>
             {
                 var field = (StructField)src;
 
-                var (type, attribute) = fieldTypes.ToCSType(field.Ref.Type);
+                var (type, attribute) = Converter.Convert(TypeContext.Field, field.Ref.Type);
                 if (string.IsNullOrEmpty(type))
                 {
                     // anonymous union
@@ -134,12 +133,11 @@ namespace {{ ns }} {
                 };
             };
 
-            var returnTypes = new ReturnType();
             Func<Object, Object> FunctionFunc = (Object src) =>
             {
                 var function = (FunctionType)src;
 
-                var csType = returnTypes.ToCSType(function.Result.Type).Item1;
+                var csType = Converter.Convert(TypeContext.Return, function.Result.Type).Item1;
 
                 return new
                 {
@@ -149,7 +147,6 @@ namespace {{ ns }} {
                 };
             };
 
-            var paramTypes = new ParamType();
             Func<Object, Object> ParamFunc = (Object src) =>
             {
                 var param = (FunctionParam)src;
@@ -161,7 +158,7 @@ namespace {{ ns }} {
                 }
                 name = EscapeSymbol(name);
 
-                var csType = paramTypes.ToCSType(param.Ref.Type).Item1;
+                var csType = Converter.Convert(TypeContext.Param, param.Ref.Type).Item1;
                 return new
                 {
                     Render = $"{csType} {name}{comma}",
