@@ -145,6 +145,7 @@ namespace {{ ns }}
 using System.Runtime.InteropServices;
 
 namespace {{ ns }} {
+    // {{ type.Location.Path.Path }}:{{ type.Location.Line }}
     [StructLayout(LayoutKind.Sequential)]
     public struct {{ type.Name }} // {{ type.Count }}
     {
@@ -319,6 +320,12 @@ namespace {{ ns }} {
                     structsDir.Create();
                     foreach (var structType in exportSource.StructTypes)
                     {
+                        if(structType.IsUnion)
+                        {
+                            // skip
+                            continue;
+                        }
+                        
                         var path = new FileInfo(Path.Combine(structsDir.FullName, $"{structType.Name}.cs"));
                         using (var s = new FileStream(path.FullName, FileMode.Create))
                         using (var w = new StreamWriter(s))
@@ -337,7 +344,7 @@ namespace {{ ns }} {
                     }
                 }
 
-                if (exportSource.StructTypes.Any() || exportSource.FunctionTypes.Any())
+                if (exportSource.FunctionTypes.Any())
                 {
                     var path = ExportFile(dst, sourcePath);
                     using (var s = new FileStream(path, FileMode.Create))
