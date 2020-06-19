@@ -2,9 +2,9 @@ using System;
 using System.Linq;
 using ClangAggregator.Types;
 
-namespace ClangCaster
+namespace CSType
 {
-    public abstract class CSType
+    public abstract class ConverterBase
     {
         protected abstract string PointerType(string src);
 
@@ -107,7 +107,7 @@ namespace ClangCaster
         }
     }
 
-    class FieldType : CSType
+    public class FieldType : ConverterBase
     {
         protected override string PointerType(string src)
         {
@@ -115,7 +115,7 @@ namespace ClangCaster
         }
     }
 
-    class ReturnType : CSType
+    public class ReturnType : ConverterBase
     {
         protected override string PointerType(string src)
         {
@@ -123,7 +123,7 @@ namespace ClangCaster
         }
     }
 
-    class ParamType : CSType
+    public class ParamType : ConverterBase
     {
         protected override string PointerType(string src)
         {

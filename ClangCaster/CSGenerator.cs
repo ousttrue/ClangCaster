@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using ClangAggregator;
 using ClangAggregator.Types;
+using CSType;
 
 namespace ClangCaster
 {

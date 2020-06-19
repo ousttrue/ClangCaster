@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ClangAggregator\ClangAggregator.csproj" />
+    <ProjectReference Include="..\CSType\CSType.csproj" />
   </ItemGroup>
 
   <ItemGroup>
