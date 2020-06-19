@@ -32,9 +32,12 @@ using System.Runtime.InteropServices;
 
 namespace {{ ns }}
 {
+    public static partial class {{ dll }}
+    {
 ";
 
-        const string END = @"}
+        const string END = @"   }
+}
 ";
 
         const string STRUCT_TEMPLATE = @"using System;
@@ -53,17 +56,12 @@ namespace {{ ns }} {
 ";
 
         const string FUNCTION_TEMPLATE = @"
-    public static partial class {{ dll }}
-    {
-{% for function in functions -%}
         [DllImport(""{{ dll }}.dll"")]
         public static extern {{ function.Return }} {{function.Name}}(
 {% for param in function.Params -%}
             {{ param.Render }}
 {%- endfor -%}
         );
-{%- endfor -%}
-    }
 ";
 
         static string ExportFile(DirectoryInfo directory, NormalizedFilePath f)
@@ -119,6 +117,11 @@ namespace {{ ns }} {
                 var field = (StructField)src;
 
                 var (type, attribute) = fieldTypes.ToCSType(field.Ref.Type);
+                if (string.IsNullOrEmpty(type))
+                {
+                    // anonymous union
+                    throw new NotImplementedException();
+                }
 
                 // name
                 var name = EscapeSymbol(field.Name);
@@ -214,14 +217,21 @@ namespace {{ ns }} {
                 {
                     var structsDir = new DirectoryInfo(Path.Combine(dir, $"structs"));
                     structsDir.Create();
+
+                    // anonymous types
+                    {
+                        int i = 0;
+                        foreach (var structType in exportSource.StructTypes)
+                        {
+                            if (string.IsNullOrEmpty(structType.Name))
+                            {
+                                structType.Name = $"__Anonymous__{i++}";
+                            }
+                        }
+                    }
+
                     foreach (var structType in exportSource.StructTypes)
                     {
-                        if(structType.IsUnion)
-                        {
-                            // skip
-                            continue;
-                        }
-
                         var path = new FileInfo(Path.Combine(structsDir.FullName, $"{structType.Name}.cs"));
                         using (var s = new FileStream(path.FullName, FileMode.Create))
                         using (var w = new StreamWriter(s))
@@ -253,17 +263,21 @@ namespace {{ ns }} {
                             new
                             {
                                 ns = ns,
+                                dll = dll,
                             }
                         )));
 
                         // function
-                        if (exportSource.FunctionTypes.Any())
+                        foreach (var functionType in exportSource.FunctionTypes)
                         {
+                            if (functionType.Name == "RegisterClassW")
+                            {
+                                var a = 0;
+                            }
                             var rendered = functionTemplate.Render(DotLiquid.Hash.FromAnonymousObject(
                                 new
                                 {
-                                    functions = exportSource.FunctionTypes,
-                                    // name = Path.GetFileNameWithoutExtension(sourcePath.Path),
+                                    function = functionType,
                                     dll = dll,
                                 }
                             ));
@@ -274,7 +288,6 @@ namespace {{ ns }} {
                         w.Write(endTemplate.Render(DotLiquid.Hash.FromAnonymousObject(
                             new
                             {
-                                ns = ns,
                             }
                         )));
                     }
@@ -283,7 +296,7 @@ namespace {{ ns }} {
 
             // csproj
             {
-                var csproj = Path.Combine(dst.FullName, $"{ns}.csproj");
+                var csproj = Path.Combine(dst.FullName, $"{dst.Name}.csproj");
                 using (var s = new FileStream(csproj, FileMode.Create))
                 using (var w = new StreamWriter(s))
                 {

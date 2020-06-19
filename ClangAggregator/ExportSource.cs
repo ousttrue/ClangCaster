@@ -72,7 +72,11 @@ namespace ClangAggregator
             }
             else if (type is TypedefType typedefType)
             {
-                // TODO:
+                if (typedefType.Ref.Type is StructType typedefStructType)
+                {
+                    // Console.WriteLine($"rename {typedefStructType.Name} => {typedefType.Name}");
+                    typedefStructType.Name = typedefType.Name;
+                }
             }
             else
             {

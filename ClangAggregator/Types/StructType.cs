@@ -23,7 +23,8 @@ namespace ClangAggregator.Types
 
     public class StructType : UserType
     {
-        public bool IsUnion;
+        public uint SizeOf { get; private set; }
+        public bool IsUnion { get; private set; }
         // public bool IsForwardDecl;
         // public StructType Definition;
 
@@ -57,6 +58,7 @@ namespace ClangAggregator.Types
         {
             var type = new StructType(cursor.CursorHashLocationSpelling());
             type.IsUnion = cursor.kind == CXCursorKind._UnionDecl;
+            type.SizeOf = (uint)libclang.clang_Type_getSizeOf(libclang.clang_getCursorType(cursor));
             // type.IsForwardDecl = IsForwardDeclaration(cursor);
 
             // if (type.IsForwardDecl)
