@@ -3,6 +3,7 @@ using System;
 using System.Runtime.InteropServices;
 
 namespace CIndex {
+    // C:/Program Files/LLVM/include/clang-c/CXString.h:42
     [StructLayout(LayoutKind.Sequential)]
     public struct CXStringSet // 1
     {

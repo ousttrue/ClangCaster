@@ -3,6 +3,7 @@ using System;
 using System.Runtime.InteropServices;
 
 namespace CIndex {
+    // C:/Program Files/LLVM/include/clang-c/Index.h:6392
     [StructLayout(LayoutKind.Sequential)]
     public struct CXIdxObjCPropertyDeclInfo // 1
     {
