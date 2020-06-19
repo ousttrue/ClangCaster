@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ClangAggregator;
 using ClangAggregator.Types;
 
-namespace ClangCaster
+namespace ClangAggregator
 {
-    class ExportSource
+    /// <summary>
+    /// ひとつのソースに属するエクスポート対象の型を保持する
+    /// </summary>
+    public class ExportSource
     {
         readonly NormalizedFilePath m_path;
 
@@ -58,7 +60,7 @@ namespace ClangCaster
             }
             else if (type is FunctionType functionType)
             {
-                if(!functionType.DllExport)
+                if (!functionType.DllExport)
                 {
                     return;
                 }

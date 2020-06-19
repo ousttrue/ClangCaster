@@ -20,7 +20,10 @@ namespace ClangAggregator
             {
                 return null;
             }
+
+            // この型がTypedefなどから参照されている回数
             ++type.Count;
+
             return type;
         }
 

@@ -88,17 +88,18 @@ namespace ClangCaster
         {
             var cmd = CommandLine.Parse(args);
             var map = Parse(cmd);
-            var exporter = new Exporter(cmd.Headers);
 
             // organize types
+            var sorter = new ExportSorter(cmd.Headers);
             foreach (var kv in map)
             {
-                exporter.Push(kv.Value);
+                sorter.Push(kv.Value);
             }
 
             // generate source
             if (!string.IsNullOrEmpty(cmd.Dst))
             {
+                // dst folder
                 Console.WriteLine(cmd.Dst);
                 var dst = new DirectoryInfo(cmd.Dst);
                 if (dst.Exists)
@@ -108,7 +109,8 @@ namespace ClangCaster
                 }
                 Directory.CreateDirectory(dst.FullName);
 
-                exporter.Export(dst, cmd.Namespace, cmd.DllName);
+                var exporter = new CSGenerator();
+                exporter.Export(sorter.HeaderMap, dst, cmd.Namespace, cmd.DllName);
             }
         }
     }
