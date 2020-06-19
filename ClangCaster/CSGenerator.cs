@@ -84,6 +84,7 @@ namespace {{ ns }} {
             "string",
             "event",
         };
+
         static string EscapeSymbol(string src)
         {
             if (!CSSymbols.Contains(src))

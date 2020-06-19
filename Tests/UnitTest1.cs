@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using ClangAggregator.Types;
+using CSType;
 using Xunit;
 
 namespace Tests
@@ -14,6 +16,12 @@ namespace Tests
             Assert.Equal(a, b);
             var c = new FileInfo("C:\\a.txt");
             Assert.Equal(a, c);
+        }
+
+        [Fact]
+        public void CSTypeTest()
+        {
+            Assert.Equal("int", Converter.Convert(TypeContext.Field, Int32Type.Instance).Item1);
         }
     }
 }
