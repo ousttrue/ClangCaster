@@ -19,7 +19,7 @@ namespace ClangAggregator.Types
             Pointee = pointee;
         }
 
-        public PointerType(BaseType type, bool isConst) : this(new TypeReference(type, isConst))
+        public PointerType(BaseType type, bool isConst = false) : this(new TypeReference(type, isConst))
         {
         }
     }

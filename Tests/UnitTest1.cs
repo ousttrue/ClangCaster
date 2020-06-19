@@ -9,7 +9,7 @@ namespace Tests
     public class UnitTest1
     {
         [Fact]
-        public void Test1()
+        public void FileInfoTest()
         {
             var a = new FileInfo("C:/a.txt");
             var b = new FileInfo("C:/a.txt");
@@ -18,10 +18,30 @@ namespace Tests
             Assert.Equal(a, c);
         }
 
-        [Fact]
-        public void CSTypeTest()
+        static void ConvertTest(string expected, TypeContext context, BaseType baseType)
         {
-            Assert.Equal("int", Converter.Convert(TypeContext.Field, Int32Type.Instance).Item1);
+            var value = Converter.Convert(context, baseType).Item1;
+            Assert.Equal(expected, value);
+        }
+
+        [Fact]
+        public void CSTypeConvertFieldTest()
+        {
+            ConvertTest("void", TypeContext.Field, VoidType.Instance);
+            ConvertTest("bool", TypeContext.Field, BoolType.Instance);
+            ConvertTest("sbyte", TypeContext.Field, Int8Type.Instance);
+            ConvertTest("short", TypeContext.Field, Int16Type.Instance);
+            ConvertTest("int", TypeContext.Field, Int32Type.Instance);
+            ConvertTest("long", TypeContext.Field, Int64Type.Instance);
+            ConvertTest("byte", TypeContext.Field, UInt8Type.Instance);
+            ConvertTest("ushort", TypeContext.Field, UInt16Type.Instance);
+            ConvertTest("uint", TypeContext.Field, UInt32Type.Instance);
+            ConvertTest("ulong", TypeContext.Field, UInt64Type.Instance);
+            ConvertTest("float", TypeContext.Field, Float32Type.Instance);
+            ConvertTest("double", TypeContext.Field, Float64Type.Instance);
+            ConvertTest("IntPtr", TypeContext.Field, new PointerType(VoidType.Instance));
+            ConvertTest("ref IntPtr", TypeContext.Field, new PointerType(new PointerType(VoidType.Instance)));
+            ConvertTest("ref int", TypeContext.Field, new PointerType(Int32Type.Instance));
         }
     }
 }

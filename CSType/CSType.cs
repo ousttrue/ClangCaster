@@ -47,6 +47,7 @@ namespace CSType
             {
                 switch (primitiveType)
                 {
+                    case BoolType boolType: return ("bool", null);
                     case Int8Type int8Type: return ("sbyte", null);
                     case Int16Type int16Type: return ("short", null);
                     case Int32Type int32Type: return ("int", null);
