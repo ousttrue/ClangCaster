@@ -1,12 +1,26 @@
 using System;
 using System.IO;
+using ClangAggregator;
 using ClangAggregator.Types;
 using CSType;
 using Xunit;
 
 namespace Tests
 {
-    public class UnitTest1
+    public class EnvFixture : IDisposable
+    {
+        public EnvFixture()
+        {
+            var path = Environment.GetEnvironmentVariable("PATH");
+            Environment.SetEnvironmentVariable("PATH", $"{path};C:\\Program Files\\LLVM\\bin");
+        }
+
+        public void Dispose()
+        {
+        }
+    }
+
+    public class UnitTest1 : IClassFixture<EnvFixture>
     {
         [Fact]
         public void FileInfoTest()
@@ -49,6 +63,22 @@ namespace Tests
         {
             ConvertTest("ref IntPtr", TypeContext.Param, new PointerType(new PointerType(VoidType.Instance)));
             ConvertTest("ref int", TypeContext.Field, new PointerType(Int32Type.Instance));
+        }
+
+        [Fact]
+        public void ParseTest()
+        {
+            var source = @"
+struct Hoge
+{
+    int Value;
+};
+";
+            var tu = ClangTU.Parse(source);
+            var aggregator = new TypeAggregator();
+            var map = aggregator.Process(tu.GetCursor());
+
+            var a = 0;
         }
     }
 }
