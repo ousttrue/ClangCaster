@@ -134,10 +134,6 @@ namespace CSType
                             return ("IntPtr", null);
                         }
                     }
-                    else if (pointerType.Pointee.Type is HashReference)
-                    {
-                        return ("IntPtr", null);
-                    }
                     else if (pointerType.Pointee.Type is FunctionType)
                     {
                         return ("IntPtr", null);

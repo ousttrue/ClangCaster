@@ -12,14 +12,16 @@ namespace ClangAggregator
     {
         readonly NormalizedFilePath m_path;
 
-        readonly List<EnumType> m_enumTypes = new List<EnumType>();
-        public List<EnumType> EnumTypes => m_enumTypes;
+        readonly List<TypeReference> m_enumTypes = new List<TypeReference>();
+        public IEnumerable<EnumType> EnumTypes => m_enumTypes.Select(x => x.Type as EnumType);
 
-        readonly List<StructType> m_structTypes = new List<StructType>();
-        public List<StructType> StructTypes => m_structTypes;
+        readonly List<TypeReference> m_structTypes = new List<TypeReference>();
+        public IEnumerable<StructType> StructTypes => m_structTypes.Select(x => x.Type as StructType);
 
-        readonly List<FunctionType> m_functionTypes = new List<FunctionType>();
-        public List<FunctionType> FunctionTypes => m_functionTypes;
+        readonly List<TypeReference> m_functionTypes = new List<TypeReference>();
+        public IEnumerable<FunctionType> FunctionTypes => m_functionTypes.Select(x => x.Type as FunctionType);
+
+        public bool IsEmpty => EnumTypes.Any() || StructTypes.Any() || FunctionTypes.Any();
 
         public ExportSource(NormalizedFilePath path)
         {
@@ -35,28 +37,29 @@ namespace ClangAggregator
             return $"{m_path} ({m_enumTypes.Count}types)";
         }
 
-        public bool Contains(ClangAggregator.Types.UserType type)
+        public bool Contains(ClangAggregator.Types.TypeReference reference)
         {
-            return m_path.Equals(type.Location.Path);
+            return m_path.Equals(reference.Location.Path);
         }
 
-        public void Push(ClangAggregator.Types.UserType type)
+        public void Push(ClangAggregator.Types.TypeReference reference)
         {
+            var type = reference.Type;
             if (type is EnumType enumType)
             {
-                if (m_enumTypes.Any(x => x.Hash == type.Hash))
+                if (m_enumTypes.Any(x => x.Hash == reference.Hash))
                 {
                     return;
                 }
-                m_enumTypes.Add(enumType);
+                m_enumTypes.Add(reference);
             }
             else if (type is StructType structType)
             {
-                if (m_structTypes.Any(x => x.Hash == type.Hash))
+                if (m_structTypes.Any(x => x.Hash == reference.Hash))
                 {
                     return;
                 }
-                m_structTypes.Add(structType);
+                m_structTypes.Add(reference);
             }
             else if (type is FunctionType functionType)
             {
@@ -64,18 +67,14 @@ namespace ClangAggregator
                 {
                     return;
                 }
-                if (m_functionTypes.Any(x => x.Hash == type.Hash))
+                if (m_functionTypes.Any(x => x.Hash == reference.Hash))
                 {
                     return;
                 }
-                m_functionTypes.Add(functionType);
+                m_functionTypes.Add(reference);
             }
             else if (type is TypedefType typedefType)
             {
-            }
-            else if (type is HashReference hashReference)
-            {
-                // TODO:
             }
             else
             {

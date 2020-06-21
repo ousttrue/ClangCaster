@@ -42,7 +42,7 @@ namespace ClangAggregator.Types
 
         public List<FunctionParam> Params = new List<FunctionParam>();
 
-        FunctionType((uint, ClangLocation, string) args) : base(args)
+        FunctionType(string name) : base(name)
         {
         }
 
@@ -54,7 +54,7 @@ namespace ClangAggregator.Types
 
         public static FunctionType Parse(in CXCursor cursor, TypeMap typeMap, in CXType resultType)
         {
-            var type = new FunctionType(cursor.CursorHashLocationSpelling());
+            var type = new FunctionType(cursor.Spelling());
 
             type.Result = typeMap.CxTypeToType(resultType, cursor);
 

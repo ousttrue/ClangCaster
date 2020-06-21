@@ -30,7 +30,7 @@ namespace ClangAggregator.Types
 
         public List<StructField> Fields { get; private set; }
 
-        StructType((uint, ClangLocation, string) args) : base(args)
+        StructType(string name) : base(name)
         {
             Fields = new List<StructField>();
         }
@@ -56,7 +56,7 @@ namespace ClangAggregator.Types
         /// <returns></returns>
         public static StructType Parse(in CXCursor cursor, TypeMap typeMap)
         {
-            var type = new StructType(cursor.CursorHashLocationSpelling());
+            var type = new StructType(cursor.Spelling());
             type.IsUnion = cursor.kind == CXCursorKind._UnionDecl;
             type.SizeOf = (uint)libclang.clang_Type_getSizeOf(libclang.clang_getCursorType(cursor));
             // type.IsForwardDecl = IsForwardDeclaration(cursor);

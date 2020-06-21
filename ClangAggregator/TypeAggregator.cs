@@ -129,16 +129,15 @@ namespace ClangAggregator
                     {
                         // first
                         // TraverseChildren(cursor, context);
-
-                        var type = TypedefType.Parse(cursor, m_typeMap);
-                        m_typeMap.Add(type);
+                        var reference = m_typeMap.GetOrCreate(cursor);
+                        reference.Type = TypedefType.Parse(cursor, m_typeMap);
                     }
                     break;
 
                 case CXCursorKind._FunctionDecl:
                     {
-                        var type = FunctionType.Parse(cursor, m_typeMap);
-                        m_typeMap.Add(type);
+                        var reference = m_typeMap.GetOrCreate(cursor);
+                        reference.Type = FunctionType.Parse(cursor, m_typeMap);
                     }
                     break;
 
@@ -146,17 +145,16 @@ namespace ClangAggregator
                 case CXCursorKind._ClassDecl:
                 case CXCursorKind._UnionDecl:
                     {
-                        var type = m_typeMap.Get(cursor);
-                        if (type is null)
+                        var reference = m_typeMap.GetOrCreate(cursor);
+                        if (reference.Type is null)
                         {
-                            type = StructType.Parse(cursor, m_typeMap);
+                            reference.Type = StructType.Parse(cursor, m_typeMap);
                             // decl.namespace = context.namespace;
-                            m_typeMap.Add(type);
 
                             var nested = context.Child();
                             TraverseChildren(cursor, nested);
 
-                            if (type is StructType structType)
+                            if (reference.Type is StructType structType)
                             {
                                 structType.ParseFields(cursor, m_typeMap);
                             }
@@ -174,8 +172,8 @@ namespace ClangAggregator
 
                 case CXCursorKind._EnumDecl:
                     {
-                        var type = EnumType.Parse(cursor);
-                        m_typeMap.Add(type);
+                        var reference = m_typeMap.GetOrCreate(cursor);
+                        reference.Type = EnumType.Parse(cursor);
                     }
                     break;
 

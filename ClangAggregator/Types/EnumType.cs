@@ -36,7 +36,7 @@ namespace ClangAggregator.Types
     {
         public List<EnumValue> Values { get; private set; }
 
-        EnumType((uint, ClangLocation, string) args) : base(args)
+        EnumType(string name) : base(name)
         {
             Values = new List<EnumValue>();
         }
@@ -48,7 +48,7 @@ namespace ClangAggregator.Types
 
         public static EnumType Parse(in CXCursor cursor)
         {
-            var type = new EnumType(cursor.CursorHashLocationSpelling());
+            var type = new EnumType(cursor.Spelling());
 
             ClangVisitor.ProcessChildren(cursor, (in CXCursor child) =>
             {

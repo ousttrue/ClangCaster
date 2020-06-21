@@ -6,7 +6,7 @@ namespace ClangAggregator.Types
     {
         public TypeReference Ref;
 
-        TypedefType((uint, ClangLocation, string) args) : base(args)
+        TypedefType(string name) : base(name)
         { }
 
         public override string ToString()
@@ -16,7 +16,7 @@ namespace ClangAggregator.Types
 
         public static TypedefType Parse(in CXCursor cursor, TypeMap typeMap)
         {
-            var type = new TypedefType(cursor.CursorHashLocationSpelling());
+            var type = new TypedefType(cursor.Spelling());
             var underlying = libclang.clang_getTypedefDeclUnderlyingType(cursor);
             type.Ref = typeMap.CxTypeToType(underlying, cursor);
             return type;

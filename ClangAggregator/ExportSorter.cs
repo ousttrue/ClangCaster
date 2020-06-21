@@ -34,25 +34,26 @@ namespace ClangAggregator
             return sb.ToString();
         }
 
-        public void Push(ClangAggregator.Types.UserType type)
+        public void Push(TypeReference reference)
         {
             foreach (var root in m_rootHeaders)
             {
-                if (root.Equals(type.Location.Path))
+                if (root.Equals(reference.Location.Path))
                 {
-                    Add(type, new UserType[] { });
+                    Add(reference, new UserType[] { });
                     return;
                 }
             }
             // skip
         }
 
-        void Add(ClangAggregator.Types.BaseType t, ClangAggregator.Types.UserType[] stack)
+        void Add(TypeReference reference, ClangAggregator.Types.UserType[] stack)
         {
-            if(t is PointerType pointerType)
+            var t = reference.Type;
+            if (t is PointerType pointerType)
             {
                 // pointer
-                Add(pointerType.Pointee.Type, stack);
+                Add(pointerType.Pointee, stack);
                 return;
             }
 
@@ -68,22 +69,26 @@ namespace ClangAggregator
                 return;
             }
 
-            // Add
-            if (!m_headerMap.TryGetValue(type.Location.Path, out ExportSource export))
+            // ensure ExportSource
+            if (string.IsNullOrEmpty(reference.Location.Path.Path))
             {
-                export = new ExportSource(type.Location.Path);
-                m_headerMap.Add(type.Location.Path, export);
+                return;
+            }
+            if (!m_headerMap.TryGetValue(reference.Location.Path, out ExportSource export))
+            {
+                export = new ExportSource(reference.Location.Path);
+                m_headerMap.Add(reference.Location.Path, export);
             }
 
-            if (string.IsNullOrEmpty(type.Name))
-            {
-                // 名無し。stack を辿って typedef があればその名前をいただく
-                if (stack.Any() && stack.Last() is TypedefType stackTypedef)
-                {
-                    type.Name = stackTypedef.Name;
-                }
-            }
-            export.Push(type);
+            // if (string.IsNullOrEmpty(type.Name))
+            // {
+            //     // 名無し。stack を辿って typedef があればその名前をいただく
+            //     if (stack.Any() && stack.Last() is TypedefType stackTypedef)
+            //     {
+            //         type.Name = stackTypedef.Name;
+            //     }
+            // }
+            export.Push(reference);
 
             // 依存する型を再帰的にAddする
             if (type is EnumType)
@@ -96,29 +101,25 @@ namespace ClangAggregator
                 // {
                 //     userType.Name = typedefType.Name;
                 // }
-                Add(typedefType.Ref.Type, stack.Concat(new[] { type }).ToArray());
+                Add(typedefType.Ref, stack.Concat(new[] { type }).ToArray());
             }
             else if (type is StructType structType)
             {
                 foreach (var field in structType.Fields)
                 {
-                    Add(field.Ref.Type, stack.Concat(new[] { type }).ToArray());
+                    Add(field.Ref, stack.Concat(new[] { type }).ToArray());
                 }
             }
             else if (type is FunctionType functionType)
             {
                 // ret
-                Add(functionType.Result.Type as UserType, stack.Concat(new[] { type }).ToArray());
+                Add(functionType.Result, stack.Concat(new[] { type }).ToArray());
 
                 // args
                 foreach (var param in functionType.Params)
                 {
-                    Add(param.Ref.Type, stack.Concat(new[] { type }).ToArray());
+                    Add(param.Ref, stack.Concat(new[] { type }).ToArray());
                 }
-            }
-            else if(type is HashReference hashReference)
-            {
-                // TODO:
             }
             else
             {

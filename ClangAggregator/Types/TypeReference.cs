@@ -1,14 +1,51 @@
 namespace ClangAggregator.Types
 {
-    public struct TypeReference
+    public class TypeReference
     {
-        public readonly bool IsConst;
-        public BaseType Type { get; private set; }
+        public BaseType Type { get; set; }
 
-        public TypeReference(BaseType type, bool isConst = false)
+        public uint Hash { get; private set; }
+
+        public FileLocation Location { get; set; }
+
+        public uint Count { get; set; }
+
+        public TypeReference(uint hash, ClangLocation location, BaseType type)
         {
+            Hash = hash;
+            Location = new FileLocation(ClangString.FromFile(location.file).ToString(), location.line, location.column, location.begin, location.end);
             Type = type;
-            IsConst = isConst;
+        }
+
+        public TypeReference((uint, ClangLocation) args, BaseType type) : this(args.Item1, args.Item2, type)
+        {
+        }
+
+        private TypeReference()
+        {
+
+        }
+
+        public static TypeReference FromPrimitive(PrimitiveType type)
+        {
+            return new TypeReference
+            {
+                Type = type
+            };
+        }
+        public static TypeReference FromPointer(PointerType type)
+        {
+            return new TypeReference
+            {
+                Type = type
+            };
+        }
+        public static TypeReference FromArray(ArrayType type)
+        {
+            return new TypeReference
+            {
+                Type = type
+            };
         }
     }
 }

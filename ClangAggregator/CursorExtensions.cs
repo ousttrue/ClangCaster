@@ -13,14 +13,11 @@ namespace ClangAggregator
             }
         }
 
-        public static (uint, ClangLocation, string) CursorHashLocationSpelling(this in CXCursor cursor)
+        public static (uint, ClangLocation) CursorHashLocation(this in CXCursor cursor)
         {
             var hash = libclang.clang_hashCursor(cursor);
             var location = ClangLocation.Create(cursor);
-            using (var spelling = ClangString.FromCursor(cursor))
-            {
-                return (hash, location, spelling.ToString());
-            }
+            return (hash, location);
         }
 
         public static List<CXCursor> Children(this in CXCursor cursor)

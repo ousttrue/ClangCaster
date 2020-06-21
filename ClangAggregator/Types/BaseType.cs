@@ -14,13 +14,9 @@ namespace ClangAggregator.Types
     {
         public TypeReference Pointee;
 
-        public PointerType(in TypeReference pointee) : base("Pointer")
+        public PointerType(TypeReference pointee) : base("Pointer")
         {
             Pointee = pointee;
-        }
-
-        public PointerType(BaseType type, bool isConst = false) : this(new TypeReference(type, isConst))
-        {
         }
     }
 
@@ -30,14 +26,10 @@ namespace ClangAggregator.Types
 
         public readonly int Size;
 
-        public ArrayType(in TypeReference element, int size) : base("Array")
+        public ArrayType(TypeReference element, int size) : base("Array")
         {
             Element = element;
             Size = size;
-        }
-
-        public ArrayType(BaseType type, bool isConst, int size) : this(new TypeReference(type, isConst), size)
-        {
         }
     }
 }

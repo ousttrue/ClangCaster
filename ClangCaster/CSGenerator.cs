@@ -121,7 +121,7 @@ namespace {{ ns }} {
                 if (string.IsNullOrEmpty(type))
                 {
                     // anonymous union
-                    throw new NotImplementedException();
+                    // throw new NotImplementedException();
                 }
 
                 // name

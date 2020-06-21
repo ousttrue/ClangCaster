@@ -9,30 +9,28 @@ namespace ClangAggregator
     /// <summary>
     /// libclangで解析した型を管理する
     /// </summary>
-    public class TypeMap : IEnumerable<KeyValuePair<uint, UserType>>
+    public class TypeMap : IEnumerable<KeyValuePair<uint, TypeReference>>
     {
-        Dictionary<uint, UserType> m_typeMap = new Dictionary<uint, UserType>();
+        Dictionary<uint, TypeReference> m_typeMap = new Dictionary<uint, TypeReference>();
 
-        public UserType Get(CXCursor cursor)
+        public TypeReference GetOrCreate(CXCursor cursor)
         {
             var hash = libclang.clang_hashCursor(cursor);
-            if (!m_typeMap.TryGetValue(hash, out UserType type))
+            if (m_typeMap.TryGetValue(hash, out TypeReference type))
             {
-                return null;
+                // この型がTypedefなどから参照されている回数
+                ++type.Count;
             }
-
-            // この型がTypedefなどから参照されている回数
-            ++type.Count;
+            else
+            {
+                type = new TypeReference(cursor.CursorHashLocation(), null);
+                m_typeMap.Add(hash, type);
+            }
 
             return type;
         }
 
-        public void Add(UserType type)
-        {
-            m_typeMap.Add(type.Hash, type);
-        }
-
-        public IEnumerator<KeyValuePair<uint, UserType>> GetEnumerator()
+        public IEnumerator<KeyValuePair<uint, TypeReference>> GetEnumerator()
         {
             return m_typeMap.GetEnumerator();
         }
@@ -55,41 +53,41 @@ namespace ClangAggregator
             var isConst = libclang.clang_isConstQualifiedType(cxType);
             if (Types.PrimitiveType.TryGetPrimitiveType(cxType, out Types.PrimitiveType primitive))
             {
-                return new TypeReference(primitive);
+                return TypeReference.FromPrimitive(primitive);
             }
 
             if (cxType.kind == CXTypeKind._Unexposed)
             {
                 // nullptr_t
-                return new TypeReference(new PointerType(VoidType.Instance, false));
+                return TypeReference.FromPointer(new PointerType(TypeReference.FromPrimitive(VoidType.Instance)));
             }
 
             if (cxType.kind == CXTypeKind._Pointer)
             {
-                return new TypeReference(new PointerType(CxTypeToType(libclang.clang_getPointeeType(cxType), cursor)));
+                return TypeReference.FromPointer(new PointerType(CxTypeToType(libclang.clang_getPointeeType(cxType), cursor)));
             }
 
             if (cxType.kind == CXTypeKind._LValueReference)
             {
-                return new TypeReference(new PointerType(CxTypeToType(libclang.clang_getPointeeType(cxType), cursor)));
+                return TypeReference.FromPointer(new PointerType(CxTypeToType(libclang.clang_getPointeeType(cxType), cursor)));
             }
 
             if (cxType.kind == CXTypeKind._IncompleteArray)
             {
-                return new TypeReference(new PointerType(CxTypeToType(libclang.clang_getArrayElementType(cxType), cursor)));
+                return TypeReference.FromPointer(new PointerType(CxTypeToType(libclang.clang_getArrayElementType(cxType), cursor)));
             }
 
             if (cxType.kind == CXTypeKind._ConstantArray)
             {
                 var arraySize = (int)libclang.clang_getArraySize(cxType);
                 var elementType = CxTypeToType(libclang.clang_getArrayElementType(cxType), cursor);
-                return new TypeReference(new ArrayType(elementType, arraySize));
+                return TypeReference.FromArray(new ArrayType(elementType, arraySize));
             }
 
             if (cxType.kind == CXTypeKind._Typedef || cxType.kind == CXTypeKind._Record)
             {
                 // find reference from child cursors
-                BaseType type = default;
+                TypeReference reference = default;
                 ClangVisitor.ProcessChildren(cursor, (in CXCursor child) =>
                 {
                     switch (child.kind)
@@ -97,11 +95,7 @@ namespace ClangAggregator
                         case CXCursorKind._TypeRef:
                             {
                                 var referenced = libclang.clang_getCursorReferenced(child);
-                                type = Get(referenced);
-                                if (type is null)
-                                {
-                                    throw new NotImplementedException();
-                                }
+                                reference = GetOrCreate(referenced);
                                 return CXChildVisitResult._Break;
                             }
 
@@ -111,21 +105,21 @@ namespace ClangAggregator
                             }
                     }
                 });
-                if (type is null)
+                if (reference is null)
                 {
                     var children = cursor.Children();
                     throw new NotImplementedException("Referenced not found");
                 }
                 else
                 {
-                    return new TypeReference(type);
+                    return reference;
                 }
             }
 
             if (cxType.kind == CXTypeKind._Elaborated)
             {
                 // typedef struct {} Hoge;
-                Types.UserType type = default;
+                TypeReference reference = default;
                 ClangVisitor.ProcessChildren(cursor, (in CXCursor child) =>
                 {
                     switch (child.kind)
@@ -133,9 +127,9 @@ namespace ClangAggregator
                         case CXCursorKind._StructDecl:
                         case CXCursorKind._UnionDecl:
                             {
-                                var structType = Get(child) as StructType;
-                                type = structType;
-                                if (type is null)
+                                reference = GetOrCreate(child);
+                                var structType = reference.Type as StructType;
+                                if (structType is null)
                                 {
                                     throw new NotImplementedException();
                                 }
@@ -150,8 +144,8 @@ namespace ClangAggregator
 
                         case CXCursorKind._EnumDecl:
                             {
-                                type = Get(child);
-                                if (type is null)
+                                reference = GetOrCreate(child);
+                                if (reference.Type is null)
                                 {
                                     throw new NotImplementedException();
                                 }
@@ -161,11 +155,7 @@ namespace ClangAggregator
                         case CXCursorKind._TypeRef:
                             {
                                 var referenced = libclang.clang_getCursorReferenced(child);
-                                type = Get(referenced);
-                                if (type is null)
-                                {
-                                    type = new HashReference(referenced.CursorHashLocationSpelling());
-                                }
+                                reference = GetOrCreate(referenced);
                                 return CXChildVisitResult._Break;
                             }
 
@@ -173,18 +163,19 @@ namespace ClangAggregator
                             return CXChildVisitResult._Continue;
                     }
                 });
-                if (type is null)
+                if (reference is null)
                 {
                     var children = cursor.Children();
                     throw new NotImplementedException("Elaborated not found");
                 }
-                return new TypeReference(type);
+                return reference;
             }
 
             if (cxType.kind == CXTypeKind._FunctionProto)
             {
                 var resultType = libclang.clang_getResultType(cxType);
-                return new TypeReference(FunctionType.Parse(cursor, this, resultType));
+                var functionType = FunctionType.Parse(cursor, this, resultType);
+                return new TypeReference(cursor.CursorHashLocation(), functionType);
             }
 
             throw new NotImplementedException("type not found");
