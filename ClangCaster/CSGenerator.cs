@@ -269,10 +269,6 @@ namespace {{ ns }} {
                         // function
                         foreach (var functionType in exportSource.FunctionTypes)
                         {
-                            if (functionType.Name == "RegisterClassW")
-                            {
-                                var a = 0;
-                            }
                             var rendered = functionTemplate.Render(DotLiquid.Hash.FromAnonymousObject(
                                 new
                                 {

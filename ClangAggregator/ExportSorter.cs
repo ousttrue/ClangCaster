@@ -92,10 +92,10 @@ namespace ClangAggregator
             }
             else if (type is TypedefType typedefType)
             {
-                if (typedefType.Ref.Type is UserType userType)
-                {
-                    userType.Name = typedefType.Name;
-                }
+                // if (typedefType.Ref.Type is UserType userType)
+                // {
+                //     userType.Name = typedefType.Name;
+                // }
                 Add(typedefType.Ref.Type, stack.Concat(new[] { type }).ToArray());
             }
             else if (type is StructType structType)
