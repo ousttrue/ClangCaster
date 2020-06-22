@@ -13,13 +13,13 @@ namespace ClangAggregator
         readonly NormalizedFilePath m_path;
 
         readonly List<TypeReference> m_enumTypes = new List<TypeReference>();
-        public IEnumerable<EnumType> EnumTypes => m_enumTypes.Select(x => x.Type as EnumType);
+        public IEnumerable<TypeReference> EnumTypes => m_enumTypes;
 
         readonly List<TypeReference> m_structTypes = new List<TypeReference>();
-        public IEnumerable<StructType> StructTypes => m_structTypes.Select(x => x.Type as StructType);
+        public IEnumerable<TypeReference> StructTypes => m_structTypes;
 
         readonly List<TypeReference> m_functionTypes = new List<TypeReference>();
-        public IEnumerable<FunctionType> FunctionTypes => m_functionTypes.Select(x => x.Type as FunctionType);
+        public IEnumerable<TypeReference> FunctionTypes => m_functionTypes;
 
         public bool IsEmpty => EnumTypes.Any() || StructTypes.Any() || FunctionTypes.Any();
 

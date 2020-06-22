@@ -39,16 +39,23 @@ namespace ClangCaster
                 };
             };
 
-            DotLiquid.Template.RegisterSafeType(typeof(StructType), new string[] { "Name", "Hash", "Location", "Count", "Fields" });
             DotLiquid.Template.RegisterSafeType(typeof(StructField), FieldFunc);
         }
 
-        public string Render(StructType structType)
+        public string Render(TypeReference reference)
         {
+            var structType = reference.Type as StructType;
             return m_template.Render(DotLiquid.Hash.FromAnonymousObject(
                 new
                 {
-                    type = structType,
+                    type = new
+                    {
+                        Hash = reference.Hash,
+                        Location = reference.Location,
+                        Count = reference.Count,
+                        Name = structType.Name,
+                        Fields = structType.Fields,
+                    },
                 }
             ));
         }

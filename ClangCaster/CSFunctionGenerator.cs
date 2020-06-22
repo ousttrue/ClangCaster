@@ -6,7 +6,7 @@ namespace ClangCaster
 {
     class CSFunctionGenerator : CSUserTypeGeneratorBase
     {
-        protected override string TemplateSource => @"
+        protected override string TemplateSource => @"        // {{ function.Location.Path.Path }}:{{ function.Location.Line }}
         [DllImport(""{{ dll }}.dll"")]
         public static extern {{ function.Return }} {{function.Name}}(
 {% for param in function.Params -%}
@@ -17,21 +17,6 @@ namespace ClangCaster
 
         public CSFunctionGenerator()
         {
-            Func<Object, Object> FunctionFunc = (Object src) =>
-            {
-                var function = (FunctionType)src;
-
-                var csType = Converter.Convert(TypeContext.Return, function.Result.Type).Item1;
-
-                return new
-                {
-                    Return = csType,
-                    Name = function.Name,
-                    Params = function.Params,
-                };
-            };
-            DotLiquid.Template.RegisterSafeType(typeof(FunctionType), FunctionFunc);
-
             Func<Object, Object> ParamFunc = (Object src) =>
             {
                 var param = (FunctionParam)src;
@@ -52,12 +37,20 @@ namespace ClangCaster
             DotLiquid.Template.RegisterSafeType(typeof(FunctionParam), ParamFunc);
         }
 
-        public string Render(string dll, FunctionType functionType)
+        public string Render(TypeReference reference, string dll)
         {
+            var functionType = reference.Type as FunctionType;
             return m_template.Render(DotLiquid.Hash.FromAnonymousObject(
                 new
                 {
-                    function = functionType,
+                    function = new
+                    {
+                        Hash = reference.Hash,
+                        Location = reference.Location,
+                        Count = reference.Count,
+                        Name = functionType.Name,
+                        Params = functionType.Params,
+                    },
                     dll = dll,
                 }
             ));

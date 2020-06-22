@@ -55,11 +55,12 @@ namespace ClangCaster
                 {
                     var enumsDir = new DirectoryInfo(Path.Combine(dir, $"enums"));
                     enumsDir.Create();
-                    foreach (var enumType in exportSource.EnumTypes)
+                    foreach (var reference in exportSource.EnumTypes)
                     {
+                        var enumType = reference.Type as EnumType;
                         using (var s = NamespaceOpener.Open(enumsDir, $"{enumType.Name}.cs", ns))
                         {
-                            s.Writer.Write(enumTemplate.Render(enumType));
+                            s.Writer.Write(enumTemplate.Render(reference));
                         }
                     }
                 }
@@ -68,11 +69,12 @@ namespace ClangCaster
                 {
                     var structsDir = new DirectoryInfo(Path.Combine(dir, $"structs"));
                     structsDir.Create();
-                    foreach (var structType in exportSource.StructTypes)
+                    foreach (var reference in exportSource.StructTypes)
                     {
+                        var structType = reference.Type as StructType;
                         using (var s = NamespaceOpener.Open(structsDir, $"{structType.Name}.cs", ns))
                         {
-                            s.Writer.Write(structTemplate.Render(structType));
+                            s.Writer.Write(structTemplate.Render(reference));
                         }
                     }
                 }
@@ -87,9 +89,10 @@ namespace ClangCaster
     {{
 ");
 
-                        foreach (var functionType in exportSource.FunctionTypes)
+                        foreach (var reference in exportSource.FunctionTypes)
                         {
-                            s.Writer.Write(functionTemplate.Render(dll, functionType));
+                            var functionType = reference.Type as FunctionType;
+                            s.Writer.WriteLine(functionTemplate.Render(reference, dll));
                         }
 
                         // close partial class
