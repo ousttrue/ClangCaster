@@ -43,10 +43,10 @@ namespace ClangCaster
             DotLiquid.Template.RegisterSafeType(typeof(FileLocation), new string[] { "Path", "Line" });
             DotLiquid.Template.RegisterSafeType(typeof(NormalizedFilePath), new string[] { "Path" });
 
-            var enumTemplate = new CSEnumGenerator();
-            var structTemplate = new CSStructGenerator();
+            var enumTemplate = new CSEnumTemplate();
+            var structTemplate = new CSStructTemplate();
             var delegateTemplate = new CSDelegateTemplate();
-            var functionTemplate = new CSFunctionGenerator();
+            var functionTemplate = new CSFunctionTemplate();
             foreach (var (sourcePath, exportSource) in map)
             {
                 Console.WriteLine(sourcePath);

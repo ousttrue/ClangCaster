@@ -2,7 +2,7 @@ using ClangAggregator.Types;
 
 namespace ClangCaster
 {
-    class CSEnumGenerator : CSTemplateBase
+    class CSEnumTemplate : CSTemplateBase
     {
         protected override string TemplateSource => @"    // {{ type.Location.Path.Path }}:{{ type.Location.Line }}
     public enum {{ type.Name }} // {{ type.Count }}
@@ -13,7 +13,7 @@ namespace ClangCaster
     }
 ";
 
-        public CSEnumGenerator()
+        public CSEnumTemplate()
         {
             DotLiquid.Template.RegisterSafeType(typeof(EnumValue), new string[] { "Name", "Value", "Hex" });
         }

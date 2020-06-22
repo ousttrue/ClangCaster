@@ -4,7 +4,7 @@ using CSType;
 
 namespace ClangCaster
 {
-    class CSFunctionGenerator : CSTemplateBase
+    class CSFunctionTemplate : CSTemplateBase
     {
         protected override string TemplateSource => @"        // {{ function.Location.Path.Path }}:{{ function.Location.Line }}
         [DllImport(""{{ dll }}.dll"")]
@@ -15,7 +15,7 @@ namespace ClangCaster
         );
 ";
 
-        public CSFunctionGenerator()
+        public CSFunctionTemplate()
         {
             Func<Object, Object> ParamFunc = (Object src) =>
             {
