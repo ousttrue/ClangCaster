@@ -42,6 +42,8 @@ namespace ClangAggregator
             return m_path.Equals(reference.Location.Path);
         }
 
+        int m_anonymous;
+
         public void Push(ClangAggregator.Types.TypeReference reference)
         {
             var type = reference.Type;
@@ -51,6 +53,10 @@ namespace ClangAggregator
                 {
                     return;
                 }
+
+                // enum値名の重複する部分を除去する
+                enumType.PreparePrefix();
+
                 m_enumTypes.Add(reference);
             }
             else if (type is StructType structType)
@@ -59,6 +65,13 @@ namespace ClangAggregator
                 {
                     return;
                 }
+
+                if (string.IsNullOrEmpty(structType.Name))
+                {
+                    // 無名型に名前を付ける(unionによくある)
+                    structType.Name = $"__Anonymous__{m_anonymous++}";
+                }
+
                 m_structTypes.Add(reference);
             }
             else if (type is FunctionType functionType)
