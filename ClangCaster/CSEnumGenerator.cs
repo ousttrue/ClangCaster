@@ -4,17 +4,12 @@ namespace ClangCaster
 {
     class CSEnumGenerator : CSUserTypeGeneratorBase
     {
-        protected override string TemplateSource => @"using System;
-using System.Runtime.InteropServices;
-
-namespace {{ ns }} {
-    public enum {{ type.Name }} // {{ type.Count }}
+        protected override string TemplateSource => @"    public enum {{ type.Name }} // {{ type.Count }}
     {
 {% for value in type.Values -%}
         {{ value.Name }} = {{ value.Hex }},
 {%- endfor -%}
     }
-}
 ";
 
         public CSEnumGenerator()
@@ -23,12 +18,11 @@ namespace {{ ns }} {
             DotLiquid.Template.RegisterSafeType(typeof(EnumValue), new string[] { "Name", "Value", "Hex" });
         }
 
-        public string Render(string ns, EnumType enumType)
+        public string Render(EnumType enumType)
         {
             return m_template.Render(DotLiquid.Hash.FromAnonymousObject(
                 new
                 {
-                    ns = ns,
                     type = enumType,
                 }
             ));

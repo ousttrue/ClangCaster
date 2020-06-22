@@ -6,11 +6,7 @@ namespace ClangCaster
 {
     class CSStructGenerator : CSUserTypeGeneratorBase
     {
-        protected override string TemplateSource => @"using System;
-using System.Runtime.InteropServices;
-
-namespace {{ ns }} {
-    // {{ type.Location.Path.Path }}:{{ type.Location.Line }}
+        protected override string TemplateSource => @"    // {{ type.Location.Path.Path }}:{{ type.Location.Line }}
     [StructLayout(LayoutKind.Sequential)]
     public struct {{ type.Name }} // {{ type.Count }}
     {
@@ -18,7 +14,6 @@ namespace {{ ns }} {
         {% if field.Attribute %}{{ field.Attribute }} {% endif %}{{ field.Render }}
 {%- endfor -%}
     }
-}
 ";
 
         public CSStructGenerator()
@@ -48,12 +43,11 @@ namespace {{ ns }} {
             DotLiquid.Template.RegisterSafeType(typeof(StructField), FieldFunc);
         }
 
-        public string Render(string ns, StructType structType)
+        public string Render(StructType structType)
         {
             return m_template.Render(DotLiquid.Hash.FromAnonymousObject(
                 new
                 {
-                    ns = ns,
                     type = structType,
                 }
             ));
