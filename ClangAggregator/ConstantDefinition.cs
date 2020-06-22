@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,7 +11,7 @@ namespace ClangAggregator
 
         public FileLocation Location { get; set; }
 
-        public string Name { get; private set; }
+        public string Name;
 
         public List<string> Values { get; private set; }
 
@@ -43,11 +44,30 @@ namespace ClangAggregator
             return $"{Name} := {values}";
         }
 
+        static string SkipPrefix(string src, string prefix, bool exception)
+        {
+            if (src.StartsWith(prefix))
+            {
+                // skip prefix
+                return src.Substring(prefix.Length);
+            }
+            else
+            {
+                if (exception)
+                {
+                    throw new Exception();
+                }
+                return src;
+            }
+        }
+
         /// <summary>
         /// 前処理
         /// </summary>
-        public void Prepare()
+        public void Prepare(string prefix)
         {
+            Name = SkipPrefix(Name, prefix, true);
+
             if (Values.Count >= 4)
             {
                 if (Values[0] == "_HRESULT_TYPEDEF_" && Values[1] == "(" && Values.Last() == ")")
@@ -65,16 +85,14 @@ namespace ClangAggregator
                     Values[0] = Values[0].Substring(0, Values[0].Length - 1);
                 }
             }
-        }
-
-        public string Render()
-        {
-            var sb = new StringBuilder();
-
-            sb.AppendLine($"       // {Location.Path.Path}:{Location.Line}");
-            sb.AppendLine($"       public const int {Name} = {Value};");
-
-            return sb.ToString();
+            else
+            {
+                // skip prefix
+                for (int i = 0; i < Values.Count; ++i)
+                {
+                    Values[i] = SkipPrefix(Values[i], prefix, false);
+                }
+            }
         }
     }
 }

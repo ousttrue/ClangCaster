@@ -48,6 +48,22 @@ namespace ClangAggregator
             return reference.Type is FunctionType;
         }
 
+        public void PushConstant(string prefix, ConstantDefinition constant)
+        {
+            // ensure ExportSource
+            if (string.IsNullOrEmpty(constant.Location.Path.Path))
+            {
+                return;
+            }
+            if (!m_headerMap.TryGetValue(constant.Location.Path, out ExportSource export))
+            {
+                export = new ExportSource(constant.Location.Path);
+                m_headerMap.Add(constant.Location.Path, export);
+            }
+
+            export.PushConstant(prefix, constant);
+        }
+
         /// <summary>
         /// root header(コンストラクタ引数) から参照されている FunctionType を登録する。
         /// </summary>

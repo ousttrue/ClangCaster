@@ -24,6 +24,8 @@ namespace ClangAggregator
         readonly List<TypeReference> m_typedefTypes = new List<TypeReference>();
         public IEnumerable<TypeReference> TypedefTypes => m_typedefTypes;
 
+        public readonly Dictionary<string, List<ConstantDefinition>> ConstantMap = new Dictionary<string, List<ConstantDefinition>>();
+
         public ExportSource(NormalizedFilePath path)
         {
             m_path = path;
@@ -38,9 +40,14 @@ namespace ClangAggregator
             return $"{m_path} ({m_enumTypes.Count}types)";
         }
 
-        public bool Contains(ClangAggregator.Types.TypeReference reference)
+        public void PushConstant(string prefix, ConstantDefinition constant)
         {
-            return m_path.Equals(reference.Location.Path);
+            if(!ConstantMap.TryGetValue(prefix, out List<ConstantDefinition> list))
+            {
+                list = new List<ConstantDefinition>();
+                ConstantMap.Add(prefix, list);
+            }
+            list.Add(constant);
         }
 
         int m_anonymous;

@@ -36,27 +36,30 @@ namespace ClangCaster
             return Path.Combine(Path.Combine(directory.FullName, stem));
         }
 
-        static string[] UseConstantPrefixies = new string[]
+        public void Export(
+            TypeMap map,
+            DirectoryInfo dst,
+            List<String> headers, string ns, string dll)
         {
-            "WS_",
-            "MSG_",
-            "SW_",
-        };
-
-        static bool UseConstant(string name)
-        {
-            if (UseConstantPrefixies.Any(x => name.StartsWith(x)))
+            // organize types
+            var sorter = new ExportSorter(headers);
+            foreach (var kv in map)
             {
-                return true;
+                sorter.PushIfRootFunction(kv.Value);
+            }
+            foreach (var constant in map.Constants)
+            {
+                foreach (var prefix in CSConstantTemplate.UseConstantPrefixies)
+                {
+                    if (constant.Name.StartsWith(prefix))
+                    {
+                        sorter.PushConstant(prefix, constant);
+                        break;
+                    }
+                }
             }
 
-            return false;
-        }
-
-        public void Export(
-            IEnumerable<KeyValuePair<NormalizedFilePath, ExportSource>> map, IEnumerable<ConstantDefinition> constants,
-            DirectoryInfo dst, string ns, string dll)
-        {
+            // export
             DotLiquid.Template.RegisterSafeType(typeof(TypeReference), new string[] { "Type" });
             DotLiquid.Template.RegisterSafeType(typeof(FileLocation), new string[] { "Path", "Line" });
             DotLiquid.Template.RegisterSafeType(typeof(NormalizedFilePath), new string[] { "Path" });
@@ -65,7 +68,7 @@ namespace ClangCaster
             var structTemplate = new CSStructTemplate();
             var delegateTemplate = new CSDelegateTemplate();
             var functionTemplate = new CSFunctionTemplate();
-            foreach (var (sourcePath, exportSource) in map)
+            foreach (var (sourcePath, exportSource) in sorter.HeaderMap)
             {
                 Console.WriteLine(sourcePath);
                 var dir = ExportDir(dst, sourcePath);
@@ -99,7 +102,7 @@ namespace ClangCaster
                 }
 
                 if (exportSource.FunctionTypes.Any()
-                || exportSource.TypedefTypes.Select(x => x.GetFunctionTypeFromTypedef().Item2 != null).Any())
+                || exportSource.TypedefTypes.Where(x => x.GetFunctionTypeFromTypedef().Item2 != null).Any())
                 {
                     var path = ExportFile(dst, sourcePath);
                     using (var s = new NamespaceOpener(new FileInfo(path), ns))
@@ -129,30 +132,30 @@ namespace ClangCaster
                         s.Writer.WriteLine("    }");
                     }
                 }
-            }
 
-            // constants
-            {
-                var path = Path.Combine(dst.FullName, $"__Constants__.cs");
-                using (var s = new NamespaceOpener(new FileInfo(path), ns))
+                if (exportSource.ConstantMap.Any())
                 {
-                    // open partial class
-                    s.Writer.Write($@"    public static class Constants
+                    var constantsDir = new DirectoryInfo(Path.Combine(dir, $"constants"));
+                    constantsDir.Create();
+                    foreach (var (prefix, list) in exportSource.ConstantMap)
+                    {
+                        using (var s = NamespaceOpener.Open(constantsDir, $"{prefix}.cs", ns))
+                        {
+                            // open static class
+                            s.Writer.Write($@"    public static class {prefix}
     {{
 ");
 
-                    foreach (var constant in constants)
-                    {
-                        if (UseConstant(constant.Name))
-                        {
-                            constant.Prepare();
+                            foreach (var constant in list)
+                            {
+                                constant.Prepare(prefix);
+                                s.Writer.WriteLine(CSConstantTemplate.Render(constant));
+                            }
 
-                            s.Writer.WriteLine(constant.Render());
+                            // close constants
+                            s.Writer.WriteLine("    }");
                         }
                     }
-
-                    // close partial class
-                    s.Writer.WriteLine("    }");
                 }
             }
 
