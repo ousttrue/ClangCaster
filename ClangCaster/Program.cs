@@ -93,7 +93,7 @@ namespace ClangCaster
             var sorter = new ExportSorter(cmd.Headers);
             foreach (var kv in map)
             {
-                sorter.Push(kv.Value);
+                sorter.PushIfRootFunction(kv.Value);
             }
 
             // generate source
@@ -110,7 +110,7 @@ namespace ClangCaster
                 Directory.CreateDirectory(dst.FullName);
 
                 var exporter = new CSGenerator();
-                exporter.Export(sorter.HeaderMap, dst, cmd.Namespace, cmd.DllName);
+                exporter.Export(sorter.HeaderMap, map.Constants, dst, cmd.Namespace, cmd.DllName);
             }
         }
     }

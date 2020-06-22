@@ -59,16 +59,39 @@ namespace CSType
             return false;
         }
 
+        static bool TryGetString(TypeContext context, BaseType baseType, out (string, string) value)
+        {
+            if (baseType.Name == "LPCSTR")
+            {
+                switch (context)
+                {
+                    case TypeContext.Field:
+                    case TypeContext.Param:
+                        value = ("string", "[MarshalAs(UnmanagedType.LPStr)]");
+                        return true;
+                }
+            }
+
+            value = default;
+            return false;
+        }
+
         /// <summary>
         /// ClangCaster.Types.BaseType から CSharp の型を表す文字列と属性(struct用)を返す
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static (string, string) Convert(TypeContext context, BaseType type)
+        public static (string, string) Convert(TypeContext context, TypeReference reference)
         {
+            var type = reference.Type;
             if (TryGetPrimitiveType(type, out string primitiveType))
             {
                 return (primitiveType, null);
+            }
+
+            if (TryGetString(context, type, out (string, string) stringTypeWithAttribute))
+            {
+                return stringTypeWithAttribute;
             }
 
             if (type is EnumType enumType)
@@ -83,13 +106,19 @@ namespace CSType
 
             if (type is ArrayType arrayType)
             {
-                var elementType = Convert(context, arrayType.Element.Type).Item1;
+                var elementType = Convert(context, arrayType.Element).Item1;
                 return ($"{elementType}[]", $"[MarshalAs(UnmanagedType.ByValArray, SizeConst = {arrayType.Size})]");
             }
 
             if (type is TypedefType typedefType)
             {
-                return Convert(context, typedefType.Ref.Type);
+                var (name, functionType) = reference.GetFunctionTypeFromTypedef();
+                if (functionType != null)
+                {
+                    // function pointer as delegate
+                    return (name, null);
+                }
+                return Convert(context, typedefType.Ref);
             }
 
             if (type is PointerType pointerType)
@@ -140,7 +169,7 @@ namespace CSType
                     }
                     else
                     {
-                        var (tmp, _) = Convert(context, pointerType.Pointee.Type);
+                        var (tmp, _) = Convert(context, pointerType.Pointee);
                         return (context.PointerType(tmp), null);
                     }
                 }

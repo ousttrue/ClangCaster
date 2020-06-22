@@ -259,5 +259,13 @@ namespace ClangAggregator.Types
             // it is _not_ the definition.
             return libclang.clang_equalCursors(cursor, definition) != 0;
         }
+
+        public static StructType CreatePointerStructType(string name)
+        {
+            var structType = new StructType(name);
+            var voidPtr = new PointerType(TypeReference.FromPrimitive(VoidType.Instance));
+            structType.Fields.Add(new StructField(0, "ptr", TypeReference.FromPointer(voidPtr), 0));
+            return structType;
+        }
     }
 }

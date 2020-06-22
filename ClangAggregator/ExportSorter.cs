@@ -19,6 +19,10 @@ namespace ClangAggregator
 
         public IDictionary<NormalizedFilePath, ExportSource> HeaderMap => m_headerMap;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="headers">Exportしたい関数が含まれている header </param>
         public ExportSorter(IEnumerable<string> headers)
         {
             m_rootHeaders = headers.Select(x => new NormalizedFilePath(x)).ToList();
@@ -34,20 +38,35 @@ namespace ClangAggregator
             return sb.ToString();
         }
 
-        public void Push(TypeReference reference)
+        bool IsRootFunction(TypeReference reference)
         {
-            foreach (var root in m_rootHeaders)
+            if (!m_rootHeaders.Any(x => x.Equals(reference.Location.Path)))
             {
-                if (root.Equals(reference.Location.Path))
-                {
-                    Add(reference, new UserType[] { });
-                    return;
-                }
+                return false;
             }
-            // skip
+
+            return reference.Type is FunctionType;
         }
 
-        void Add(TypeReference reference, ClangAggregator.Types.UserType[] stack)
+        /// <summary>
+        /// root header(コンストラクタ引数) から参照されている FunctionType を登録する。
+        /// </summary>
+        /// <param name="reference"></param>
+        public void PushIfRootFunction(TypeReference reference)
+        {
+            if (IsRootFunction(reference))
+            {
+                Add(reference, new UserType[] { });
+            }
+        }
+
+        /// <summary>
+        /// Enum, Struct, Function, Typedef を登録する。
+        /// Struct, Function, Typedef から間接的に参照されている型を再帰的に登録する。
+        /// </summary>
+        /// <param name="reference"></param>
+        /// <param name="stack"></param>
+        private void Add(TypeReference reference, ClangAggregator.Types.UserType[] stack)
         {
             var t = reference.Type;
             if (t is PointerType pointerType)
@@ -80,14 +99,6 @@ namespace ClangAggregator
                 m_headerMap.Add(reference.Location.Path, export);
             }
 
-            // if (string.IsNullOrEmpty(type.Name))
-            // {
-            //     // 名無し。stack を辿って typedef があればその名前をいただく
-            //     if (stack.Any() && stack.Last() is TypedefType stackTypedef)
-            //     {
-            //         type.Name = stackTypedef.Name;
-            //     }
-            // }
             export.Push(reference);
 
             // 依存する型を再帰的にAddする
@@ -97,10 +108,33 @@ namespace ClangAggregator
             }
             else if (type is TypedefType typedefType)
             {
-                // if (typedefType.Ref.Type is UserType userType)
-                // {
-                //     userType.Name = typedefType.Name;
-                // }
+                if (typedefType.TryCreatePointerStructType(out StructType pointerStructType))
+                {
+                    // HWND
+                    reference.Type = pointerStructType;
+                    Add(reference, stack);
+                    return;
+                }
+
+                if (typedefType.Ref.Type is UserType userType)
+                {
+                    if (string.IsNullOrEmpty(userType.Name))
+                    {
+                        // 名無しの宣言に名前を付ける
+                        userType.Name = typedefType.Name;
+                    }
+                    else if (userType is EnumType)
+                    {
+                        // enum の tag 名と typedef名を同じにする
+                        userType.Name = typedefType.Name;
+                    }
+                    else if (userType is StructType)
+                    {
+                        // struct の tag 名と typedef名を同じにする
+                        userType.Name = typedefType.Name;
+                    }
+                }
+
                 Add(typedefType.Ref, stack.Concat(new[] { type }).ToArray());
             }
             else if (type is StructType structType)

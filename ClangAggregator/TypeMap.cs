@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using ClangAggregator.Types;
 using CIndex;
+using System.Linq;
 
 namespace ClangAggregator
 {
@@ -12,6 +13,9 @@ namespace ClangAggregator
     public class TypeMap : IEnumerable<KeyValuePair<uint, TypeReference>>
     {
         Dictionary<uint, TypeReference> m_typeMap = new Dictionary<uint, TypeReference>();
+
+        List<ConstantDefinition> m_constants = new List<ConstantDefinition>();
+        public IReadOnlyList<ConstantDefinition> Constants => m_constants;
 
         public TypeReference GetOrCreate(CXCursor cursor)
         {
@@ -179,6 +183,41 @@ namespace ClangAggregator
             }
 
             throw new NotImplementedException("type not found");
+        }
+
+        public void ParseMacroDefinition(in CXCursor cursor)
+        {
+            var isFunctionLike = libclang.clang_Cursor_isMacroFunctionLike(cursor) != 0;
+            if (isFunctionLike)
+            {
+                return;
+            }
+
+            using (var token = new ClangToken(cursor))
+            {
+                if (token.Length == 1)
+                {
+                    return;
+                }
+                var tokens = token.Select(x => x.Spelling(token.TU)).ToArray();
+
+                if (token.Length > 1)
+                {
+                    var (hash, location) = cursor.CursorHashLocation();
+                    if (location.file != IntPtr.Zero)
+                    {
+                        m_constants.Add(new ConstantDefinition(hash, location, tokens[0], tokens.Skip(1).ToArray()));
+                    }
+                    else
+                    {
+                        // Console.WriteLine(string.Join(", ", tokens));
+                    }
+                }
+                else
+                {
+                    Console.WriteLine(string.Join(", ", tokens));
+                }
+            }
         }
     }
 }

@@ -34,7 +34,7 @@ namespace Tests
 
         static void ConvertTest(string expected, TypeContext context, BaseType baseType)
         {
-            var value = Converter.Convert(context, baseType).Item1;
+            var value = Converter.Convert(context, new TypeReference(default, default, baseType)).Item1;
             Assert.Equal(expected, value);
         }
 

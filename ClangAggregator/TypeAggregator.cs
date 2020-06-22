@@ -64,7 +64,7 @@ namespace ClangAggregator
                     break;
 
                 case CXCursorKind._MacroDefinition:
-                    // parseMacroDefinition(cursor);
+                    m_typeMap.ParseMacroDefinition(cursor);
                     break;
 
                 case CXCursorKind._MacroExpansion:
