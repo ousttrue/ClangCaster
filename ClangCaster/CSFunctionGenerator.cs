@@ -50,6 +50,7 @@ namespace ClangCaster
                         Count = reference.Count,
                         Name = functionType.Name,
                         Params = functionType.Params,
+                        Return = Converter.Convert(TypeContext.Return, functionType.Result.Type).Item1,
                     },
                     dll = dll,
                 }
