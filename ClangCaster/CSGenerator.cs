@@ -141,13 +141,13 @@ namespace ClangCaster
     {{
 ");
 
-                    s.Writer.WriteLine("       static int _HRESULT_TYPEDEF_(int n) => n;");
                     foreach (var constant in constants)
                     {
                         if (UseConstant(constant.Name))
                         {
-                            s.Writer.WriteLine($"       // {constant.Location.Path.Path}:{constant.Location.Line}");
-                            s.Writer.WriteLine($"       public static readonly int {constant.Name} = {constant.Value};");
+                            constant.Prepare();
+
+                            s.Writer.WriteLine(constant.Render());
                         }
                     }
 
