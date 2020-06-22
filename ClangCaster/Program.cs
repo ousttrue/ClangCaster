@@ -110,7 +110,7 @@ namespace ClangCaster
                 Directory.CreateDirectory(dst.FullName);
 
                 var exporter = new CSGenerator();
-                exporter.Export(sorter.HeaderMap, dst, cmd.Namespace, cmd.DllName);
+                exporter.Export(sorter.HeaderMap, map.Constants, dst, cmd.Namespace, cmd.DllName);
             }
         }
     }

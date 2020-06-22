@@ -30,14 +30,32 @@ namespace ClangCaster
             return Path.Combine(Path.Combine(directory.FullName, $"{stem}.cs"));
         }
 
-
         static string ExportDir(DirectoryInfo directory, NormalizedFilePath f)
         {
             var stem = Path.GetFileNameWithoutExtension(f.Path);
             return Path.Combine(Path.Combine(directory.FullName, stem));
         }
 
-        public void Export(IDictionary<NormalizedFilePath, ExportSource> map, DirectoryInfo dst, string ns, string dll)
+        static string[] UseConstantPrefixies = new string[]
+        {
+            "WS_",
+            "MSG_",
+            "SW_",
+        };
+
+        static bool UseConstant(string name)
+        {
+            if (UseConstantPrefixies.Any(x => name.StartsWith(x)))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public void Export(
+            IEnumerable<KeyValuePair<NormalizedFilePath, ExportSource>> map, IEnumerable<ConstantDefinition> constants,
+            DirectoryInfo dst, string ns, string dll)
         {
             DotLiquid.Template.RegisterSafeType(typeof(TypeReference), new string[] { "Type" });
             DotLiquid.Template.RegisterSafeType(typeof(FileLocation), new string[] { "Path", "Line" });
@@ -110,6 +128,31 @@ namespace ClangCaster
                         // close partial class
                         s.Writer.WriteLine("    }");
                     }
+                }
+            }
+
+            // constants
+            {
+                var path = Path.Combine(dst.FullName, $"__Constants__.cs");
+                using (var s = new NamespaceOpener(new FileInfo(path), ns))
+                {
+                    // open partial class
+                    s.Writer.Write($@"    public static class Constants
+    {{
+");
+
+                    s.Writer.WriteLine("       static int _HRESULT_TYPEDEF_(int n) => n;");
+                    foreach (var constant in constants)
+                    {
+                        if (UseConstant(constant.Name))
+                        {
+                            s.Writer.WriteLine($"       // {constant.Location.Path.Path}:{constant.Location.Line}");
+                            s.Writer.WriteLine($"       public static readonly int {constant.Name} = {constant.Value};");
+                        }
+                    }
+
+                    // close partial class
+                    s.Writer.WriteLine("    }");
                 }
             }
 

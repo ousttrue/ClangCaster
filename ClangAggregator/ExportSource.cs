@@ -24,8 +24,6 @@ namespace ClangAggregator
         readonly List<TypeReference> m_typedefTypes = new List<TypeReference>();
         public IEnumerable<TypeReference> TypedefTypes => m_typedefTypes;
 
-        public bool IsEmpty => EnumTypes.Any() || StructTypes.Any() || FunctionTypes.Any();
-
         public ExportSource(NormalizedFilePath path)
         {
             m_path = path;

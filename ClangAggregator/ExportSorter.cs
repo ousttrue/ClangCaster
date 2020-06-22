@@ -60,7 +60,6 @@ namespace ClangAggregator
             }
         }
 
-
         /// <summary>
         /// Enum, Struct, Function, Typedef を登録する。
         /// Struct, Function, Typedef から間接的に参照されている型を再帰的に登録する。

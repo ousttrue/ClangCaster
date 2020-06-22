@@ -24,6 +24,14 @@ namespace ClangAggregator
             };
         }
 
+        public static ClangString FromToken(IntPtr tu, in CXToken token)
+        {
+            return new ClangString
+            {
+                m_str = libclang.clang_getTokenSpelling(tu, token)
+            };
+        }
+
         public override string ToString()
         {
             var p = libclang.clang_getCString(m_str);
