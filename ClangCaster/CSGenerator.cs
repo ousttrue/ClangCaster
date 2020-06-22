@@ -7,13 +7,13 @@ using ClangAggregator.Types;
 
 namespace ClangCaster
 {
-    abstract class CSUserTypeGeneratorBase
+    abstract class CSTemplateBase
     {
         protected DotLiquid.Template m_template;
 
         abstract protected string TemplateSource { get; }
 
-        protected CSUserTypeGeneratorBase()
+        protected CSTemplateBase()
         {
             m_template = DotLiquid.Template.Parse(TemplateSource);
         }
@@ -45,6 +45,7 @@ namespace ClangCaster
 
             var enumTemplate = new CSEnumGenerator();
             var structTemplate = new CSStructGenerator();
+            var delegateTemplate = new CSDelegateTemplate();
             var functionTemplate = new CSFunctionGenerator();
             foreach (var (sourcePath, exportSource) in map)
             {
@@ -79,16 +80,27 @@ namespace ClangCaster
                     }
                 }
 
-                if (exportSource.FunctionTypes.Any())
+                if (exportSource.FunctionTypes.Any()
+                || exportSource.TypedefTypes.Select(x => x.GetFunctionTypeFromTypedef() != null).Any())
                 {
                     var path = ExportFile(dst, sourcePath);
                     using (var s = new NamespaceOpener(new FileInfo(path), ns))
                     {
+                        // delegates
+                        foreach (var reference in exportSource.TypedefTypes)
+                        {
+                            if (reference.GetFunctionTypeFromTypedef() != null)
+                            {
+                                s.Writer.WriteLine(delegateTemplate.Render(reference));
+                            }
+                        }
+
                         // open partial class
                         s.Writer.Write($@"    public static partial class {dll}
     {{
 ");
 
+                        // functions
                         foreach (var reference in exportSource.FunctionTypes)
                         {
                             var functionType = reference.Type as FunctionType;

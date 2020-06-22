@@ -21,6 +21,9 @@ namespace ClangAggregator
         readonly List<TypeReference> m_functionTypes = new List<TypeReference>();
         public IEnumerable<TypeReference> FunctionTypes => m_functionTypes;
 
+        readonly List<TypeReference> m_typedefTypes = new List<TypeReference>();
+        public IEnumerable<TypeReference> TypedefTypes => m_typedefTypes;
+
         public bool IsEmpty => EnumTypes.Any() || StructTypes.Any() || FunctionTypes.Any();
 
         public ExportSource(NormalizedFilePath path)
@@ -88,6 +91,11 @@ namespace ClangAggregator
             }
             else if (type is TypedefType typedefType)
             {
+                if (m_typedefTypes.Any(x => x.Hash == reference.Hash))
+                {
+                    return;
+                }
+                m_typedefTypes.Add(reference);
             }
             else
             {

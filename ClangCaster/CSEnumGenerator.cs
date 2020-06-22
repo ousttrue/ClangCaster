@@ -2,7 +2,7 @@ using ClangAggregator.Types;
 
 namespace ClangCaster
 {
-    class CSEnumGenerator : CSUserTypeGeneratorBase
+    class CSEnumGenerator : CSTemplateBase
     {
         protected override string TemplateSource => @"    // {{ type.Location.Path.Path }}:{{ type.Location.Line }}
     public enum {{ type.Name }} // {{ type.Count }}

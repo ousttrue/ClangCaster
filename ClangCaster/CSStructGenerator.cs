@@ -4,7 +4,7 @@ using CSType;
 
 namespace ClangCaster
 {
-    class CSStructGenerator : CSUserTypeGeneratorBase
+    class CSStructGenerator : CSTemplateBase
     {
         protected override string TemplateSource => @"    // {{ type.Location.Path.Path }}:{{ type.Location.Line }}
     [StructLayout(LayoutKind.Sequential)]

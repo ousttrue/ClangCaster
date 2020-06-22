@@ -4,18 +4,17 @@ using CSType;
 
 namespace ClangCaster
 {
-    class CSFunctionGenerator : CSTemplateBase
+    class CSDelegateTemplate : CSTemplateBase
     {
-        protected override string TemplateSource => @"        // {{ function.Location.Path.Path }}:{{ function.Location.Line }}
-        [DllImport(""{{ dll }}.dll"")]
-        public static extern {{ function.Return }} {{function.Name}}(
+        protected override string TemplateSource => @"    // {{ function.Location.Path.Path }}:{{ function.Location.Line }}
+    public delegate {{ function.Return }} {{function.Name}}(
 {% for param in function.Params -%}
-            {{ param.Render }}
+        {{ param.Render }}
 {%- endfor -%}
-        );
+    );
 ";
 
-        public CSFunctionGenerator()
+        public CSDelegateTemplate()
         {
             Func<Object, Object> ParamFunc = (Object src) =>
             {
@@ -37,9 +36,9 @@ namespace ClangCaster
             DotLiquid.Template.RegisterSafeType(typeof(FunctionParam), ParamFunc);
         }
 
-        public string Render(TypeReference reference, string dll)
+        public string Render(TypeReference reference)
         {
-            var functionType = reference.Type as FunctionType;
+            var functionType = reference.GetFunctionTypeFromTypedef();
             return m_template.Render(DotLiquid.Hash.FromAnonymousObject(
                 new
                 {
@@ -51,8 +50,7 @@ namespace ClangCaster
                         Name = functionType.Name,
                         Params = functionType.Params,
                         Return = Converter.Convert(TypeContext.Return, functionType.Result.Type).Item1,
-                    },
-                    dll = dll,
+                    }
                 }
             ));
         }
