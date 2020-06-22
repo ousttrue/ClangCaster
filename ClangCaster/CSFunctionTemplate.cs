@@ -24,7 +24,7 @@ namespace ClangCaster
                 var name = param.Name;
                 if (string.IsNullOrEmpty(name))
                 {
-                    name = $"__param__{param.Index + 1}";
+                    name = $"__param__{param.Index}";
                 }
                 name = CSType.CSSymbole.Escape(name);
 
