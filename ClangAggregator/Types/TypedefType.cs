@@ -22,4 +22,31 @@ namespace ClangAggregator.Types
             return type;
         }
     }
+
+    public static class TypedefExtensions
+    {
+        /// <summary>
+        /// HWND など
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static bool TryCreatePointerStructType(this TypedefType type, out StructType dst)
+        {
+            if (type.Ref.Type is PointerType pointerType)
+            {
+                if (pointerType.Pointee.Type is StructType structType)
+                {
+                    // HWND__
+                    if (structType.Name.EndsWith("__"))
+                    {
+                        dst = StructType.CreatePointerStructType(type.Name);
+                        return true;
+                    }
+                }
+            }
+
+            dst = default;
+            return false;
+        }
+    }
 }

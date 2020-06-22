@@ -28,7 +28,11 @@ namespace ClangCaster
                 }
                 name = CSType.CSSymbole.Escape(name);
 
-                var csType = Converter.Convert(TypeContext.Param, param.Ref).Item1;
+                var (csType, csAttr) = Converter.Convert(TypeContext.Param, param.Ref);
+                if (!string.IsNullOrEmpty(csAttr))
+                {
+                    csType = $"{csAttr} {csType}";
+                }
                 return new
                 {
                     Render = $"{csType} {name}{comma}",

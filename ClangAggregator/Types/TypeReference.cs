@@ -58,12 +58,14 @@ namespace ClangAggregator.Types
         /// <returns></returns>
         public static (string, FunctionType) GetFunctionTypeFromTypedef(this TypeReference reference)
         {
-            var typedefType = reference.Type as TypedefType;
-            if (typedefType.Ref.Type is PointerType pointerType)
+            if (reference.Type is TypedefType typedefType)
             {
-                if (pointerType.Pointee.Type is FunctionType functionType)
+                if (typedefType.Ref.Type is PointerType pointerType)
                 {
-                    return (typedefType.Name, functionType);
+                    if (pointerType.Pointee.Type is FunctionType functionType)
+                    {
+                        return (typedefType.Name, functionType);
+                    }
                 }
             }
             return default;

@@ -60,6 +60,7 @@ namespace ClangAggregator
             }
         }
 
+
         /// <summary>
         /// Enum, Struct, Function, Typedef を登録する。
         /// Struct, Function, Typedef から間接的に参照されている型を再帰的に登録する。
@@ -108,6 +109,14 @@ namespace ClangAggregator
             }
             else if (type is TypedefType typedefType)
             {
+                if (typedefType.TryCreatePointerStructType(out StructType pointerStructType))
+                {
+                    // HWND
+                    reference.Type = pointerStructType;
+                    Add(reference, stack);
+                    return;
+                }
+
                 if (typedefType.Ref.Type is UserType userType)
                 {
                     if (string.IsNullOrEmpty(userType.Name))
@@ -126,8 +135,6 @@ namespace ClangAggregator
                         userType.Name = typedefType.Name;
                     }
                 }
-
-                // TODO: pointer に対する typedef を struct 化する. ex: HWND
 
                 Add(typedefType.Ref, stack.Concat(new[] { type }).ToArray());
             }

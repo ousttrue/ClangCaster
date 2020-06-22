@@ -59,6 +59,23 @@ namespace CSType
             return false;
         }
 
+        static bool TryGetString(TypeContext context, BaseType baseType, out (string, string) value)
+        {
+            if (baseType.Name == "LPCSTR")
+            {
+                switch (context)
+                {
+                    case TypeContext.Field:
+                    case TypeContext.Param:
+                        value = ("string", "[MarshalAs(UnmanagedType.LPStr)]");
+                        return true;
+                }
+            }
+
+            value = default;
+            return false;
+        }
+
         /// <summary>
         /// ClangCaster.Types.BaseType から CSharp の型を表す文字列と属性(struct用)を返す
         /// </summary>
@@ -70,6 +87,11 @@ namespace CSType
             if (TryGetPrimitiveType(type, out string primitiveType))
             {
                 return (primitiveType, null);
+            }
+
+            if (TryGetString(context, type, out (string, string) stringTypeWithAttribute))
+            {
+                return stringTypeWithAttribute;
             }
 
             if (type is EnumType enumType)
