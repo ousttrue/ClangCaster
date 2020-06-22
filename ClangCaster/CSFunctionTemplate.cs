@@ -28,7 +28,7 @@ namespace ClangCaster
                 }
                 name = CSType.CSSymbole.Escape(name);
 
-                var csType = Converter.Convert(TypeContext.Param, param.Ref.Type).Item1;
+                var csType = Converter.Convert(TypeContext.Param, param.Ref).Item1;
                 return new
                 {
                     Render = $"{csType} {name}{comma}",
@@ -50,7 +50,7 @@ namespace ClangCaster
                         Count = reference.Count,
                         Name = functionType.Name,
                         Params = functionType.Params,
-                        Return = Converter.Convert(TypeContext.Return, functionType.Result.Type).Item1,
+                        Return = Converter.Convert(TypeContext.Return, functionType.Result).Item1,
                     },
                     dll = dll,
                 }

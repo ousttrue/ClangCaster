@@ -51,17 +51,22 @@ namespace ClangAggregator.Types
 
     public static class TypeReferenceExtensions
     {
-        public static FunctionType GetFunctionTypeFromTypedef(this TypeReference reference)
+        /// <summary>
+        /// 関数ポインタの typedef の名前と型を得る
+        /// </summary>
+        /// <param name="reference"></param>
+        /// <returns></returns>
+        public static (string, FunctionType) GetFunctionTypeFromTypedef(this TypeReference reference)
         {
             var typedefType = reference.Type as TypedefType;
             if (typedefType.Ref.Type is PointerType pointerType)
             {
                 if (pointerType.Pointee.Type is FunctionType functionType)
                 {
-                    return functionType;
+                    return (typedefType.Name, functionType);
                 }
             }
-            return null;
+            return default;
         }
     }
 }

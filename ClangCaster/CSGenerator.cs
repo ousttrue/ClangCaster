@@ -81,7 +81,7 @@ namespace ClangCaster
                 }
 
                 if (exportSource.FunctionTypes.Any()
-                || exportSource.TypedefTypes.Select(x => x.GetFunctionTypeFromTypedef() != null).Any())
+                || exportSource.TypedefTypes.Select(x => x.GetFunctionTypeFromTypedef().Item2 != null).Any())
                 {
                     var path = ExportFile(dst, sourcePath);
                     using (var s = new NamespaceOpener(new FileInfo(path), ns))
@@ -89,7 +89,7 @@ namespace ClangCaster
                         // delegates
                         foreach (var reference in exportSource.TypedefTypes)
                         {
-                            if (reference.GetFunctionTypeFromTypedef() != null)
+                            if (reference.GetFunctionTypeFromTypedef().Item2 != null)
                             {
                                 s.Writer.WriteLine(delegateTemplate.Render(reference));
                             }

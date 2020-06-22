@@ -27,7 +27,7 @@ namespace ClangCaster
                 }
                 name = CSType.CSSymbole.Escape(name);
 
-                var csType = Converter.Convert(TypeContext.Param, param.Ref.Type).Item1;
+                var csType = Converter.Convert(TypeContext.Param, param.Ref).Item1;
                 return new
                 {
                     Render = $"{csType} {name}{comma}",
@@ -38,7 +38,7 @@ namespace ClangCaster
 
         public string Render(TypeReference reference)
         {
-            var functionType = reference.GetFunctionTypeFromTypedef();
+            var (name, functionType) = reference.GetFunctionTypeFromTypedef();
             return m_template.Render(DotLiquid.Hash.FromAnonymousObject(
                 new
                 {
@@ -47,9 +47,9 @@ namespace ClangCaster
                         Hash = reference.Hash,
                         Location = reference.Location,
                         Count = reference.Count,
-                        Name = functionType.Name,
+                        Name = name,
                         Params = functionType.Params,
-                        Return = Converter.Convert(TypeContext.Return, functionType.Result.Type).Item1,
+                        Return = Converter.Convert(TypeContext.Return, functionType.Result).Item1,
                     }
                 }
             ));

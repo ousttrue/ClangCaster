@@ -64,8 +64,9 @@ namespace CSType
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static (string, string) Convert(TypeContext context, BaseType type)
+        public static (string, string) Convert(TypeContext context, TypeReference reference)
         {
+            var type = reference.Type;
             if (TryGetPrimitiveType(type, out string primitiveType))
             {
                 return (primitiveType, null);
@@ -83,13 +84,19 @@ namespace CSType
 
             if (type is ArrayType arrayType)
             {
-                var elementType = Convert(context, arrayType.Element.Type).Item1;
+                var elementType = Convert(context, arrayType.Element).Item1;
                 return ($"{elementType}[]", $"[MarshalAs(UnmanagedType.ByValArray, SizeConst = {arrayType.Size})]");
             }
 
             if (type is TypedefType typedefType)
             {
-                return Convert(context, typedefType.Ref.Type);
+                var (name, functionType) = reference.GetFunctionTypeFromTypedef();
+                if (functionType != null)
+                {
+                    // function pointer as delegate
+                    return (name, null);
+                }
+                return Convert(context, typedefType.Ref);
             }
 
             if (type is PointerType pointerType)
@@ -140,7 +147,7 @@ namespace CSType
                     }
                     else
                     {
-                        var (tmp, _) = Convert(context, pointerType.Pointee.Type);
+                        var (tmp, _) = Convert(context, pointerType.Pointee);
                         return (context.PointerType(tmp), null);
                     }
                 }

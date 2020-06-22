@@ -22,7 +22,7 @@ namespace ClangCaster
             {
                 var field = (StructField)src;
 
-                var (type, attribute) = Converter.Convert(TypeContext.Field, field.Ref.Type);
+                var (type, attribute) = Converter.Convert(TypeContext.Field, field.Ref);
                 if (string.IsNullOrEmpty(type))
                 {
                     // anonymous union
