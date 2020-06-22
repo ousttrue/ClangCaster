@@ -93,7 +93,7 @@ namespace ClangCaster
             var sorter = new ExportSorter(cmd.Headers);
             foreach (var kv in map)
             {
-                sorter.Push(kv.Value);
+                sorter.PushIfRootFunction(kv.Value);
             }
 
             // generate source
