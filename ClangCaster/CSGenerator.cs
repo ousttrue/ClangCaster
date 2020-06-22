@@ -78,23 +78,6 @@ namespace {{ ns }} {
             return Path.Combine(Path.Combine(directory.FullName, stem));
         }
 
-        static bool GetPrimitive(BaseType type, out PrimitiveType primitive)
-        {
-            if (type is PrimitiveType)
-            {
-                primitive = type as PrimitiveType;
-                return true;
-            }
-
-            if (type is TypedefType typedefType)
-            {
-                return GetPrimitive(typedefType.Ref.Type, out primitive);
-            }
-
-            primitive = null;
-            return false;
-        }
-
         public void Export(IDictionary<NormalizedFilePath, ExportSource> map, DirectoryInfo dst, string ns, string dll)
         {
             Func<Object, Object> FieldFunc = (Object src) =>
