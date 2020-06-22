@@ -145,27 +145,20 @@ namespace ClangAggregator
                 case CXCursorKind._ClassDecl:
                 case CXCursorKind._UnionDecl:
                     {
+                        var nested = context.Child();
+                        TraverseChildren(cursor, nested);
+
                         var reference = m_typeMap.GetOrCreate(cursor);
-                        if (reference.Type is null)
+                        reference.Type = StructType.Parse(cursor, m_typeMap);
+                        // decl.namespace = context.namespace;
+
+                        if (reference.Type is StructType structType)
                         {
-                            reference.Type = StructType.Parse(cursor, m_typeMap);
-                            // decl.namespace = context.namespace;
-
-                            var nested = context.Child();
-                            TraverseChildren(cursor, nested);
-
-                            if (reference.Type is StructType structType)
-                            {
-                                structType.ParseFields(cursor, m_typeMap);
-                            }
-                            else
-                            {
-                                throw new NotImplementedException();
-                            }
+                            structType.ParseFields(cursor, m_typeMap);
                         }
                         else
                         {
-                            // throw new NotImplementedException();
+                            throw new NotImplementedException();
                         }
                     }
                     break;
