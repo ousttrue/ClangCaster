@@ -78,22 +78,6 @@ namespace {{ ns }} {
             return Path.Combine(Path.Combine(directory.FullName, stem));
         }
 
-        static string[] CSSymbols = new string[]
-        {
-            "base",
-            "string",
-            "event",
-        };
-
-        static string EscapeSymbol(string src)
-        {
-            if (!CSSymbols.Contains(src))
-            {
-                return src;
-            }
-            return $"_{src}";
-        }
-
         static bool GetPrimitive(BaseType type, out PrimitiveType primitive)
         {
             if (type is PrimitiveType)
@@ -125,7 +109,7 @@ namespace {{ ns }} {
                 }
 
                 // name
-                var name = EscapeSymbol(field.Name);
+                var name = CSType.CSSymbole.Escape(field.Name);
 
                 return new
                 {
@@ -157,7 +141,7 @@ namespace {{ ns }} {
                 {
                     name = $"__param__{param.Index + 1}";
                 }
-                name = EscapeSymbol(name);
+                name = CSType.CSSymbole.Escape(name);
 
                 var csType = Converter.Convert(TypeContext.Param, param.Ref.Type).Item1;
                 return new
