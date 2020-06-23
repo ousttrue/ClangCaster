@@ -168,6 +168,10 @@ namespace CSType
                         {
                             return (context.PointerType("IntPtr"), null);
                         }
+                        else if (typedefPointee.Ref.Type is UserType userType)
+                        {
+                            return (context.PointerType(userType.Name), null);
+                        }
                         else
                         {
                             return ("IntPtr", null);
