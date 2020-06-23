@@ -168,9 +168,9 @@ namespace CSType
                         {
                             return (context.PointerType("IntPtr"), null);
                         }
-                        else if (typedefPointee.Ref.Type is UserType userType)
+                        else if (typedefPointee.Ref.Type is StructType st)
                         {
-                            return (context.PointerType(userType.Name), null);
+                            return (context.PointerType(st.Name), null);
                         }
                         else
                         {
