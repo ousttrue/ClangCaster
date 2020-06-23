@@ -12,6 +12,9 @@ namespace ClangCaster
             "WS_",
             "MSG_",
             "SW_",
+            "CW_",
+            "WM_",
+            "COLOR_",
         };
 
         public static string Render(ConstantDefinition constant)

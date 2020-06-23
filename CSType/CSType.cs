@@ -71,6 +71,16 @@ namespace CSType
                         return true;
                 }
             }
+            else if (baseType.Name == "LPCWSTR")
+            {
+                switch (context)
+                {
+                    case TypeContext.Field:
+                    case TypeContext.Param:
+                        value = ("string", "[MarshalAs(UnmanagedType.LPWStr)]");
+                        return true;
+                }
+            }
 
             value = default;
             return false;
