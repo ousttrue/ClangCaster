@@ -85,13 +85,11 @@ namespace ClangAggregator
                     Values[0] = Values[0].Substring(0, Values[0].Length - 1);
                 }
             }
-            else
+
+            // skip prefix
+            for (int i = 0; i < Values.Count; ++i)
             {
-                // skip prefix
-                for (int i = 0; i < Values.Count; ++i)
-                {
-                    Values[i] = SkipPrefix(Values[i], prefix, false);
-                }
+                Values[i] = SkipPrefix(Values[i], prefix, false);
             }
         }
     }

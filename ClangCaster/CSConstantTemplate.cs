@@ -18,8 +18,8 @@ namespace ClangCaster
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine($"       // {constant.Location.Path.Path}:{constant.Location.Line}");
-            sb.AppendLine($"       public const int {constant.Name} = {constant.Value};");
+            sb.AppendLine($"        // {constant.Location.Path.Path}:{constant.Location.Line}");
+            sb.AppendLine($"        public const int {constant.Name} = unchecked((int){constant.Value});");
 
             return sb.ToString();
         }
