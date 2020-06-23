@@ -142,7 +142,7 @@ namespace ClangCaster
                         using (var s = NamespaceOpener.Open(constantsDir, $"{prefix}.cs", ns))
                         {
                             // open static class
-                            s.Writer.Write($@"    public static class {prefix}
+                            s.Writer.Write($@"    public static partial class {prefix}
     {{
 ");
 

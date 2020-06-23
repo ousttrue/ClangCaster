@@ -48,8 +48,8 @@ namespace ClangAggregator
         {
             if (src.StartsWith(prefix))
             {
-                // skip prefix
-                return src.Substring(prefix.Length);
+                // skip prefix. keep underscore for digits starts
+                return src.Substring(prefix.Length - 1);
             }
             else
             {
@@ -90,6 +90,11 @@ namespace ClangAggregator
             for (int i = 0; i < Values.Count; ++i)
             {
                 Values[i] = SkipPrefix(Values[i], prefix, false);
+
+                if (Values[i] == "SHORT")
+                {
+                    Values[i] = "short";
+                }
             }
         }
     }
