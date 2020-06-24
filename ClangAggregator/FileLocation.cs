@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 
@@ -13,24 +14,35 @@ namespace ClangAggregator
 
         static char[] s_buffer = new char[MAX_PATH];
 
+        static Dictionary<string, string> s_pathCache = new Dictionary<string, string>();
+
         static string Normalize(string path)
         {
+            if (s_pathCache.TryGetValue(path, out string value))
+            {
+                return value;
+            }
+
             var length = GetLongPathNameW(path, s_buffer, s_buffer.Length);
             if (length == 0)
             {
                 throw new NotImplementedException();
                 // return path;
             }
-            return new String(s_buffer, 0, length);
+            value = new String(s_buffer, 0, length);
+
+            // use '/'
+            value = System.IO.Path.GetFullPath(value).Replace("\\", "/");
+
+            s_pathCache.Add(path, value);
+            return value;
         }
 
         public string Path { get; private set; }
         readonly int m_hash;
         public NormalizedFilePath(string pathString)
         {
-            Path = System.IO.Path.GetFullPath(pathString).Replace("\\", "/");
-
-            Path = Normalize(Path);
+            Path = Normalize(pathString);
 
             m_hash = Path.ToLower().GetHashCode();
         }
