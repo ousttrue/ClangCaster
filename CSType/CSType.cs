@@ -86,6 +86,24 @@ namespace CSType
             return false;
         }
 
+        static bool TryGetGuid(TypeContext context, BaseType baseType, out (string, string) value)
+        {
+            if (baseType is PointerType pointerType)
+            {
+                if (pointerType.Pointee.Type is TypedefType pointeeType)
+                {
+                    if (pointeeType.Name == "IID")
+                    {
+                        value = ("ref Guid", null);
+                        return true;
+                    }
+                }
+            }
+
+            value = default;
+            return false;
+        }
+
         /// <summary>
         /// ClangCaster.Types.BaseType から CSharp の型を表す文字列と属性(struct用)を返す
         /// </summary>
@@ -102,6 +120,11 @@ namespace CSType
             if (TryGetString(context, type, out (string, string) stringTypeWithAttribute))
             {
                 return stringTypeWithAttribute;
+            }
+
+            if (TryGetGuid(context, type, out (string, string) guidTypeWithAttribute))
+            {
+                return guidTypeWithAttribute;
             }
 
             if (type is EnumType enumType)
@@ -143,50 +166,48 @@ namespace CSType
                     // void* is always IntPtr
                     return ("IntPtr", null);
                 }
-                else
+                if (pointerType.Pointee.Type is Int8Type)
                 {
-                    if (pointerType.Pointee.Type is Int8Type)
+                    // avoid ref sbyte
+                    return (context.PointerType("byte"), null);
+                }
+                else if (pointerType.Pointee.Type is StructType structPointee)
+                {
+                    if (structPointee.Fields.Any())
                     {
-                        // avoid ref sbyte
-                        return (context.PointerType("byte"), null);
-                    }
-                    else if (pointerType.Pointee.Type is StructType structPointee)
-                    {
-                        if (structPointee.Fields.Any())
-                        {
-                            return (context.PointerType(structPointee.Name), null);
-                        }
-                        else
-                        {
-                            // forward decl
-                            return ("IntPtr", null);
-                        }
-                    }
-                    else if (pointerType.Pointee.Type is TypedefType typedefPointee)
-                    {
-                        if (typedefPointee.Ref.Type is PointerType)
-                        {
-                            return (context.PointerType("IntPtr"), null);
-                        }
-                        else if (typedefPointee.Ref.Type is StructType st)
-                        {
-                            return (context.PointerType(st.Name), null);
-                        }
-                        else
-                        {
-                            return ("IntPtr", null);
-                        }
-                    }
-                    else if (pointerType.Pointee.Type is FunctionType)
-                    {
-                        return ("IntPtr", null);
+                        return (context.PointerType(structPointee.Name), null);
                     }
                     else
                     {
-                        var (tmp, _) = Convert(context, pointerType.Pointee);
-                        return (context.PointerType(tmp), null);
+                        // forward decl
+                        return ("IntPtr", null);
                     }
                 }
+                else if (pointerType.Pointee.Type is TypedefType typedefPointee)
+                {
+                    if (typedefPointee.Ref.Type is PointerType)
+                    {
+                        return (context.PointerType("IntPtr"), null);
+                    }
+                    else if (typedefPointee.Ref.Type is StructType st)
+                    {
+                        return (context.PointerType(st.Name), null);
+                    }
+                    else
+                    {
+                        return ("IntPtr", null);
+                    }
+                }
+                else if (pointerType.Pointee.Type is FunctionType)
+                {
+                    return ("IntPtr", null);
+                }
+                else
+                {
+                    var (tmp, _) = Convert(context, pointerType.Pointee);
+                    return (context.PointerType(tmp), null);
+                }
+
             }
 
             throw new NotImplementedException();
