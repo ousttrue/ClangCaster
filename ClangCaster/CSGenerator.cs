@@ -111,7 +111,7 @@ namespace ClangCaster
                     {
                         var structType = reference.Type as StructType;
                         structType.CalcVTable();
-                        using (var s = NamespaceOpener.Open(interfacesDir, $"{structType.Name}.cs", ns))
+                        using (var s = NamespaceOpener.Open(interfacesDir, $"{structType.Name}.cs", ns, CSComInterfaceTemplate.Using))
                         {
                             s.Writer.Write(interfaceTemplate.Render(reference));
                         }
@@ -122,7 +122,7 @@ namespace ClangCaster
                 || exportSource.TypedefTypes.Where(x => x.GetFunctionTypeFromTypedef().Item2 != null).Any())
                 {
                     var path = ExportFile(dst, sourcePath);
-                    using (var s = new NamespaceOpener(new FileInfo(path), ns, "System", "System.Runtime.InteropServices"))
+                    using (var s = new NamespaceOpener(new FileInfo(path), ns, CSFunctionTemplate.Using))
                     {
                         // delegates
                         foreach (var reference in exportSource.TypedefTypes)
@@ -189,7 +189,7 @@ namespace ClangCaster
             if (interfaceTemplate.Counter > 0)
             {
                 var path = Path.Combine(dst.FullName, "__ComPtr__.cs");
-                using (var s = new NamespaceOpener(new FileInfo(path), ns))
+                using (var s = new NamespaceOpener(new FileInfo(path), ns, ComPtr.Using))
                 {
                     s.Writer.Write(ComPtr.Source);
                 }

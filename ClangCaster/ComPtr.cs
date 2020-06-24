@@ -2,13 +2,19 @@ namespace ClangCaster
 {
     static class ComPtr
     {
+        public static string[] Using = new string[]
+        {
+            "System",
+            "System.Runtime.InteropServices",
+        };
+
         public const string Source = @"
     public static class ComPtrExtensions
     {
         public static T QueryInterface<T>(this IUnknown self) where T : ComPtr, new()
         {
             var p = new T();
-            if (self.QueryInterface(ref p.GetIID(), out p.PtrForNew).Failed())
+            if (self.QueryInterface(ref p.GetIID(), ref p.PtrForNew) != 0)
             {
                 return null;
             }

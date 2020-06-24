@@ -6,6 +6,12 @@ namespace ClangCaster
 {
     class CSFunctionTemplate : CSTemplateBase
     {
+        public static string[] Using = new string[]
+        {
+            "System",
+            "System.Runtime.InteropServices",
+        };
+
         protected override string TemplateSource => @"        // {{ function.Location.Path.Path }}:{{ function.Location.Line }}
         [DllImport(""{{ dll }}.dll"")]
         public static extern {{ function.Return }} {{function.Name}}(

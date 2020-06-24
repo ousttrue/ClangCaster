@@ -7,6 +7,12 @@ namespace ClangCaster
 {
     class CSComInterfaceTemplate : CSTemplateBase
     {
+        public static string[] Using = new string[]
+        {
+            "System",
+            "System.Runtime.InteropServices",
+        };
+
         protected override string TemplateSource => @"    // {{ type.Location.Path.Path }}:{{ type.Location.Line }}
     public class {{ type.Name }} : {{ type.Base }} // {{ type.Count }}
     {
@@ -20,9 +26,9 @@ namespace ClangCaster
             var fp = GetFunctionPointer({{method.VTableIndex}});
             if(m_{{ method.Name }}Func==null) m_{{ method.Name }}Func = ({{ method.Name }}Func)Marshal.GetDelegateForFunctionPointer(fp, typeof({{ Method.Name }}Func));
             
-            return m_{{ method.Name }}Func(m_ptr{{method.Comma}}{{method.Call}});
+            {{ method.ReturnNorVoid }} m_{{ method.Name }}Func(m_ptr{{method.Comma}}{{method.Call}});
         }
-        delegate int {{ method.Name }}Func(IntPtr self{{method.Comma}}{{method.ParamsWithName}});
+        delegate {{ method.Return }} {{ method.Name }}Func(IntPtr self{{method.Comma}}{{method.ParamsWithName}});
         {{ method.Name }}Func m_{{ method.Name }}Func;
 
 {%- endfor -%}
@@ -48,7 +54,7 @@ namespace ClangCaster
 
             if (csType.StartsWith("ref "))
             {
-                name = $"ref name";
+                name = $"ref {name}";
             }
 
             return name;
@@ -79,15 +85,17 @@ namespace ClangCaster
                 var functionType = (FunctionType)src;
                 var paramsWithName = string.Join(", ", functionType.Params.Select(x => ParamsWithName(x)).ToArray());
                 var call = String.Join(", ", functionType.Params.Select(x => Call(x)).ToArray());
+                var returnType = Converter.Convert(TypeContext.Return, functionType.Result).Item1;
                 return new
                 {
                     Name = functionType.Name,
                     Params = functionType.Params,
-                    Return = Converter.Convert(TypeContext.Return, functionType.Result).Item1,
+                    Return = returnType,
                     VTableIndex = functionType.VTableIndex,
                     ParamsWithName = paramsWithName,
                     Call = call,
                     Comma = functionType.Params.Count == 0 ? "" : ", ",
+                    ReturnNorVoid = returnType == "void" ? "" : "return "
                 };
             };
 

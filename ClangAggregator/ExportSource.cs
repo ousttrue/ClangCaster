@@ -61,7 +61,7 @@ namespace ClangAggregator
             list.Add(constant);
         }
 
-        int m_anonymous;
+        static int s_anonymous;
 
         static bool IsExportFunction(FunctionType functionType)
         {
@@ -117,7 +117,7 @@ namespace ClangAggregator
                     if (string.IsNullOrEmpty(structType.Name))
                     {
                         // 無名型に名前を付ける(unionによくある)
-                        structType.Name = $"__Anonymous__{m_anonymous++}";
+                        structType.Name = $"__Anonymous__{s_anonymous++}";
                     }
 
                     m_structTypes.Add(reference);
