@@ -45,7 +45,7 @@ namespace ClangCaster
             var sorter = new ExportSorter(headers);
             foreach (var kv in map)
             {
-                sorter.PushIfRootFunction(kv.Value);
+                sorter.PushIf(kv.Value);
             }
             foreach (var constant in map.Constants)
             {
@@ -81,6 +81,10 @@ namespace ClangCaster
                     foreach (var reference in exportSource.EnumTypes)
                     {
                         var enumType = reference.Type as EnumType;
+                        if (string.IsNullOrEmpty(enumType.Name))
+                        {
+                            continue;
+                        }
                         using (var s = NamespaceOpener.Open(enumsDir, $"{enumType.Name}.cs", ns))
                         {
                             s.Writer.Write(enumTemplate.Render(reference));

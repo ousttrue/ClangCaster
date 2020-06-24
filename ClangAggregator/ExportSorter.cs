@@ -49,16 +49,6 @@ namespace ClangAggregator
             return m_rootHeaders.Any(x => x.Equals(reference.Location.Path));
         }
 
-        bool IsRootFunction(TypeReference reference)
-        {
-            if (!IsContainedInRootHeaders(reference))
-            {
-                return false;
-            }
-
-            return reference.Type is FunctionType;
-        }
-
         bool IsComInterface(TypeReference reference)
         {
             if (!IsContainedInRootHeaders(reference))
@@ -116,11 +106,18 @@ namespace ClangAggregator
         /// root header(コンストラクタ引数) から参照されている FunctionType を登録する。
         /// </summary>
         /// <param name="reference"></param>
-        public void PushIfRootFunction(TypeReference reference)
+        public void PushIf(TypeReference reference)
         {
-            if (IsRootFunction(reference))
+            if (IsContainedInRootHeaders(reference))
             {
-                Add(reference, new UserType[] { });
+                if (reference.Type is FunctionType)
+                {
+                    Add(reference, new UserType[] { });
+                }
+                else if (reference.Type is EnumType)
+                {
+                    Add(reference, new UserType[] { });
+                }
             }
             else if (IsComInterface(reference))
             {
