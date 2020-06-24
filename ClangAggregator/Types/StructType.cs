@@ -27,6 +27,7 @@ namespace ClangAggregator.Types
         public bool IsUnion { get; private set; }
         public List<StructField> Fields { get; private set; }
 
+        public TypeReference BaseClass;
         public Guid IID;
 
         StructType(string name) : base(name)
@@ -198,21 +199,9 @@ namespace ClangAggregator.Types
 
                     case CXCursorKind._CXXBaseSpecifier:
                         {
-                            // Decl referenced = getReferenceType(child);
-                            // while (true)
-                            // {
-                            //     var typeDef = cast(TypeDef) referenced;
-                            //     if (!typeDef)
-                            //         break;
-                            //     referenced = typeDef.typeref.type;
-                            // }
-                            // var base = cast(Struct) referenced;
-                            // if (base.definition)
-                            // {
-                            //     base = base.definition;
-                            // }
-                            // decl.base = base;
-                            // decl.vtable = base.vtable;
+                            var referenced = libclang.clang_getCursorReferenced(child);
+                            var baseClass = typeMap.GetOrCreate(referenced);
+                            BaseClass = baseClass;
                         }
                         break;
 

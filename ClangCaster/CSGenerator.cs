@@ -66,7 +66,7 @@ namespace ClangCaster
 
             var enumTemplate = new CSEnumTemplate();
             var structTemplate = new CSStructTemplate();
-            var interfaceTemplate = new CSStructTemplate();
+            var interfaceTemplate = new CSComInterfaceTemplate();
             var delegateTemplate = new CSDelegateTemplate();
             var functionTemplate = new CSFunctionTemplate();
             foreach (var (sourcePath, exportSource) in sorter.HeaderMap)
@@ -121,7 +121,7 @@ namespace ClangCaster
                 || exportSource.TypedefTypes.Where(x => x.GetFunctionTypeFromTypedef().Item2 != null).Any())
                 {
                     var path = ExportFile(dst, sourcePath);
-                    using (var s = new NamespaceOpener(new FileInfo(path), ns))
+                    using (var s = new NamespaceOpener(new FileInfo(path), ns, "System", "System.Runtime.InteropServices"))
                     {
                         // delegates
                         foreach (var reference in exportSource.TypedefTypes)
@@ -181,6 +181,16 @@ namespace ClangCaster
                             s.Writer.WriteLine("    }");
                         }
                     }
+                }
+            }
+
+            // ComPtr
+            if (interfaceTemplate.Counter > 0)
+            {
+                var path = Path.Combine(dst.FullName, "__ComPtr__.cs");
+                using (var s = new NamespaceOpener(new FileInfo(path), ns))
+                {
+                    s.Writer.Write(ComPtr.Source);
                 }
             }
 

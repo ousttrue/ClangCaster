@@ -4,18 +4,24 @@ using CSType;
 
 namespace ClangCaster
 {
-    class CSComTemplate : CSTemplateBase
+    class CSComInterfaceTemplate : CSTemplateBase
     {
         protected override string TemplateSource => @"    // {{ type.Location.Path.Path }}:{{ type.Location.Line }}
-    public struct {{ type.Name }} // {{ type.Count }}
+    public class {{ type.Name }} : {{ type.Base }} // {{ type.Count }}
     {
+        static Guid s_uuid = new Guid(""{{ type.IID }}"");
+        public static new ref Guid IID => ref s_uuid;
+        public override ref Guid GetIID() { return ref s_uuid; }
+
 {% for field in type.Fields -%}
         {% if field.Attribute %}{{ field.Attribute }} {% endif %}{{ field.Render }}
 {%- endfor -%}
     }
 ";
 
-        public CSComTemplate()
+        public int Counter { get; private set; }
+
+        public CSComInterfaceTemplate()
         {
             Func<Object, Object> FieldFunc = (Object src) =>
             {
@@ -43,7 +49,9 @@ namespace ClangCaster
 
         public string Render(TypeReference reference)
         {
+            Counter += 1;
             var structType = reference.Type as StructType;
+            var baseClass = structType.BaseClass != null ? structType.BaseClass.Type.Name : "ComPtr";
             return m_template.Render(DotLiquid.Hash.FromAnonymousObject(
                 new
                 {
@@ -54,6 +62,8 @@ namespace ClangCaster
                         Count = reference.Count,
                         Name = structType.Name,
                         Fields = structType.Fields,
+                        IID = structType.IID.ToString(),
+                        Base = baseClass,
                     },
                 }
             ));

@@ -136,6 +136,11 @@ namespace ClangAggregator
         /// <param name="stack"></param>
         private void Add(TypeReference reference, ClangAggregator.Types.UserType[] stack)
         {
+            if(reference is null)
+            {
+                return;
+            }
+
             var t = reference.Type;
             if (t is PointerType pointerType)
             {
@@ -207,6 +212,8 @@ namespace ClangAggregator
                 {
                     Add(field.Ref, stack.Concat(new[] { type }).ToArray());
                 }
+
+                Add(structType.BaseClass, stack.Concat(new[] { type }).ToArray());
             }
             else if (type is FunctionType functionType)
             {
