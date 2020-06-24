@@ -49,7 +49,7 @@ namespace ClangCaster
             }
             foreach (var constant in map.Constants)
             {
-                foreach (var prefix in CSConstantTemplate.UseConstantPrefixies)
+                foreach (var prefix in ConstantDefinition.UseConstantPrefixies)
                 {
                     if (constant.Name.StartsWith(prefix))
                     {

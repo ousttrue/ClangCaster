@@ -7,6 +7,23 @@ namespace ClangAggregator
 {
     public class ConstantDefinition
     {
+        public static string[] UseConstantPrefixies = new string[]
+        {
+            "WS_S_",
+            "WS_E_",
+            "WS_",
+            "MSG_",
+            "SW_",
+            "CW_",
+            "WM_",
+            "COLOR_",
+            "QS_",
+            "PM_",
+            "CS_",
+            "IDC_",
+            "SM_",
+        };
+
         public uint Hash { get; private set; }
 
         public FileLocation Location { get; set; }
@@ -94,6 +111,16 @@ namespace ClangAggregator
                 if (Values[i] == "SHORT")
                 {
                     Values[i] = "short";
+                }
+
+                // split
+                foreach (var p in UseConstantPrefixies)
+                {
+                    if (Values[i].StartsWith(p))
+                    {
+                        // split
+                        Values[i] = $"{Values[i][0..p.Length]}.{Values[i][(p.Length - 1)..^0]}";
+                    }
                 }
             }
         }

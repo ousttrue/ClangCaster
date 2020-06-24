@@ -60,6 +60,9 @@ namespace ClangAggregator
                 case CXCursorKind._CXXBaseSpecifier:
                 case CXCursorKind._CXXAccessSpecifier:
                 case CXCursorKind._CXXMethod:
+                case CXCursorKind._Constructor:
+                case CXCursorKind._Destructor:
+                case CXCursorKind._ConversionFunction:
                     // skip
                     break;
 

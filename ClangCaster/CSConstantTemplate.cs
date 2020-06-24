@@ -5,18 +5,6 @@ namespace ClangCaster
 {
     class CSConstantTemplate
     {
-        public static string[] UseConstantPrefixies = new string[]
-        {
-            "WS_S_",
-            "WS_E_",
-            "WS_",
-            "MSG_",
-            "SW_",
-            "CW_",
-            "WM_",
-            "COLOR_",
-        };
-
         public static string Render(ConstantDefinition constant)
         {
             var sb = new StringBuilder();
