@@ -42,6 +42,8 @@ namespace ClangAggregator.Types
 
         public List<FunctionParam> Params = new List<FunctionParam>();
 
+        public int VTableIndex = -1;
+        
         FunctionType(string name) : base(name)
         {
         }

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using ClangAggregator.Types;
 using CSType;
 
@@ -13,38 +14,84 @@ namespace ClangCaster
         public static new ref Guid IID => ref s_uuid;
         public override ref Guid GetIID() { return ref s_uuid; }
 
-{% for field in type.Fields -%}
-        {% if field.Attribute %}{{ field.Attribute }} {% endif %}{{ field.Render }}
+{% for method in type.Methods -%}
+        public {{ method.Return }} {{method.Name}}({{method.ParamsWithName}})
+        {
+            var fp = GetFunctionPointer({{method.VTableIndex}});
+            if(m_{{ method.Name }}Func==null) m_{{ method.Name }}Func = ({{ method.Name }}Func)Marshal.GetDelegateForFunctionPointer(fp, typeof({{ Method.Name }}Func));
+            
+            return m_{{ method.Name }}Func(m_ptr{{method.Comma}}{{method.Call}});
+        }
+        delegate int {{ method.Name }}Func(IntPtr self{{method.Comma}}{{method.ParamsWithName}});
+        {{ method.Name }}Func m_{{ method.Name }}Func;
+
 {%- endfor -%}
     }
 ";
 
         public int Counter { get; private set; }
 
+        static string Call(in FunctionParam param)
+        {
+            var name = param.Name;
+            if (string.IsNullOrEmpty(name))
+            {
+                name = $"__param__{param.Index}";
+            }
+            name = CSType.CSSymbole.Escape(name);
+
+            var (csType, csAttr) = Converter.Convert(TypeContext.Param, param.Ref);
+            if (!string.IsNullOrEmpty(csAttr))
+            {
+                csType = $"{csAttr} {csType}";
+            }
+
+            if (csType.StartsWith("ref "))
+            {
+                name = $"ref name";
+            }
+
+            return name;
+        }
+
+        static string ParamsWithName(in FunctionParam param)
+        {
+            var name = param.Name;
+            if (string.IsNullOrEmpty(name))
+            {
+                name = $"__param__{param.Index}";
+            }
+            name = CSType.CSSymbole.Escape(name);
+
+            var (csType, csAttr) = Converter.Convert(TypeContext.Param, param.Ref);
+            if (!string.IsNullOrEmpty(csAttr))
+            {
+                csType = $"{csAttr} {csType}";
+            }
+
+            return $"{csType} {name}";
+        }
+
         public CSComInterfaceTemplate()
         {
-            Func<Object, Object> FieldFunc = (Object src) =>
+            Func<Object, Object> MethodFunc = (Object src) =>
             {
-                var field = (StructField)src;
-
-                var (type, attribute) = Converter.Convert(TypeContext.Field, field.Ref);
-                if (string.IsNullOrEmpty(type))
-                {
-                    // anonymous union
-                    // throw new NotImplementedException();
-                }
-
-                // name
-                var name = CSType.CSSymbole.Escape(field.Name);
-
+                var functionType = (FunctionType)src;
+                var paramsWithName = string.Join(", ", functionType.Params.Select(x => ParamsWithName(x)).ToArray());
+                var call = String.Join(", ", functionType.Params.Select(x => Call(x)).ToArray());
                 return new
                 {
-                    Attribute = attribute,
-                    Render = $"public {type} {name};",
+                    Name = functionType.Name,
+                    Params = functionType.Params,
+                    Return = Converter.Convert(TypeContext.Return, functionType.Result).Item1,
+                    VTableIndex = functionType.VTableIndex,
+                    ParamsWithName = paramsWithName,
+                    Call = call,
+                    Comma = functionType.Params.Count == 0 ? "" : ", ",
                 };
             };
 
-            DotLiquid.Template.RegisterSafeType(typeof(StructField), FieldFunc);
+            DotLiquid.Template.RegisterSafeType(typeof(FunctionType), MethodFunc);
         }
 
         public string Render(TypeReference reference)
@@ -64,6 +111,7 @@ namespace ClangCaster
                         Fields = structType.Fields,
                         IID = structType.IID.ToString(),
                         Base = baseClass,
+                        Methods = structType.Methods,
                     },
                 }
             ));

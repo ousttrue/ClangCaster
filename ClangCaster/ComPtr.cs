@@ -18,6 +18,7 @@ namespace ClangCaster
 
     /// <summary>
     /// COMの virtual function table を自前で呼び出すヘルパークラス。
+    /// RCW は、うまくいかなかった。
     /// </summary>
     public abstract class ComPtr : IDisposable
     {
@@ -31,6 +32,10 @@ namespace ClangCaster
         /// <summay>
         protected IntPtr m_ptr;
 
+        /// <summary>
+        /// 初期化に、 void** が要求された場合に使う
+        /// </summary>
+        /// <value></value>
         public ref IntPtr PtrForNew
         {
             get

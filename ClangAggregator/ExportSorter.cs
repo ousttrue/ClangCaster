@@ -136,7 +136,7 @@ namespace ClangAggregator
         /// <param name="stack"></param>
         private void Add(TypeReference reference, ClangAggregator.Types.UserType[] stack)
         {
-            if(reference is null)
+            if (reference is null)
             {
                 return;
             }
@@ -162,13 +162,11 @@ namespace ClangAggregator
             }
 
             // ensure ExportSource
-            if (string.IsNullOrEmpty(reference.Location.Path.Path))
+            if (!string.IsNullOrEmpty(reference.Location.Path.Path))
             {
-                return;
+                var export = GetOrCreateSource(reference.Location.Path);
+                export.Push(reference);
             }
-            var export = GetOrCreateSource(reference.Location.Path);
-
-            export.Push(reference);
 
             // 依存する型を再帰的にAddする
             if (type is EnumType)
@@ -214,6 +212,11 @@ namespace ClangAggregator
                 }
 
                 Add(structType.BaseClass, stack.Concat(new[] { type }).ToArray());
+
+                foreach (var method in structType.Methods)
+                {
+                    Add(new TypeReference(default, default, method), stack.Concat(new[] { type }).ToArray());
+                }
             }
             else if (type is FunctionType functionType)
             {

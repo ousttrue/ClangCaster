@@ -27,6 +27,19 @@ namespace ClangAggregator.Types
         public bool IsUnion { get; private set; }
         public List<StructField> Fields { get; private set; }
 
+        List<FunctionType> m_methods;
+        public List<FunctionType> Methods
+        {
+            get
+            {
+                if (m_methods is null)
+                {
+                    m_methods = new List<FunctionType>();
+                }
+                return m_methods;
+            }
+        }
+
         public TypeReference BaseClass;
         public Guid IID;
 
@@ -37,15 +50,8 @@ namespace ClangAggregator.Types
 
         public override string ToString()
         {
-            // if (IsForwardDecl)
-            // {
-            //     return $"struct {Name};";
-            // }
-            // else
-            {
-                var fields = string.Join(", ", Fields.Select(x => x.Ref.Type));
-                return $"struct {Name} {{}}";
-            }
+            var fields = string.Join(", ", Fields.Select(x => x.Ref.Type));
+            return $"struct {Name} {{}}";
         }
 
         /// <summary>
@@ -124,6 +130,14 @@ namespace ClangAggregator.Types
                             break;
                         }
 
+                    case CXCursorKind._CXXBaseSpecifier:
+                        {
+                            var referenced = libclang.clang_getCursorReferenced(child);
+                            var baseClass = typeMap.GetOrCreate(referenced);
+                            BaseClass = baseClass;
+                        }
+                        break;
+
                     case CXCursorKind._UnexposedAttr:
                         {
                             var src = typeMap.GetSource(child);
@@ -139,10 +153,12 @@ namespace ClangAggregator.Types
                             var method = FunctionType.Parse(child, typeMap);
                             if (!method.HasBody)
                             {
-                                // CXCursor *p;
-                                // uint32_t n;
+                                // TODO: override check
+
+                                // IntPtr p = default;
+                                // uint n = default;
                                 // ulong[] hashes;
-                                // clang_getOverriddenCursors(child, &p, &n);
+                                // libclang.clang_getOverriddenCursors(child, ref p, ref n);
                                 // if (n)
                                 // {
                                 //     scope(exit) clang_disposeOverriddenCursors(p);
@@ -161,10 +177,10 @@ namespace ClangAggregator.Types
                                 // }
 
                                 // var found = -1;
-                                // for (int i = 0; i < decl.vtable.length; ++i)
+                                // for (int i = 0; i < VTable.Count; ++i)
                                 // {
                                 //     var current = decl.vtable[i].hash;
-                                //     if (hashes.any !(x = > x == current))
+                                //     if (hashes.any!(x = > x == current))
                                 //     {
                                 //         found = i;
                                 //         break;
@@ -181,7 +197,8 @@ namespace ClangAggregator.Types
                                 //     debug var a = 0;
                                 // }
                                 // decl.methodVTableIndices ~ = found;
-                                // decl.methods ~ = method;
+
+                                Methods.Add(method);
                             }
                         }
                         break;
@@ -197,37 +214,10 @@ namespace ClangAggregator.Types
                     case CXCursorKind._CXXAccessSpecifier:
                         break;
 
-                    case CXCursorKind._CXXBaseSpecifier:
-                        {
-                            var referenced = libclang.clang_getCursorReferenced(child);
-                            var baseClass = typeMap.GetOrCreate(referenced);
-                            BaseClass = baseClass;
-                        }
-                        break;
-
                     case CXCursorKind._TypeRef:
                         // template param ?
                         // debug var a = 0;
                         break;
-
-                    // case CXCursorKind._StructDecl:
-                    // case CXCursorKind._ClassDecl:
-                    // case CXCursorKind._UnionDecl:
-                    // case CXCursorKind._TypedefDecl:
-                    // case CXCursorKind._EnumDecl: {
-                    //     // nested type
-                    //     traverse(child, context);
-                    //     // var nestName = getCursorSpelling(child);
-                    //     // if (nestName == "")
-                    //     // {
-                    //     //     // anonymous
-                    //     //     var fieldOffset = clang_Cursor_getOffsetOfField(child);
-                    //     //     var fieldDecl = getDeclFromCursor(child);
-                    //     //     var fieldConst = clang_isConstQualifiedType(fieldType);
-                    //     //     decl.fields ~ = Field(fieldOffset, nestName, TypeRef(fieldDecl, fieldConst != 0));
-                    //     // }
-                    // }
-                    // break;
 
                     default:
                         // traverse(child, context);
@@ -262,6 +252,38 @@ namespace ClangAggregator.Types
             var voidPtr = new PointerType(TypeReference.FromPrimitive(VoidType.Instance));
             structType.Fields.Add(new StructField(0, "ptr", TypeReference.FromPointer(voidPtr), 0));
             return structType;
+        }
+
+        public int CalcVTable()
+        {
+            var index = 0;
+            if (BaseClass != null)
+            {
+                if (BaseClass.Type is StructType baseStruct)
+                {
+                    index = baseStruct.CalcVTable();
+                }
+                else if (BaseClass.Type is TypedefType baseTypedef)
+                {
+                    if (baseTypedef.Ref.Type is StructType baseTypedefStruct)
+                    {
+                        index = baseTypedefStruct.CalcVTable();
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+            }
+            foreach (var method in Methods)
+            {
+                method.VTableIndex = index++;
+            }
+            return index;
         }
     }
 }

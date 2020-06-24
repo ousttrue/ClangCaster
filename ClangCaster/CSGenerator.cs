@@ -110,6 +110,7 @@ namespace ClangCaster
                     foreach (var reference in exportSource.Interfaces)
                     {
                         var structType = reference.Type as StructType;
+                        structType.CalcVTable();
                         using (var s = NamespaceOpener.Open(interfacesDir, $"{structType.Name}.cs", ns))
                         {
                             s.Writer.Write(interfaceTemplate.Render(reference));
