@@ -13,7 +13,7 @@ namespace ClangCaster
         };
 
         protected override string TemplateSource => @"    // {{ type.Location.Path.Path }}:{{ type.Location.Line }}
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     public struct {{ type.Name }} // {{ type.Count }}
     {
 {% for field in type.Fields -%}

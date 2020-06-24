@@ -139,6 +139,13 @@ namespace CSType
 
             if (type is ArrayType arrayType)
             {
+                if (arrayType.Element.Type.Name == "WCHAR")
+                {
+                    if (arrayType.Size > 0 && context == TypeContext.Field)
+                    {
+                        return ("string", $"[MarshalAs(UnmanagedType.ByValTStr, SizeConst = {arrayType.Size})]");
+                    }
+                }
                 var elementType = Convert(context, arrayType.Element).Item1;
                 return ($"{elementType}[]", $"[MarshalAs(UnmanagedType.ByValArray, SizeConst = {arrayType.Size})]");
             }
