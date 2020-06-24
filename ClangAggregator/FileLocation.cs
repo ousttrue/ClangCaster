@@ -1,15 +1,37 @@
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace ClangAggregator
 {
     public struct NormalizedFilePath : IEquatable<NormalizedFilePath>
     {
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode, BestFitMapping = false, ExactSpelling = true)]
+        internal static extern int GetLongPathNameW(string src, char[] buffer, int bufferLength);
+
+        const int MAX_PATH = 260;
+
+        static char[] s_buffer = new char[MAX_PATH];
+
+        static string Normalize(string path)
+        {
+            var length = GetLongPathNameW(path, s_buffer, s_buffer.Length);
+            if (length == 0)
+            {
+                throw new NotImplementedException();
+                // return path;
+            }
+            return new String(s_buffer, 0, length);
+        }
+
         public string Path { get; private set; }
         readonly int m_hash;
         public NormalizedFilePath(string pathString)
         {
             Path = System.IO.Path.GetFullPath(pathString).Replace("\\", "/");
+
+            Path = Normalize(Path);
+
             m_hash = Path.ToLower().GetHashCode();
         }
 
