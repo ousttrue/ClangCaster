@@ -6,6 +6,12 @@ namespace ClangCaster
 {
     class CSStructTemplate : CSTemplateBase
     {
+        public static string[] Using = new string[]
+        {
+            "System",
+            "System.Runtime.InteropServices",
+        };
+
         protected override string TemplateSource => @"    // {{ type.Location.Path.Path }}:{{ type.Location.Line }}
     [StructLayout(LayoutKind.Sequential)]
     public struct {{ type.Name }} // {{ type.Count }}

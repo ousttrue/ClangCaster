@@ -95,7 +95,7 @@ namespace ClangCaster
                     foreach (var reference in exportSource.StructTypes)
                     {
                         var structType = reference.Type as StructType;
-                        using (var s = NamespaceOpener.Open(structsDir, $"{structType.Name}.cs", ns))
+                        using (var s = NamespaceOpener.Open(structsDir, $"{structType.Name}.cs", ns, CSStructTemplate.Using))
                         {
                             s.Writer.Write(structTemplate.Render(reference));
                         }
