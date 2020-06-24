@@ -14,7 +14,9 @@ namespace ClangAggregator
     /// </summary>
     public class ExportSorter
     {
-        List<NormalizedFilePath> m_rootHeaders;
+        List<NormalizedFilePath> m_rootHeaders = new List<NormalizedFilePath>();
+        List<string> m_dllList = new List<string>();
+
         Dictionary<NormalizedFilePath, ExportSource> m_headerMap = new Dictionary<NormalizedFilePath, ExportSource>();
 
         public IDictionary<NormalizedFilePath, ExportSource> HeaderMap => m_headerMap;
@@ -23,9 +25,13 @@ namespace ClangAggregator
         /// 
         /// </summary>
         /// <param name="headers">Exportしたい関数が含まれている header </param>
-        public ExportSorter(IEnumerable<string> headers)
+        public ExportSorter(IEnumerable<HeaderWithDll> headers)
         {
-            m_rootHeaders = headers.Select(x => new NormalizedFilePath(x)).ToList();
+            foreach (var header in headers)
+            {
+                m_rootHeaders.Add(new NormalizedFilePath(header.Header));
+                m_dllList.Add(header.Dll);
+            }
         }
 
         public override string ToString()
@@ -48,6 +54,30 @@ namespace ClangAggregator
             return reference.Type is FunctionType;
         }
 
+        string GetDll(NormalizedFilePath path)
+        {
+            for (int i = 0; i < m_rootHeaders.Count; ++i)
+            {
+                if (m_rootHeaders[i].Equals(path))
+                {
+                    return m_dllList[i];
+                }
+            }
+
+            return default;
+        }
+
+        ExportSource GetOrCreateSource(NormalizedFilePath path)
+        {
+            if (!m_headerMap.TryGetValue(path, out ExportSource export))
+            {
+                var dll = GetDll(path);
+                export = new ExportSource(path, dll);
+                m_headerMap.Add(path, export);
+            }
+            return export;
+        }
+
         public void PushConstant(string prefix, ConstantDefinition constant)
         {
             // ensure ExportSource
@@ -55,12 +85,8 @@ namespace ClangAggregator
             {
                 return;
             }
-            if (!m_headerMap.TryGetValue(constant.Location.Path, out ExportSource export))
-            {
-                export = new ExportSource(constant.Location.Path);
-                m_headerMap.Add(constant.Location.Path, export);
-            }
 
+            var export = GetOrCreateSource(constant.Location.Path);
             export.PushConstant(prefix, constant);
         }
 
@@ -109,11 +135,7 @@ namespace ClangAggregator
             {
                 return;
             }
-            if (!m_headerMap.TryGetValue(reference.Location.Path, out ExportSource export))
-            {
-                export = new ExportSource(reference.Location.Path);
-                m_headerMap.Add(reference.Location.Path, export);
-            }
+            var export = GetOrCreateSource(reference.Location.Path);
 
             export.Push(reference);
 

@@ -12,6 +12,8 @@ namespace ClangAggregator
     {
         readonly NormalizedFilePath m_path;
 
+        public readonly string Dll;
+
         readonly List<TypeReference> m_enumTypes = new List<TypeReference>();
         public IEnumerable<TypeReference> EnumTypes => m_enumTypes;
 
@@ -26,12 +28,18 @@ namespace ClangAggregator
 
         public readonly Dictionary<string, List<ConstantDefinition>> ConstantMap = new Dictionary<string, List<ConstantDefinition>>();
 
-        public ExportSource(NormalizedFilePath path)
+        public ExportSource(NormalizedFilePath path, string dll)
         {
             m_path = path;
+            if (!string.IsNullOrEmpty(dll) && dll.ToLower().EndsWith(".dll"))
+            {
+                // remove extension
+                dll = dll.Substring(0, dll.Length - 4);
+            }
+            Dll = dll;
         }
 
-        public ExportSource(string path) : this(new NormalizedFilePath(path))
+        public ExportSource(string path, string dll) : this(new NormalizedFilePath(path), dll)
         {
         }
 
@@ -42,7 +50,7 @@ namespace ClangAggregator
 
         public void PushConstant(string prefix, ConstantDefinition constant)
         {
-            if(!ConstantMap.TryGetValue(prefix, out List<ConstantDefinition> list))
+            if (!ConstantMap.TryGetValue(prefix, out List<ConstantDefinition> list))
             {
                 list = new List<ConstantDefinition>();
                 ConstantMap.Add(prefix, list);

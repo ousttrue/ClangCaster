@@ -1,21 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using ClangAggregator;
 
 namespace ClangCaster
 {
     class CommandLine
     {
-        public List<string> Headers = new List<string>();
+        public List<HeaderWithDll> Headers = new List<HeaderWithDll>();
         public List<string> Includes = new List<string>();
         public List<string> Defines = new List<string>();
 
         public string Dst;
 
         public string Namespace;
-
-        public string DllName;
 
         public static CommandLine Parse(string[] args)
         {
@@ -29,11 +28,6 @@ namespace ClangCaster
                         ++i;
                         break;
 
-                    case "-dll":
-                        cmd.DllName = args[i + 1];
-                        ++i;
-                        break;
-
                     case "-d":
                         // dst
                         cmd.Dst = args[i + 1];
@@ -43,7 +37,7 @@ namespace ClangCaster
                     case "-h":
                         // header
                         {
-                            cmd.Headers.Add(args[i + 1]);
+                            cmd.Headers.Add(new HeaderWithDll(args[i + 1]));
                             ++i;
                         }
                         break;
@@ -70,7 +64,7 @@ namespace ClangCaster
     {
         static TypeMap Parse(in CommandLine cmd)
         {
-            using (var tu = ClangTU.Parse(cmd.Headers, cmd.Includes, cmd.Defines))
+            using (var tu = ClangTU.Parse(cmd.Headers.Select(x => x.Header), cmd.Includes, cmd.Defines))
             {
                 if (tu is null)
                 {
@@ -93,7 +87,7 @@ namespace ClangCaster
             if (!string.IsNullOrEmpty(cmd.Dst))
             {
                 // dst folder
-                Console.WriteLine(cmd.Dst);
+                Console.WriteLine($"dst: {cmd.Dst}");
                 var dst = new DirectoryInfo(cmd.Dst);
                 if (dst.Exists)
                 {
@@ -103,7 +97,7 @@ namespace ClangCaster
                 Directory.CreateDirectory(dst.FullName);
 
                 var exporter = new CSGenerator();
-                exporter.Export(map, dst, cmd.Headers, cmd.Namespace, cmd.DllName);
+                exporter.Export(map, dst, cmd.Headers, cmd.Namespace);
             }
         }
     }

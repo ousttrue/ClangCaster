@@ -48,7 +48,7 @@ namespace ClangAggregator
         }
 
         public static ClangTU Parse(
-            IReadOnlyList<string> headers,
+            IEnumerable<string> headers,
             IReadOnlyList<string> includes,
             IReadOnlyList<string> defines)
         {
@@ -70,7 +70,7 @@ namespace ClangAggregator
                 args.Add($"-D{define}");
             }
 
-            return Parse(headers, args);
+            return Parse(headers.ToList(), args);
         }
 
         class AllocBuffer : IDisposable
@@ -149,7 +149,7 @@ namespace ClangAggregator
             List<Action> disposeList = new List<Action>();
 
             CXUnsavedFile cxUnsaved = default;
-            int unsavedFiles = default;
+            uint unsavedFiles = default;
             if (string.IsNullOrEmpty(unsaved))
             {
                 unsavedFiles = 0;
@@ -175,7 +175,7 @@ namespace ClangAggregator
             var tu = libclang.clang_parseTranslationUnit(index,
                 ref filenameBytes[0],
                 ref ptrs[0], ptrs.Length,
-                ref cxUnsaved, 1,
+                ref cxUnsaved, unsavedFiles,
                 options);
 
             foreach (var x in disposeList)

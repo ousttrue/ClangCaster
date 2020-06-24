@@ -39,7 +39,7 @@ namespace ClangCaster
         public void Export(
             TypeMap map,
             DirectoryInfo dst,
-            List<String> headers, string ns, string dll)
+            List<HeaderWithDll> headers, string ns)
         {
             // organize types
             var sorter = new ExportSorter(headers);
@@ -70,7 +70,7 @@ namespace ClangCaster
             var functionTemplate = new CSFunctionTemplate();
             foreach (var (sourcePath, exportSource) in sorter.HeaderMap)
             {
-                Console.WriteLine(sourcePath);
+                Console.WriteLine($"export: {sourcePath}");
                 var dir = ExportDir(dst, sourcePath);
 
                 if (exportSource.EnumTypes.Any())
@@ -116,20 +116,26 @@ namespace ClangCaster
                             }
                         }
 
-                        // open partial class
-                        s.Writer.Write($@"    public static partial class {dll}
+                        if (exportSource.FunctionTypes.Any())
+                        {
+                            if (string.IsNullOrEmpty(exportSource.Dll))
+                            {
+                                Console.WriteLine("dll name not specified. please use -h PATH_TO_HEADER.h,NAME.dll");
+                            }
+                            // open partial class
+                            s.Writer.Write($@"    public static partial class {exportSource.Dll}
     {{
 ");
+                            // functions
+                            foreach (var reference in exportSource.FunctionTypes)
+                            {
+                                var functionType = reference.Type as FunctionType;
+                                s.Writer.WriteLine(functionTemplate.Render(reference, exportSource.Dll));
+                            }
 
-                        // functions
-                        foreach (var reference in exportSource.FunctionTypes)
-                        {
-                            var functionType = reference.Type as FunctionType;
-                            s.Writer.WriteLine(functionTemplate.Render(reference, dll));
+                            // close partial class
+                            s.Writer.WriteLine("    }");
                         }
-
-                        // close partial class
-                        s.Writer.WriteLine("    }");
                     }
                 }
 

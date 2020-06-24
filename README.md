@@ -32,4 +32,4 @@ Generated https://github.com/ousttrue/regenerator .
 
 ### windows.h
 
-* [ ] rename struct tagXXX
+* [x] rename struct tagXXX

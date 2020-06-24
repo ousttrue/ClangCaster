@@ -40,14 +40,14 @@
             "args": [
                 "-ns",
                 "WindowsKits",
-                "-dll",
-                "user32",
                 "-d",
                 "${workspaceFolder}/WindowsKits",
                 "-h",
                 "C:/Program Files (x86)/Windows Kits/10/Include/10.0.18362.0/um/Windows.h",
                 "-h",
-                "C:/Program Files (x86)/Windows Kits/10/Include/10.0.18362.0/um/winuser.h",
+                "C:/Program Files (x86)/Windows Kits/10/Include/10.0.18362.0/um/winuser.h,user32.dll",
+                "-h",
+                "C:/Program Files (x86)/Windows Kits/10/Include/10.0.18362.0/um/libloaderapi.h,kernel32.dll",
             ],
             "cwd": "${workspaceFolder}",
             "env": {
