@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using CIndex;
 
@@ -13,11 +14,16 @@ namespace ClangAggregator
             }
         }
 
-        public static (uint, ClangLocation) CursorHashLocation(this in CXCursor cursor)
+        public static (uint, FileLocation) CursorHashLocation(this in CXCursor cursor)
         {
             var hash = libclang.clang_hashCursor(cursor);
             var location = ClangLocation.Create(cursor);
-            return (hash, location);
+            if (location.file == IntPtr.Zero)
+            {
+                return (hash, default);
+            }
+            var fileLocation = new FileLocation(ClangString.FromFile(location.file).ToString(), location.line, location.column, (int)location.begin, (int)location.end);
+            return (hash, fileLocation);
         }
 
         public static List<CXCursor> Children(this in CXCursor cursor)

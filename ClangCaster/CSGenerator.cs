@@ -66,6 +66,7 @@ namespace ClangCaster
 
             var enumTemplate = new CSEnumTemplate();
             var structTemplate = new CSStructTemplate();
+            var interfaceTemplate = new CSStructTemplate();
             var delegateTemplate = new CSDelegateTemplate();
             var functionTemplate = new CSFunctionTemplate();
             foreach (var (sourcePath, exportSource) in sorter.HeaderMap)
@@ -101,6 +102,21 @@ namespace ClangCaster
                     }
                 }
 
+                if (exportSource.Interfaces.Any())
+                {
+                    // COM interface
+                    var interfacesDir = new DirectoryInfo(Path.Combine(dir, $"interfaces"));
+                    interfacesDir.Create();
+                    foreach (var reference in exportSource.Interfaces)
+                    {
+                        var structType = reference.Type as StructType;
+                        using (var s = NamespaceOpener.Open(interfacesDir, $"{structType.Name}.cs", ns))
+                        {
+                            s.Writer.Write(interfaceTemplate.Render(reference));
+                        }
+                    }
+                }
+
                 if (exportSource.FunctionTypes.Any()
                 || exportSource.TypedefTypes.Where(x => x.GetFunctionTypeFromTypedef().Item2 != null).Any())
                 {
@@ -122,19 +138,22 @@ namespace ClangCaster
                             {
                                 Console.WriteLine("dll name not specified. please use -h PATH_TO_HEADER.h,NAME.dll");
                             }
-                            // open partial class
-                            s.Writer.Write($@"    public static partial class {exportSource.Dll}
+                            else
+                            {
+                                // open partial class
+                                s.Writer.Write($@"    public static partial class {exportSource.Dll}
     {{
 ");
-                            // functions
-                            foreach (var reference in exportSource.FunctionTypes)
-                            {
-                                var functionType = reference.Type as FunctionType;
-                                s.Writer.WriteLine(functionTemplate.Render(reference, exportSource.Dll));
-                            }
+                                // functions
+                                foreach (var reference in exportSource.FunctionTypes)
+                                {
+                                    var functionType = reference.Type as FunctionType;
+                                    s.Writer.WriteLine(functionTemplate.Render(reference, exportSource.Dll));
+                                }
 
-                            // close partial class
-                            s.Writer.WriteLine("    }");
+                                // close partial class
+                                s.Writer.WriteLine("    }");
+                            }
                         }
                     }
                 }

@@ -30,10 +30,10 @@ namespace ClangAggregator
             }
         }
 
-        public ConstantDefinition(uint hash, ClangLocation location, string name, IEnumerable<string> values)
+        public ConstantDefinition(uint hash, FileLocation location, string name, IEnumerable<string> values)
         {
             Hash = hash;
-            Location = new FileLocation(ClangString.FromFile(location.file).ToString(), location.line, location.column, location.begin, location.end);
+            Location = location;
             Name = name;
             Values = values.ToList();
         }

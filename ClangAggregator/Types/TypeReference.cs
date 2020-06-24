@@ -10,14 +10,14 @@ namespace ClangAggregator.Types
 
         public uint Count { get; set; }
 
-        public TypeReference(uint hash, ClangLocation location, BaseType type)
+        public TypeReference(uint hash, FileLocation location, BaseType type)
         {
             Hash = hash;
-            Location = new FileLocation(ClangString.FromFile(location.file).ToString(), location.line, location.column, location.begin, location.end);
+            Location = location;
             Type = type;
         }
 
-        public TypeReference((uint, ClangLocation) args, BaseType type) : this(args.Item1, args.Item2, type)
+        public TypeReference((uint, FileLocation) args, BaseType type) : this(args.Item1, args.Item2, type)
         {
         }
 

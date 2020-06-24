@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using ClangAggregator.Types;
 using CIndex;
 using System.Linq;
+using System.Text;
 
 namespace ClangAggregator
 {
@@ -204,7 +205,7 @@ namespace ClangAggregator
                 if (token.Length > 1)
                 {
                     var (hash, location) = cursor.CursorHashLocation();
-                    if (location.file != IntPtr.Zero)
+                    if (location.IsValid)
                     {
                         m_constants.Add(new ConstantDefinition(hash, location, tokens[0], tokens.Skip(1).ToArray()));
                     }
@@ -218,6 +219,23 @@ namespace ClangAggregator
                     Console.WriteLine(string.Join(", ", tokens));
                 }
             }
+        }
+
+        Dictionary<NormalizedFilePath, string> m_sourceCache = new Dictionary<NormalizedFilePath, string>();
+
+        public string GetSource(in CXCursor cursor)
+        {
+            var (hash, location) = cursor.CursorHashLocation();
+            if (!location.IsValid)
+            {
+                return null;
+            }
+            if (!m_sourceCache.TryGetValue(location.Path, out string value))
+            {
+                value = Encoding.UTF8.GetString(location.ReadAllBytes());
+                m_sourceCache.Add(location.Path, value);
+            }
+            return value.Substring(location.Begin, location.End - location.Begin);
         }
     }
 }

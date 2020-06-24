@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 
 namespace ClangAggregator
 {
@@ -44,21 +45,28 @@ namespace ClangAggregator
     {
         public NormalizedFilePath Path { get; private set; }
 
+        public bool IsValid => !string.IsNullOrEmpty(Path.Path);
+
         // text position
         public uint Line { get; private set; }
         public readonly uint Column;
 
         // byte offset
-        public readonly uint Begin;
-        public readonly uint End;
+        public readonly int Begin;
+        public readonly int End;
 
-        public FileLocation(string path, uint line, uint column, uint begin, uint end)
+        public FileLocation(string path, uint line, uint column, int begin, int end)
         {
             Path = new NormalizedFilePath(path);
             Line = line;
             Column = column;
             Begin = begin;
             End = end;
+        }
+
+        public byte[] ReadAllBytes()
+        {
+            return File.ReadAllBytes(Path.Path);
         }
     }
 }

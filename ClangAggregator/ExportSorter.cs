@@ -44,14 +44,36 @@ namespace ClangAggregator
             return sb.ToString();
         }
 
+        bool IsContainedInRootHeaders(TypeReference reference)
+        {
+            return m_rootHeaders.Any(x => x.Equals(reference.Location.Path));
+        }
+
         bool IsRootFunction(TypeReference reference)
         {
-            if (!m_rootHeaders.Any(x => x.Equals(reference.Location.Path)))
+            if (!IsContainedInRootHeaders(reference))
             {
                 return false;
             }
 
             return reference.Type is FunctionType;
+        }
+
+        bool IsComInterface(TypeReference reference)
+        {
+            if (!IsContainedInRootHeaders(reference))
+            {
+                return false;
+            }
+
+            if (reference.Type is StructType structType)
+            {
+                return structType.IID != default;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         string GetDll(NormalizedFilePath path)
@@ -97,6 +119,10 @@ namespace ClangAggregator
         public void PushIfRootFunction(TypeReference reference)
         {
             if (IsRootFunction(reference))
+            {
+                Add(reference, new UserType[] { });
+            }
+            else if (IsComInterface(reference))
             {
                 Add(reference, new UserType[] { });
             }

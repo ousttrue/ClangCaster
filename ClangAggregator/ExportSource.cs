@@ -26,6 +26,9 @@ namespace ClangAggregator
         readonly List<TypeReference> m_typedefTypes = new List<TypeReference>();
         public IEnumerable<TypeReference> TypedefTypes => m_typedefTypes;
 
+        readonly List<TypeReference> m_interfaces = new List<TypeReference>();
+        public IEnumerable<TypeReference> Interfaces => m_interfaces;
+
         public readonly Dictionary<string, List<ConstantDefinition>> ConstantMap = new Dictionary<string, List<ConstantDefinition>>();
 
         public ExportSource(NormalizedFilePath path, string dll)
@@ -60,7 +63,23 @@ namespace ClangAggregator
 
         int m_anonymous;
 
-        public void Push(ClangAggregator.Types.TypeReference reference)
+        static bool IsExportFunction(FunctionType functionType)
+        {
+            if (functionType.DllExport)
+            {
+                return true;
+            }
+
+            if (!functionType.HasBody)
+            {
+                // とりあえず
+                return true;
+            }
+
+            return false;
+        }
+
+        public void Push(TypeReference reference)
         {
             var type = reference.Type;
             if (type is EnumType enumType)
@@ -77,22 +96,36 @@ namespace ClangAggregator
             }
             else if (type is StructType structType)
             {
-                if (m_structTypes.Any(x => x.Hash == reference.Hash))
+                if (structType.IID != default)
                 {
-                    return;
-                }
+                    // COM interface
+                    if (m_interfaces.Any(x => x.Hash == reference.Hash))
+                    {
+                        return;
+                    }
 
-                if (string.IsNullOrEmpty(structType.Name))
+                    m_interfaces.Add(reference);
+                }
+                else
                 {
-                    // 無名型に名前を付ける(unionによくある)
-                    structType.Name = $"__Anonymous__{m_anonymous++}";
-                }
+                    // struct
+                    if (m_structTypes.Any(x => x.Hash == reference.Hash))
+                    {
+                        return;
+                    }
 
-                m_structTypes.Add(reference);
+                    if (string.IsNullOrEmpty(structType.Name))
+                    {
+                        // 無名型に名前を付ける(unionによくある)
+                        structType.Name = $"__Anonymous__{m_anonymous++}";
+                    }
+
+                    m_structTypes.Add(reference);
+                }
             }
             else if (type is FunctionType functionType)
             {
-                if (!functionType.DllExport)
+                if (!IsExportFunction(functionType))
                 {
                     return;
                 }

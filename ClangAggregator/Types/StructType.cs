@@ -25,10 +25,9 @@ namespace ClangAggregator.Types
     {
         public uint SizeOf { get; private set; }
         public bool IsUnion { get; private set; }
-        // public bool IsForwardDecl;
-        // public StructType Definition;
-
         public List<StructField> Fields { get; private set; }
+
+        public Guid IID;
 
         StructType(string name) : base(name)
         {
@@ -59,29 +58,38 @@ namespace ClangAggregator.Types
             var type = new StructType(cursor.Spelling());
             type.IsUnion = cursor.kind == CXCursorKind._UnionDecl;
             type.SizeOf = (uint)libclang.clang_Type_getSizeOf(libclang.clang_getCursorType(cursor));
-            // type.IsForwardDecl = IsForwardDeclaration(cursor);
-
-            // if (type.IsForwardDecl)
-            // {
-            //     var defCursor = libclang.clang_getCursorDefinition(cursor);
-            //     if (libclang.clang_equalCursors(defCursor, libclang.clang_getNullCursor()))
-            //     {
-            //         // not exists
-            //     }
-            //     else
-            //     {
-            //         // var defDecl = typeMap.Get(defCursor) as StructType;
-            //         // if (defDecl is null)
-            //         // {
-            //         //     // create
-            //         //     defDecl = StructType.Parse(defCursor, typeMap);
-            //         //     typeMap.Add(defDecl);
-            //         // }
-            //         // type.Definition = defDecl;
-            //     }
-            // }
-
             return type;
+        }
+
+        const string D3D11_KEY = "MIDL_INTERFACE(\"";
+        const string D2D1_KEY = "DX_DECLARE_INTERFACE(\"";
+        const string DWRITE_KEY = "DWRITE_DECLARE_INTERFACE(\"";
+
+        static string ExtractIID(string src, string key)
+        {
+            return src.Substring(key.Length, src.Length - key.Length - 2);
+        }
+
+        static bool TryGetIID(string src, out Guid iid)
+        {
+            if (src.StartsWith(D3D11_KEY))
+            {
+                iid = Guid.Parse(ExtractIID(src, D3D11_KEY));
+                return true;
+            }
+            else if (src.StartsWith(D2D1_KEY))
+            {
+                iid = Guid.Parse(ExtractIID(src, D2D1_KEY));
+                return true;
+            }
+            else if (src.StartsWith(DWRITE_KEY))
+            {
+                iid = Guid.Parse(ExtractIID(src, DWRITE_KEY));
+                return true;
+            }
+
+            iid = default;
+            return false;
         }
 
         /// <summary>
@@ -116,14 +124,13 @@ namespace ClangAggregator.Types
                         }
 
                     case CXCursorKind._UnexposedAttr:
-                        // {
-                        //     var src = getSource(child);
-                        //     var uuid = getUUID(src);
-                        //     if (!uuid.empty())
-                        //     {
-                        //         decl.iid = uuid;
-                        //     }
-                        // }
+                        {
+                            var src = typeMap.GetSource(child);
+                            if (TryGetIID(src, out Guid iid))
+                            {
+                                IID = iid;
+                            }
+                        }
                         break;
 
                     case CXCursorKind._CXXMethod:
