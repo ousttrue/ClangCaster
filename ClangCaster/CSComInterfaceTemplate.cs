@@ -23,8 +23,10 @@ namespace ClangCaster
 {% for method in type.Methods -%}
         public {{ method.Return }} {{method.Name}}({{method.ParamsWithName}})
         {
-            var fp = GetFunctionPointer({{method.VTableIndex}});
-            if(m_{{ method.Name }}Func==null) m_{{ method.Name }}Func = ({{ method.Name }}Func)Marshal.GetDelegateForFunctionPointer(fp, typeof({{ Method.Name }}Func));
+            if(m_{{ method.Name }}Func==null){
+                var fp = GetFunctionPointer({{method.VTableIndex}});
+                m_{{ method.Name }}Func = ({{ method.Name }}Func)Marshal.GetDelegateForFunctionPointer(fp, typeof({{ Method.Name }}Func));
+            } 
             
             {{ method.ReturnNorVoid }} m_{{ method.Name }}Func(m_ptr{{method.Comma}}{{method.Call}});
         }
