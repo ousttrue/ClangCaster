@@ -38,6 +38,28 @@ namespace ClangAggregator
             Values = values.ToList();
         }
 
+        public static ConstantDefinition Create(uint hash, FileLocation location, IEnumerable<string> tokens)
+        {
+            var name = tokens.First();
+            if (name == "CINDEX_VERSION")
+            {
+                var values = tokens.Skip(1).ToArray();
+                // CINDEX_VERSION_ENCODE(major, minor)
+                if (values.Length != 6)
+                {
+                    throw new Exception();
+                }
+                return new ConstantDefinition(hash, location, name, new string[]{
+                    "CINDEX_VERSION_MAJOR", "*", "10000", "+", "CINDEX_VERSION_MINOR"
+                });
+            }
+            if (name == "CINDEX_VERSION_STRING")
+            {
+
+            }
+            return new ConstantDefinition(hash, location, name, tokens.Skip(1).ToArray());
+        }
+
         public override string ToString()
         {
             var values = string.Join(" ", Values);
@@ -106,12 +128,12 @@ namespace ClangAggregator
 
         bool IsMacrofunctionCall(int open, int close)
         {
-            if(open==0)
+            if (open == 0)
             {
                 return false;
             }
-            var name = Values[open-1];
-            if(name=="sizeof")
+            var name = Values[open - 1];
+            if (name == "sizeof")
             {
                 return false;
             }

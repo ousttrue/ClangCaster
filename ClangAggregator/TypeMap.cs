@@ -207,7 +207,7 @@ namespace ClangAggregator
                     var (hash, location) = cursor.CursorHashLocation();
                     if (location.IsValid)
                     {
-                        m_constants.Add(new ConstantDefinition(hash, location, tokens[0], tokens.Skip(1).ToArray()));
+                        m_constants.Add(ConstantDefinition.Create(hash, location, tokens));
                     }
                     else
                     {

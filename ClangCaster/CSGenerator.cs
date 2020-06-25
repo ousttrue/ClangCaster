@@ -39,7 +39,7 @@ namespace ClangCaster
         public void Export(
             TypeMap map,
             DirectoryInfo dst,
-            List<HeaderWithDll> headers, string ns, string constantsClassName = "C")
+            List<HeaderWithDll> headers, string ns, bool dllExportOnly, string constantsClassName = "C")
         {
             // organize types
             var sorter = new ExportSorter(headers);
@@ -146,6 +146,13 @@ namespace ClangCaster
                                 foreach (var reference in exportSource.FunctionTypes)
                                 {
                                     var functionType = reference.Type as FunctionType;
+                                    if (dllExportOnly)
+                                    {
+                                        if (!functionType.DllExport)
+                                        {
+                                            continue;
+                                        }
+                                    }
                                     s.Writer.WriteLine(functionTemplate.Render(reference, exportSource.Dll));
                                 }
 
@@ -167,8 +174,12 @@ namespace ClangCaster
                         foreach (var constant in exportSource.Constants)
                         {
                             constant.Prepare();
-                            
+
                             // TODO:
+                            if (constant.Name == "CINDEX_VERSION_STRING")
+                            {
+                                continue;
+                            }
                             if (constant.Values.Contains("sizeof"))
                             {
                                 continue;

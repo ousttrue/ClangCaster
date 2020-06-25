@@ -172,7 +172,7 @@ namespace CSType
                     // double pointer
                     return (context.PointerType("IntPtr"), null);
                 }
-                else if (pointerType.Pointee.Type is VoidType)
+                if (pointerType.Pointee.Type is VoidType)
                 {
                     // void* is always IntPtr
                     return ("IntPtr", null);
@@ -182,8 +182,16 @@ namespace CSType
                     // avoid ref sbyte
                     return (context.PointerType("byte"), null);
                 }
-                else if (pointerType.Pointee.Type is StructType structPointee)
+                if (pointerType.Pointee.Type is UserType userType)
                 {
+                    if (pointerType.Pointee.Type.Name == "CXToken")
+                    {
+                        return ("IntPtr", null);
+                    }
+                }
+                if (pointerType.Pointee.Type is StructType structPointee)
+                {
+
                     if (structPointee.Fields.Any())
                     {
                         return (context.PointerType(structPointee.Name), null);

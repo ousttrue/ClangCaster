@@ -16,6 +16,8 @@ namespace ClangCaster
 
         public string Namespace;
 
+        public bool DllExportOnly;
+
         public static CommandLine Parse(string[] args)
         {
             var cmd = new CommandLine();
@@ -23,6 +25,10 @@ namespace ClangCaster
             {
                 switch (args[i])
                 {
+                    case "-exportonly":
+                        cmd.DllExportOnly = true;
+                        break;
+
                     case "-ns":
                         cmd.Namespace = args[i + 1];
                         ++i;
@@ -97,7 +103,7 @@ namespace ClangCaster
                 Directory.CreateDirectory(dst.FullName);
 
                 var exporter = new CSGenerator();
-                exporter.Export(map, dst, cmd.Headers, cmd.Namespace);
+                exporter.Export(map, dst, cmd.Headers, cmd.Namespace, cmd.DllExportOnly);
             }
         }
     }

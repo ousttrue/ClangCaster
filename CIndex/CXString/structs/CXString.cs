@@ -2,9 +2,10 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace CIndex {
+namespace CIndex
+{
     // C:/Program Files/LLVM/include/clang-c/CXString.h:37
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     public struct CXString // 1
     {
         public IntPtr data;

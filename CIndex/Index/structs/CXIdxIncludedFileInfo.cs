@@ -2,9 +2,10 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace CIndex {
+namespace CIndex
+{
     // C:/Program Files/LLVM/include/clang-c/Index.h:6179
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     public struct CXIdxIncludedFileInfo // 1
     {
         public CXIdxLoc hashLoc;

@@ -4,20 +4,25 @@ using System.Runtime.InteropServices;
 
 namespace CIndex
 {
-
     public static partial class libclang
     {
+        // C:/Program Files/LLVM/include/clang-c/CXString.h:50
         [DllImport("libclang.dll")]
         public static extern IntPtr clang_getCString(
             CXString _string
         );
+
+        // C:/Program Files/LLVM/include/clang-c/CXString.h:55
         [DllImport("libclang.dll")]
         public static extern void clang_disposeString(
             CXString _string
         );
+
+        // C:/Program Files/LLVM/include/clang-c/CXString.h:60
         [DllImport("libclang.dll")]
         public static extern void clang_disposeStringSet(
-            IntPtr set
+            ref CXStringSet set
         );
+
     }
 }

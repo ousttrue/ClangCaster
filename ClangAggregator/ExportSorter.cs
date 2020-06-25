@@ -132,7 +132,7 @@ namespace ClangAggregator
         }
 
         /// <summary>
-        /// root header(コンストラクタ引数) から参照されている FunctionType を登録する。
+        /// root header(コンストラクタ引数) から参照されている型を登録する。
         /// </summary>
         /// <param name="reference"></param>
         public void PushIf(TypeReference reference)
@@ -144,6 +144,10 @@ namespace ClangAggregator
                     Add(reference, new UserType[] { });
                 }
                 else if (reference.Type is EnumType)
+                {
+                    Add(reference, new UserType[] { });
+                }
+                else if (reference.Type is TypedefType)
                 {
                     Add(reference, new UserType[] { });
                 }
