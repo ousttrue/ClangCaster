@@ -190,13 +190,13 @@ namespace ClangAggregator
             {
                 return;
             }
-            stack = stack.Concat(new[] { type }).ToArray();
 
             if (stack.Contains(type))
             {
                 // avoid recursive loop
                 return;
             }
+            stack = stack.Concat(new[] { type }).ToArray();
 
             // ensure ExportSource
             if (!string.IsNullOrEmpty(reference.Location.Path.Path))
