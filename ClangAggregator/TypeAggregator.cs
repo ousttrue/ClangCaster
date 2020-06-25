@@ -159,9 +159,9 @@ namespace ClangAggregator
                             structType.AnonymousParent = context.Current;
                             var fieldOffset = (uint)libclang.clang_Cursor_getOffsetOfField(cursor);
                             var current = context.Current;
-                            var fieldName = cursor.Spelling();
+                            // var fieldName = cursor.Spelling();
                             // FIXME: anonymous type field offset ?
-                            current.Fields.Add(new StructField(current.Fields.Count, fieldName, reference, 0));
+                            current.Fields.Add(new StructField(current.Fields.Count, "", reference, 0));
                         }
                     }
                     break;

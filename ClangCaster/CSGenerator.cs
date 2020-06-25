@@ -52,6 +52,25 @@ namespace ClangCaster
                 sorter.PushConstant(constant);
             }
 
+            // prepare
+            int anonymous = 0;
+            foreach (var (sourcePath, exportSource) in sorter.HeaderMap)
+            {
+                foreach (var reference in exportSource.StructTypes)
+                {
+                    var structType = reference.Type as StructType;
+                    if (string.IsNullOrEmpty(structType.Name))
+                    {
+                        if (structType.AnonymousParent is null)
+                        {
+                            var a = 0;
+                        }
+                        // 無名型に名前を付ける(unionによくある)
+                        structType.Name = $"__Anonymous__{anonymous++}";
+                    }
+                }
+            }
+
             // export
             DotLiquid.Template.RegisterSafeType(typeof(TypeReference), new string[] { "Type" });
             DotLiquid.Template.RegisterSafeType(typeof(FileLocation), new string[] { "Path", "Line" });
