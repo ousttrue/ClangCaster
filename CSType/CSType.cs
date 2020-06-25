@@ -139,15 +139,19 @@ namespace CSType
 
             if (type is ArrayType arrayType)
             {
-                if (arrayType.Element.Type.Name == "WCHAR")
+                var elementType = Convert(context, arrayType.Element).Item1;
+                if (context == TypeContext.Field && arrayType.Size > 0)
                 {
-                    if (arrayType.Size > 0 && context == TypeContext.Field)
+                    if (arrayType.Element.Type.Name == "WCHAR")
                     {
                         return ("string", $"[MarshalAs(UnmanagedType.ByValTStr, SizeConst = {arrayType.Size})]");
                     }
+                    return ($"{elementType}[]", $"[MarshalAs(UnmanagedType.ByValArray, SizeConst = {arrayType.Size})]");
                 }
-                var elementType = Convert(context, arrayType.Element).Item1;
-                return ($"{elementType}[]", $"[MarshalAs(UnmanagedType.ByValArray, SizeConst = {arrayType.Size})]");
+                else
+                {
+                    return ($"ref {elementType}", null);
+                }
             }
 
             if (type is TypedefType typedefType)
