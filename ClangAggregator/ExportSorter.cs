@@ -148,7 +148,7 @@ namespace ClangAggregator
                     Add(reference, new UserType[] { });
                 }
             }
-            else if (IsComInterface(reference))
+            if (IsComInterface(reference))
             {
                 Add(reference, new UserType[] { });
             }
