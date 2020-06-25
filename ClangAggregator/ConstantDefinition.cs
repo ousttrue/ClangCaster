@@ -101,11 +101,13 @@ namespace ClangAggregator
         {
             "LPWSTR",
             "ULONG_PTR",
+            "UINT_PTR",
             "HWND",
             "HBITMAP",
             "HANDLE",
             "DWORD",
             "LONG",
+            "ID3DInclude *",
         };
 
         IEnumerable<(int, int)> GetParenthesis()
