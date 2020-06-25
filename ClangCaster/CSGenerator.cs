@@ -153,6 +153,10 @@ namespace ClangCaster
                                             continue;
                                         }
                                     }
+                                    if (functionType.IsDelegate)
+                                    {
+                                        continue;
+                                    }
                                     s.Writer.WriteLine(functionTemplate.Render(reference, exportSource.Dll));
                                 }
 

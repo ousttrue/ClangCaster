@@ -142,6 +142,13 @@ namespace ClangAggregator
                 {
                     return false;
                 }
+                if (typedefType.Ref.Type is PointerType pointerType)
+                {
+                    if (pointerType.Pointee.Type is FunctionType ft)
+                    {
+                        ft.IsDelegate = true;
+                    }
+                }
                 m_typedefTypes.Add(reference);
             }
             else
