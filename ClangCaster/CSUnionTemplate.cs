@@ -5,7 +5,7 @@ using CSType;
 
 namespace ClangCaster
 {
-    class CSStructTemplate : CSTemplateBase
+    class CSUnionTemplate : CSTemplateBase
     {
         public static string[] Using = new string[]
         {
@@ -14,11 +14,11 @@ namespace ClangCaster
         };
 
         protected override string TemplateSource => @"    // {{ type.Location.Path.Path }}:{{ type.Location.Line }}
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    [StructLayout(LayoutKind.Explicit, CharSet = CharSet.Unicode)]
     public struct {{ type.Name }} // {{ type.Count }}
     {
-{% for field in type.Fields -%}
-        {% if field.Attribute %}{{ field.Attribute }} {% endif %}{{ field.Render }}
+{% for field in type.Fields -%}        
+        [FieldOffset({{ field.Offset }})] {% if field.Attribute %}{{ field.Attribute }} {% endif %}{{ field.Render }}
 {%- endfor -%}
     }
 ";
@@ -38,7 +38,7 @@ namespace ClangCaster
 
                 // name
                 var name = CSType.CSSymbole.Escape(field.Name);
-                if(string.IsNullOrEmpty(name))
+                if (string.IsNullOrEmpty(name))
                 {
                     name = $"__field__{field.Index}";
                 }
@@ -46,6 +46,7 @@ namespace ClangCaster
                 return new
                 {
                     Attribute = attribute,
+                    Offset = field.Offset,
                     Render = $"public {type} {name};",
                 };
             };

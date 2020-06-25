@@ -114,6 +114,32 @@ namespace ClangAggregator.Types
 
             ClangVisitor.ProcessChildren(cursor, (in CXCursor child) =>
             {
+                if (libclang.clang_Cursor_isAnonymousRecordDecl(child) != 0)
+                {
+                    //
+                    // anonymous field
+                    //
+                    var tmpChild = child;
+                    ClangVisitor.ProcessChildren(child, (in CXCursor childChild) =>
+                    {
+                        switch (childChild.kind)
+                        {
+                            case CXCursorKind._FieldDecl:
+                                {
+                                    // var fieldName = childChild.Spelling();
+                                    var fieldOffset = (uint)libclang.clang_Cursor_getOffsetOfField(childChild);
+                                    var typeReference = typeMap.GetOrCreate(tmpChild);
+                                    // typeReference.Type = StructType.Parse(childChild, typeMap);
+                                    Fields.Add(new StructField(Fields.Count, "", typeReference, fieldOffset));
+                                    // break;
+                                    return CXChildVisitResult._Break; // ?
+                                }
+                        }
+
+                        return CXChildVisitResult._Continue;
+                    });
+                    return CXChildVisitResult._Continue;
+                }
 
                 switch (child.kind)
                 {

@@ -59,6 +59,7 @@ namespace ClangCaster
 
             var enumTemplate = new CSEnumTemplate();
             var structTemplate = new CSStructTemplate();
+            var unionTemplate = new CSUnionTemplate();
             var interfaceTemplate = new CSComInterfaceTemplate();
             var delegateTemplate = new CSDelegateTemplate();
             var functionTemplate = new CSFunctionTemplate();
@@ -67,6 +68,9 @@ namespace ClangCaster
                 Console.WriteLine($"export: {sourcePath}");
                 var dir = ExportDir(dst, sourcePath);
 
+                //
+                // Enum
+                //
                 if (exportSource.EnumTypes.Any())
                 {
                     var enumsDir = new DirectoryInfo(Path.Combine(dir, $"enums"));
@@ -85,6 +89,9 @@ namespace ClangCaster
                     }
                 }
 
+                //
+                // Struct
+                // 
                 if (exportSource.StructTypes.Any())
                 {
                     var structsDir = new DirectoryInfo(Path.Combine(dir, $"structs"));
@@ -94,11 +101,21 @@ namespace ClangCaster
                         var structType = reference.Type as StructType;
                         using (var s = NamespaceOpener.Open(structsDir, $"{structType.Name}.cs", ns, CSStructTemplate.Using))
                         {
-                            s.Writer.Write(structTemplate.Render(reference));
+                            if (structType.IsUnion)
+                            {
+                                s.Writer.Write(unionTemplate.Render(reference));
+                            }
+                            else
+                            {
+                                s.Writer.Write(structTemplate.Render(reference));
+                            }
                         }
                     }
                 }
 
+                //
+                // ComInterface
+                //
                 if (exportSource.Interfaces.Any())
                 {
                     // COM interface
@@ -115,6 +132,9 @@ namespace ClangCaster
                     }
                 }
 
+                //
+                // Functions & Delgates
+                //
                 if (exportSource.FunctionTypes.Any()
                 || exportSource.TypedefTypes.Where(x => x.Type.GetFunctionTypeFromTypedef().Item2 != null).Any())
                 {
@@ -167,6 +187,9 @@ namespace ClangCaster
                     }
                 }
 
+                //
+                // Constants
+                //
                 if (exportSource.Constants.Any())
                 {
                     using (var s = NamespaceOpener.Open(new DirectoryInfo(dir), $"constants.cs", ns))
