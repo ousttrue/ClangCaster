@@ -26,6 +26,7 @@ namespace ClangAggregator.Types
         public uint SizeOf { get; private set; }
         public bool IsUnion { get; private set; }
         public List<StructField> Fields { get; private set; }
+        public StructType AnonymousParent;
 
         List<FunctionType> m_methods;
         public List<FunctionType> Methods
@@ -77,7 +78,7 @@ namespace ClangAggregator.Types
             return src.Substring(key.Length, src.Length - key.Length - 2);
         }
 
-        static bool TryGetIID(string src, out Guid iid)
+        public static bool TryGetIID(string src, out Guid iid)
         {
             if (src.StartsWith(D3D11_KEY))
             {
@@ -97,161 +98,6 @@ namespace ClangAggregator.Types
 
             iid = default;
             return false;
-        }
-
-        /// <summary>
-        /// third
-        /// </summary>
-        /// <param name="cursor"></param>
-        /// <param name="typeMap"></param>
-        public void ParseFields(in CXCursor cursor, TypeMap typeMap)
-        {
-            if (Fields.Any())
-            {
-                // not reach here
-                throw new Exception();
-            }
-
-            ClangVisitor.ProcessChildren(cursor, (in CXCursor child) =>
-            {
-                if (libclang.clang_Cursor_isAnonymousRecordDecl(child) != 0)
-                {
-                    //
-                    // anonymous field
-                    //
-                    var tmpChild = child;
-                    ClangVisitor.ProcessChildren(child, (in CXCursor childChild) =>
-                    {
-                        switch (childChild.kind)
-                        {
-                            case CXCursorKind._FieldDecl:
-                                {
-                                    // var fieldName = childChild.Spelling();
-                                    var fieldOffset = (uint)libclang.clang_Cursor_getOffsetOfField(childChild);
-                                    var typeReference = typeMap.GetOrCreate(tmpChild);
-                                    // typeReference.Type = StructType.Parse(childChild, typeMap);
-                                    Fields.Add(new StructField(Fields.Count, "", typeReference, fieldOffset));
-                                    // break;
-                                    return CXChildVisitResult._Break; // ?
-                                }
-                        }
-
-                        return CXChildVisitResult._Continue;
-                    });
-                    return CXChildVisitResult._Continue;
-                }
-
-                switch (child.kind)
-                {
-                    case CXCursorKind._FieldDecl:
-                        {
-                            var fieldName = child.Spelling();
-                            var fieldOffset = (uint)libclang.clang_Cursor_getOffsetOfField(child);
-                            var fieldType = libclang.clang_getCursorType(child);
-                            if (!string.IsNullOrEmpty(fieldName) && Fields.Any(x => x.Name == fieldName))
-                            {
-                                throw new Exception();
-                            }
-                            Fields.Add(new StructField(Fields.Count, fieldName, typeMap.CxTypeToType(fieldType, child), fieldOffset));
-                            break;
-                        }
-
-                    case CXCursorKind._CXXBaseSpecifier:
-                        {
-                            var referenced = libclang.clang_getCursorReferenced(child);
-                            var baseClass = typeMap.GetOrCreate(referenced);
-                            BaseClass = baseClass;
-                        }
-                        break;
-
-                    case CXCursorKind._UnexposedAttr:
-                        {
-                            var src = typeMap.GetSource(child);
-                            if (TryGetIID(src, out Guid iid))
-                            {
-                                IID = iid;
-                            }
-                        }
-                        break;
-
-                    case CXCursorKind._CXXMethod:
-                        {
-                            var method = FunctionType.Parse(child, typeMap);
-                            if (!method.HasBody)
-                            {
-                                // TODO: override check
-
-                                // IntPtr p = default;
-                                // uint n = default;
-                                // ulong[] hashes;
-                                // libclang.clang_getOverriddenCursors(child, ref p, ref n);
-                                // if (n)
-                                // {
-                                //     scope(exit) clang_disposeOverriddenCursors(p);
-
-                                //     hashes.length = n;
-                                //     for (int i = 0; i < n; ++i)
-                                //     {
-                                //         hashes[i] = clang_hashCursor(p[i]);
-                                //     }
-
-                                //     debug
-                                //     {
-                                //         var childName = getCursorSpelling(child);
-                                //         var a = 0;
-                                //     }
-                                // }
-
-                                // var found = -1;
-                                // for (int i = 0; i < VTable.Count; ++i)
-                                // {
-                                //     var current = decl.vtable[i].hash;
-                                //     if (hashes.any!(x = > x == current))
-                                //     {
-                                //         found = i;
-                                //         break;
-                                //     }
-                                // }
-                                // if (found != -1)
-                                // {
-                                //     debug var a = 0;
-                                // }
-                                // else
-                                // {
-                                //     found = cast(int) decl.vtable.length;
-                                //     decl.vtable ~ = method;
-                                //     debug var a = 0;
-                                // }
-                                // decl.methodVTableIndices ~ = found;
-
-                                Methods.Add(method);
-                            }
-                        }
-                        break;
-
-                    case CXCursorKind._Constructor:
-                    case CXCursorKind._Destructor:
-                    case CXCursorKind._ConversionFunction:
-                    case CXCursorKind._FunctionTemplate:
-                    case CXCursorKind._VarDecl:
-                    case CXCursorKind._ObjCClassMethodDecl:
-                    case CXCursorKind._UnexposedExpr:
-                    case CXCursorKind._AlignedAttr:
-                    case CXCursorKind._CXXAccessSpecifier:
-                        break;
-
-                    case CXCursorKind._TypeRef:
-                        // template param ?
-                        // debug var a = 0;
-                        break;
-
-                    default:
-                        // traverse(child, context);
-                        break;
-                }
-
-                return CXChildVisitResult._Continue;
-            });
         }
 
         // https://joshpeterson.github.io/identifying-a-forward-declaration-with-libclang

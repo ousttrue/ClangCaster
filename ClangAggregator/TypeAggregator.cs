@@ -1,6 +1,7 @@
 using System;
 using ClangAggregator.Types;
 using CIndex;
+using System.Linq;
 
 namespace ClangAggregator
 {
@@ -21,19 +22,22 @@ namespace ClangAggregator
         {
             public readonly int Level;
 
-            public Context(int level)
+            public readonly StructType Current;
+
+            public Context(int level, StructType current)
             {
                 Level = level;
+                Current = current;
             }
 
             public Context Child()
             {
-                return new Context(Level + 1);
+                return new Context(Level + 1, Current);
             }
 
             public Context Enter(StructType type)
             {
-                return new Context(Level + 1);
+                return new Context(Level + 1, type);
             }
         }
 
@@ -53,13 +57,9 @@ namespace ClangAggregator
                 case CXCursorKind._FunctionTemplate:
                 case CXCursorKind._UsingDeclaration:
                 case CXCursorKind._StaticAssert:
-                case CXCursorKind._FieldDecl:
                 case CXCursorKind._FirstExpr:
-                case CXCursorKind._FirstAttr:
                 case CXCursorKind._AlignedAttr:
-                case CXCursorKind._CXXBaseSpecifier:
                 case CXCursorKind._CXXAccessSpecifier:
-                case CXCursorKind._CXXMethod:
                 case CXCursorKind._Constructor:
                 case CXCursorKind._Destructor:
                 case CXCursorKind._ConversionFunction:
@@ -148,20 +148,107 @@ namespace ClangAggregator
                 case CXCursorKind._ClassDecl:
                 case CXCursorKind._UnionDecl:
                     {
-                        var nested = context.Child();
-                        TraverseChildren(cursor, nested);
-
                         var reference = m_typeMap.GetOrCreate(cursor);
-                        reference.Type = StructType.Parse(cursor, m_typeMap);
-                        // decl.namespace = context.namespace;
-
-                        if (reference.Type is StructType structType)
+                        var structType = StructType.Parse(cursor, m_typeMap);
+                        reference.Type = structType;
+                        var nested = context.Enter(structType);
+                        TraverseChildren(cursor, nested);
+                        if (libclang.clang_Cursor_isAnonymousRecordDecl(cursor) != 0)
                         {
-                            structType.ParseFields(cursor, m_typeMap);
+                            // anonymous type decl add field to current struct.
+                            structType.AnonymousParent = context.Current;
+                            var fieldOffset = (uint)libclang.clang_Cursor_getOffsetOfField(cursor);
+                            var current = context.Current;
+                            var fieldName = cursor.Spelling();
+                            // FIXME: anonymous type field offset ?
+                            current.Fields.Add(new StructField(current.Fields.Count, fieldName, reference, 0));
                         }
-                        else
+                    }
+                    break;
+
+                case CXCursorKind._FieldDecl:
+                    {
+                        var fieldName = cursor.Spelling();
+                        var fieldOffset = (uint)libclang.clang_Cursor_getOffsetOfField(cursor);
+                        var fieldType = libclang.clang_getCursorType(cursor);
+                        var current = context.Current;
+                        if (!string.IsNullOrEmpty(fieldName) && current.Fields.Any(x => x.Name == fieldName))
                         {
-                            throw new NotImplementedException();
+                            throw new Exception();
+                        }
+                        current.Fields.Add(new StructField(current.Fields.Count, fieldName, m_typeMap.CxTypeToType(fieldType, cursor), fieldOffset));
+                        break;
+                    }
+
+                case CXCursorKind._CXXBaseSpecifier:
+                    {
+                        var referenced = libclang.clang_getCursorReferenced(cursor);
+                        var baseClass = m_typeMap.GetOrCreate(referenced);
+                        context.Current.BaseClass = baseClass;
+                    }
+                    break;
+
+                case CXCursorKind._UnexposedAttr:
+                    {
+                        var src = m_typeMap.GetSource(cursor);
+                        if (StructType.TryGetIID(src, out Guid iid))
+                        {
+                            context.Current.IID = iid;
+                        }
+                    }
+                    break;
+
+                case CXCursorKind._CXXMethod:
+                    {
+                        var method = FunctionType.Parse(cursor, m_typeMap);
+                        if (!method.HasBody)
+                        {
+                            // TODO: override check
+
+                            // IntPtr p = default;
+                            // uint n = default;
+                            // ulong[] hashes;
+                            // libclang.clang_getOverriddenCursors(child, ref p, ref n);
+                            // if (n)
+                            // {
+                            //     scope(exit) clang_disposeOverriddenCursors(p);
+
+                            //     hashes.length = n;
+                            //     for (int i = 0; i < n; ++i)
+                            //     {
+                            //         hashes[i] = clang_hashCursor(p[i]);
+                            //     }
+
+                            //     debug
+                            //     {
+                            //         var childName = getCursorSpelling(child);
+                            //         var a = 0;
+                            //     }
+                            // }
+
+                            // var found = -1;
+                            // for (int i = 0; i < VTable.Count; ++i)
+                            // {
+                            //     var current = decl.vtable[i].hash;
+                            //     if (hashes.any!(x = > x == current))
+                            //     {
+                            //         found = i;
+                            //         break;
+                            //     }
+                            // }
+                            // if (found != -1)
+                            // {
+                            //     debug var a = 0;
+                            // }
+                            // else
+                            // {
+                            //     found = cast(int) decl.vtable.length;
+                            //     decl.vtable ~ = method;
+                            //     debug var a = 0;
+                            // }
+                            // decl.methodVTableIndices ~ = found;
+
+                            context.Current.Methods.Add(method);
                         }
                     }
                     break;

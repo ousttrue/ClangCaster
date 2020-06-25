@@ -139,10 +139,10 @@ namespace ClangAggregator
                                     throw new NotImplementedException();
                                 }
 
-                                if (!StructType.IsForwardDeclaration(child))
-                                {
-                                    structType.ParseFields(child, this);
-                                }
+                                // if (!StructType.IsForwardDeclaration(child))
+                                // {
+                                //     structType.ParseFields(child, this);
+                                // }
 
                                 return CXChildVisitResult._Break;
                             }
