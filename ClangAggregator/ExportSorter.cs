@@ -202,7 +202,10 @@ namespace ClangAggregator
             if (!string.IsNullOrEmpty(reference.Location.Path.Path))
             {
                 var export = GetOrCreateSource(reference.Location.Path);
-                export.Push(reference);
+                if(!export.Push(reference))
+                {
+                    return;
+                }
             }
 
             // 依存する型を再帰的にAddする

@@ -53,7 +53,7 @@ namespace ClangAggregator
 
         public void PushConstant(ConstantDefinition constant)
         {
-            if(Constants.Any(x => x.Name == constant.Name))
+            if (Constants.Any(x => x.Name == constant.Name))
             {
                 Console.WriteLine($"duplicated: {constant.Location} => {constant}");
                 return;
@@ -80,14 +80,14 @@ namespace ClangAggregator
             return false;
         }
 
-        public void Push(TypeReference reference)
+        public bool Push(TypeReference reference)
         {
             var type = reference.Type;
             if (type is EnumType enumType)
             {
                 if (m_enumTypes.Any(x => x.Hash == reference.Hash))
                 {
-                    return;
+                    return false;
                 }
 
                 // enum値名の重複する部分を除去する
@@ -102,7 +102,7 @@ namespace ClangAggregator
                     // COM interface
                     if (m_interfaces.Any(x => x.Hash == reference.Hash))
                     {
-                        return;
+                        return false;
                     }
 
                     m_interfaces.Add(reference);
@@ -112,7 +112,7 @@ namespace ClangAggregator
                     // struct
                     if (m_structTypes.Any(x => x.Hash == reference.Hash))
                     {
-                        return;
+                        return false;
                     }
 
                     if (string.IsNullOrEmpty(structType.Name))
@@ -128,11 +128,11 @@ namespace ClangAggregator
             {
                 if (!IsExportFunction(functionType))
                 {
-                    return;
+                    return false;
                 }
                 if (m_functionTypes.Any(x => x.Hash == reference.Hash))
                 {
-                    return;
+                    return false;
                 }
                 m_functionTypes.Add(reference);
             }
@@ -140,7 +140,7 @@ namespace ClangAggregator
             {
                 if (m_typedefTypes.Any(x => x.Hash == reference.Hash))
                 {
-                    return;
+                    return false;
                 }
                 m_typedefTypes.Add(reference);
             }
@@ -148,6 +148,7 @@ namespace ClangAggregator
             {
                 throw new NotImplementedException();
             }
+            return true;
         }
     }
 }
