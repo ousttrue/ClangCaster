@@ -39,7 +39,7 @@ namespace ClangCaster
         public void Export(
             TypeMap map,
             DirectoryInfo dst,
-            List<HeaderWithDll> headers, string ns)
+            List<HeaderWithDll> headers, string ns, string constantsClassName = "C")
         {
             // organize types
             var sorter = new ExportSorter(headers);
@@ -161,7 +161,7 @@ namespace ClangCaster
                     using (var s = NamespaceOpener.Open(new DirectoryInfo(dir), $"constants.cs", ns))
                     {
                         // open static class
-                        s.Writer.Write($@"    public static partial class _
+                        s.Writer.Write($@"    public static partial class {constantsClassName}
     {{
 ");
                         foreach (var constant in exportSource.Constants)
