@@ -164,7 +164,7 @@ namespace ClangAggregator
         /// </summary>
         /// <param name="reference"></param>
         /// <param name="stack"></param>
-        private void Add(TypeReference reference, ClangAggregator.Types.UserType[] stack)
+        private void Add(TypeReference reference, UserType[] stack)
         {
             if (reference is null)
             {
@@ -190,6 +190,7 @@ namespace ClangAggregator
             {
                 return;
             }
+            stack = stack.Concat(new[] { type }).ToArray();
 
             if (stack.Contains(type))
             {
@@ -238,32 +239,37 @@ namespace ClangAggregator
                     }
                 }
 
-                Add(typedefType.Ref, stack.Concat(new[] { type }).ToArray());
+                Add(typedefType.Ref, stack);
+                return;
             }
             else if (type is StructType structType)
             {
                 foreach (var field in structType.Fields)
                 {
-                    Add(field.Ref, stack.Concat(new[] { type }).ToArray());
+                    Add(field.Ref, stack);
                 }
 
-                Add(structType.BaseClass, stack.Concat(new[] { type }).ToArray());
+                Add(structType.BaseClass, stack);
 
                 foreach (var method in structType.Methods)
                 {
-                    Add(new TypeReference(default, default, method), stack.Concat(new[] { type }).ToArray());
+                    Add(new TypeReference(default, default, method), stack);
                 }
+
+                return;
             }
             else if (type is FunctionType functionType)
             {
                 // ret
-                Add(functionType.Result, stack.Concat(new[] { type }).ToArray());
+                Add(functionType.Result, stack);
 
                 // args
                 foreach (var param in functionType.Params)
                 {
-                    Add(param.Ref, stack.Concat(new[] { type }).ToArray());
+                    Add(param.Ref, stack);
                 }
+
+                return;
             }
             else
             {
