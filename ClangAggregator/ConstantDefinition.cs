@@ -71,7 +71,7 @@ namespace ClangAggregator
             return (c >= 'A' && c <= 'z');
         }
 
-        public bool IsRename => Values.Count == 1 && Values[0].All(IsAlphabet);
+        public bool IsRename => Values.Count == 1 && IsAlphabet(Values[0][0]);
 
         // static string SkipPrefix(string src, string prefix, bool exception)
         // {
@@ -107,7 +107,7 @@ namespace ClangAggregator
             "HANDLE",
             "DWORD",
             "LONG",
-            "ID3DInclude *",
+            "ID3DInclude",
         };
 
         IEnumerable<(int, int)> GetParenthesis()
@@ -147,7 +147,23 @@ namespace ClangAggregator
         bool IsCast(int open, int close)
         {
             // ( Axxx )
-            return open + 2 == close && CastTypes.Contains(Values[open + 1]);
+            if (open + 2 == close)
+            {
+                return CastTypes.Contains(Values[open + 1]);
+            }
+            else if (open + 3 == close)
+            {
+                // ID3DInclude *
+                if (Values[open + 1] == "-")
+                {
+                    return false;
+                }
+                return CastTypes.Contains(Values[open + 1]) && Values[open + 2] == "*";
+            }
+            else
+            {
+                return false;
+            }
         }
 
         void RemoveCastOrMacroFunction()
@@ -166,7 +182,7 @@ namespace ClangAggregator
                     }
                     if (IsCast(open, close))
                     {
-                        Values.RemoveRange(open, 3);
+                        Values.RemoveRange(open, 1 + close - open);
                         found = true;
                         break;
                     }

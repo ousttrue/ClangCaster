@@ -51,11 +51,6 @@ namespace ClangAggregator
 
         bool IsComInterface(TypeReference reference)
         {
-            if (!IsContainedInRootHeaders(reference.Location))
-            {
-                return false;
-            }
-
             if (reference.Type is StructType structType)
             {
                 return structType.IID != default;
@@ -202,7 +197,7 @@ namespace ClangAggregator
             if (!string.IsNullOrEmpty(reference.Location.Path.Path))
             {
                 var export = GetOrCreateSource(reference.Location.Path);
-                if(!export.Push(reference))
+                if (!export.Push(reference))
                 {
                     return;
                 }

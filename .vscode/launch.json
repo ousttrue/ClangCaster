@@ -53,6 +53,8 @@
                 "C:/Program Files (x86)/Windows Kits/10/Include/10.0.18362.0/um/d3d11.h,d3d11.dll",
                 "-h",
                 "C:/Program Files (x86)/Windows Kits/10/Include/10.0.18362.0/um/d3dcompiler.h,d3dcompiler_47.dll",
+                "-h",
+                "C:/Program Files (x86)/Windows Kits/10/Include/10.0.18362.0/um/d3dcommon.h",
             ],
             "cwd": "${workspaceFolder}",
             "env": {

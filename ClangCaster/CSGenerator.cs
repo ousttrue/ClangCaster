@@ -116,7 +116,7 @@ namespace ClangCaster
                 }
 
                 if (exportSource.FunctionTypes.Any()
-                || exportSource.TypedefTypes.Where(x => x.GetFunctionTypeFromTypedef().Item2 != null).Any())
+                || exportSource.TypedefTypes.Where(x => x.Type.GetFunctionTypeFromTypedef().Item2 != null).Any())
                 {
                     var path = ExportFile(dst, sourcePath);
                     using (var s = new NamespaceOpener(new FileInfo(path), ns, CSFunctionTemplate.Using))
@@ -124,7 +124,7 @@ namespace ClangCaster
                         // delegates
                         foreach (var reference in exportSource.TypedefTypes)
                         {
-                            if (reference.GetFunctionTypeFromTypedef().Item2 != null)
+                            if (reference.Type.GetFunctionTypeFromTypedef().Item2 != null)
                             {
                                 s.Writer.WriteLine(delegateTemplate.Render(reference));
                             }
@@ -173,6 +173,11 @@ namespace ClangCaster
 ");
                         foreach (var constant in exportSource.Constants)
                         {
+                            if (constant.Name == "IID_ID3DBlob")
+                            {
+                                var a = 0;
+                            }
+
                             constant.Prepare();
 
                             // TODO:
@@ -182,6 +187,11 @@ namespace ClangCaster
                             }
                             if (constant.Values.Contains("sizeof"))
                             {
+                                continue;
+                            }
+                            if (constant.Values.Any(x => x.Contains('"')))
+                            {
+                                // non int
                                 continue;
                             }
 

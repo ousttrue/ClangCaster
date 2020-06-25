@@ -36,6 +36,10 @@ namespace CSType
     {
         static bool TryGetPrimitiveType(BaseType type, out string value)
         {
+            if (type is TypedefType typedefType)
+            {
+                type = typedefType.Ref.Type;
+            }
             if (type is PrimitiveType primitiveType)
             {
                 switch (primitiveType)
@@ -88,15 +92,10 @@ namespace CSType
 
         static bool TryGetGuid(TypeContext context, BaseType baseType, out (string, string) value)
         {
-            if (baseType is PointerType pointerType)
+            if (context == TypeContext.Param)
             {
-                if (pointerType.Pointee.Type is TypedefType pointeeType)
+                if (baseType is PointerType pointerType)
                 {
-                    if (pointeeType.Name == "IID")
-                    {
-                        value = ("ref Guid", null);
-                        return true;
-                    }
                 }
             }
 
@@ -112,6 +111,34 @@ namespace CSType
         public static (string, string) Convert(TypeContext context, TypeReference reference)
         {
             var type = reference.Type;
+            if (type is PointerType pointerType)
+            {
+                return ConvertPointer(context, pointerType);
+            }
+            if (type is ArrayType arrayType)
+            {
+                var elementType = Convert(context, arrayType.Element).Item1;
+                if (context == TypeContext.Field && arrayType.Size > 0)
+                {
+                    if (arrayType.Element.Type.Name == "WCHAR")
+                    {
+                        return ("string", $"[MarshalAs(UnmanagedType.ByValTStr, SizeConst = {arrayType.Size})]");
+                    }
+                    return ($"{elementType}[]", $"[MarshalAs(UnmanagedType.ByValArray, SizeConst = {arrayType.Size})]");
+                }
+                else
+                {
+                    return ($"ref {elementType}", null);
+                }
+            }
+            else
+            {
+                return ConvertRaw(context, type);
+            }
+        }
+
+        public static (string, string) ConvertRaw(TypeContext context, BaseType type)
+        {
             if (TryGetPrimitiveType(type, out string primitiveType))
             {
                 return (primitiveType, null);
@@ -137,26 +164,9 @@ namespace CSType
                 return (structType.Name, null);
             }
 
-            if (type is ArrayType arrayType)
-            {
-                var elementType = Convert(context, arrayType.Element).Item1;
-                if (context == TypeContext.Field && arrayType.Size > 0)
-                {
-                    if (arrayType.Element.Type.Name == "WCHAR")
-                    {
-                        return ("string", $"[MarshalAs(UnmanagedType.ByValTStr, SizeConst = {arrayType.Size})]");
-                    }
-                    return ($"{elementType}[]", $"[MarshalAs(UnmanagedType.ByValArray, SizeConst = {arrayType.Size})]");
-                }
-                else
-                {
-                    return ($"ref {elementType}", null);
-                }
-            }
-
             if (type is TypedefType typedefType)
             {
-                var (name, functionType) = reference.GetFunctionTypeFromTypedef();
+                var (name, functionType) = type.GetFunctionTypeFromTypedef();
                 if (functionType != null)
                 {
                     // function pointer as delegate
@@ -165,71 +175,95 @@ namespace CSType
                 return Convert(context, typedefType.Ref);
             }
 
-            if (type is PointerType pointerType)
+            throw new NotImplementedException();
+        }
+
+        public static (string, string) ConvertPointer(TypeContext context, PointerType pointerType)
+        {
+            if (TryGetPrimitiveType(pointerType.Pointee.Type, out string primitiveType))
             {
-                if (pointerType.Pointee.Type is PointerType)
-                {
-                    // double pointer
-                    return (context.PointerType("IntPtr"), null);
-                }
-                if (pointerType.Pointee.Type is VoidType)
+                if (primitiveType == "void")
                 {
                     // void* is always IntPtr
                     return ("IntPtr", null);
                 }
-                if (pointerType.Pointee.Type is Int8Type)
+                return (context.PointerType(primitiveType), null);
+            }
+            if (pointerType.Pointee.Type is PointerType)
+            {
+                // double pointer
+                return (context.PointerType("IntPtr"), null);
+            }
+            if (pointerType.Pointee.Type is Int8Type)
+            {
+                // avoid ref sbyte
+                return (context.PointerType("byte"), null);
+            }
+            if (pointerType.Pointee.Type is TypedefType pointeeType)
+            {
+                if (pointeeType.Name == "IID")
                 {
-                    // avoid ref sbyte
-                    return (context.PointerType("byte"), null);
+                    return (context.PointerType("Guid"), null);
                 }
-                if (pointerType.Pointee.Type is UserType userType)
-                {
-                    if (pointerType.Pointee.Type.Name == "CXToken")
-                    {
-                        return ("IntPtr", null);
-                    }
-                }
-                if (pointerType.Pointee.Type is StructType structPointee)
-                {
-
-                    if (structPointee.Fields.Any())
-                    {
-                        return (context.PointerType(structPointee.Name), null);
-                    }
-                    else
-                    {
-                        // forward decl
-                        return ("IntPtr", null);
-                    }
-                }
-                else if (pointerType.Pointee.Type is TypedefType typedefPointee)
-                {
-                    if (typedefPointee.Ref.Type is PointerType)
-                    {
-                        return (context.PointerType("IntPtr"), null);
-                    }
-                    else if (typedefPointee.Ref.Type is StructType st)
-                    {
-                        return (context.PointerType(st.Name), null);
-                    }
-                    else
-                    {
-                        return ("IntPtr", null);
-                    }
-                }
-                else if (pointerType.Pointee.Type is FunctionType)
+            }
+            if (pointerType.Pointee.Type is UserType userType)
+            {
+                if (pointerType.Pointee.Type.Name == "CXToken")
                 {
                     return ("IntPtr", null);
                 }
-                else
+            }
+            if (pointerType.Pointee.Type is StructType structPointee)
+            {
+                if (structPointee.IID != default || structPointee.Name == "ID3DInclude")
                 {
-                    var (tmp, _) = Convert(context, pointerType.Pointee);
-                    return (context.PointerType(tmp), null);
+                    // COM interface
+                    return ("IntPtr", null);
                 }
 
+                if (structPointee.Fields.Any())
+                {
+                    return (context.PointerType(structPointee.Name), null);
+                }
+                else
+                {
+                    // forward decl
+                    return ("IntPtr", null);
+                }
             }
-
-            throw new NotImplementedException();
+            else if (pointerType.Pointee.Type is TypedefType typedefPointee)
+            {
+                if (typedefPointee.Ref.Type is PointerType)
+                {
+                    return (context.PointerType("IntPtr"), null);
+                }
+                else if (typedefPointee.Ref.Type is StructType st)
+                {
+                    if (st.IID != default || st.Name == "ID3DInclude")
+                    {
+                        // COM interface
+                        return ("IntPtr", null);
+                    }
+                    return (context.PointerType(st.Name), null);
+                }
+                else if (typedefPointee.Ref.Type is EnumType et)
+                {
+                    return (context.PointerType(et.Name), null);
+                }
+                else
+                {
+                    return ("IntPtr", null);
+                }
+            }
+            else if (pointerType.Pointee.Type is FunctionType)
+            {
+                return ("IntPtr", null);
+            }
+            else
+            {
+                var (tmp, _) = Convert(context, pointerType.Pointee);
+                return (context.PointerType(tmp), null);
+            }
         }
     }
 }

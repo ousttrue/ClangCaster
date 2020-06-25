@@ -56,9 +56,9 @@ namespace ClangAggregator.Types
         /// </summary>
         /// <param name="reference"></param>
         /// <returns></returns>
-        public static (string, FunctionType) GetFunctionTypeFromTypedef(this TypeReference reference)
+        public static (string, FunctionType) GetFunctionTypeFromTypedef(this BaseType type)
         {
-            if (reference.Type is TypedefType typedefType)
+            if (type is TypedefType typedefType)
             {
                 if (typedefType.Ref.Type is PointerType pointerType)
                 {

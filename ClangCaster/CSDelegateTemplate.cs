@@ -38,7 +38,7 @@ namespace ClangCaster
 
         public string Render(TypeReference reference)
         {
-            var (name, functionType) = reference.GetFunctionTypeFromTypedef();
+            var (name, functionType) = reference.Type.GetFunctionTypeFromTypedef();
             return m_template.Render(DotLiquid.Hash.FromAnonymousObject(
                 new
                 {

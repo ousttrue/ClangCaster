@@ -85,12 +85,17 @@ namespace ClangCaster
             Func<Object, Object> MethodFunc = (Object src) =>
             {
                 var functionType = (FunctionType)src;
+                var name = functionType.Name;
+                if (name == "Marshal")
+                {
+                    name = "_Marshal";
+                }
                 var paramsWithName = string.Join(", ", functionType.Params.Select(x => ParamsWithName(x)).ToArray());
                 var call = String.Join(", ", functionType.Params.Select(x => Call(x)).ToArray());
                 var returnType = Converter.Convert(TypeContext.Return, functionType.Result).Item1;
                 return new
                 {
-                    Name = functionType.Name,
+                    Name = name,
                     Params = functionType.Params,
                     Return = returnType,
                     VTableIndex = functionType.VTableIndex,
