@@ -35,6 +35,7 @@ namespace ClangCaster
 
         public static NamespaceOpener Open(DirectoryInfo dir, string file, string ns, params string[] usingList)
         {
+            dir.Create();
             return new NamespaceOpener(new FileInfo(Path.Combine(dir.FullName, file)), ns, usingList);
         }
     }

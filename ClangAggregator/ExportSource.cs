@@ -29,7 +29,7 @@ namespace ClangAggregator
         readonly List<TypeReference> m_interfaces = new List<TypeReference>();
         public IEnumerable<TypeReference> Interfaces => m_interfaces;
 
-        public readonly Dictionary<string, List<ConstantDefinition>> ConstantMap = new Dictionary<string, List<ConstantDefinition>>();
+        public readonly List<ConstantDefinition> Constants = new List<ConstantDefinition>();
 
         public ExportSource(NormalizedFilePath path, string dll)
         {
@@ -51,14 +51,15 @@ namespace ClangAggregator
             return $"{m_path} ({m_enumTypes.Count}types)";
         }
 
-        public void PushConstant(string prefix, ConstantDefinition constant)
+        public void PushConstant(ConstantDefinition constant)
         {
-            if (!ConstantMap.TryGetValue(prefix, out List<ConstantDefinition> list))
+            if(Constants.Any(x => x.Name == constant.Name))
             {
-                list = new List<ConstantDefinition>();
-                ConstantMap.Add(prefix, list);
+                Console.WriteLine($"duplicated: {constant.Location} => {constant}");
+                return;
             }
-            list.Add(constant);
+
+            Constants.Add(constant);
         }
 
         static int s_anonymous;

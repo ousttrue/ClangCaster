@@ -7,23 +7,6 @@ namespace ClangAggregator
 {
     public class ConstantDefinition
     {
-        public static string[] UseConstantPrefixies = new string[]
-        {
-            "WS_S_",
-            "WS_E_",
-            "WS_",
-            "MSG_",
-            "SW_",
-            "CW_",
-            "WM_",
-            "COLOR_",
-            "QS_",
-            "PM_",
-            "CS_",
-            "IDC_",
-            "SM_",
-        };
-
         public uint Hash { get; private set; }
 
         public FileLocation Location { get; set; }
@@ -61,38 +44,129 @@ namespace ClangAggregator
             return $"{Name} := {values}";
         }
 
-        static string SkipPrefix(string src, string prefix, bool exception)
+        public static bool IsAlphabet(char c)
         {
-            if (src.StartsWith(prefix))
+            return (c >= 'A' && c <= 'z');
+        }
+
+        public bool IsRename => Values.Count == 1 && Values[0].All(IsAlphabet);
+
+        // static string SkipPrefix(string src, string prefix, bool exception)
+        // {
+        //     if (src.StartsWith(prefix))
+        //     {
+        //         // skip prefix. keep underscore for digits starts
+        //         return src.Substring(prefix.Length - 1);
+        //     }
+        //     else
+        //     {
+        //         if (exception)
+        //         {
+        //             throw new Exception();
+        //         }
+        //         return src;
+        //     }
+        // }
+
+        // public static string[] RemoveMacroFunctions = new string[]
+        // {
+        //     "_HRESULT_TYPEDEF_",
+        //     "MAKEINTRESOURCE",
+        //     "MAKEINTATOM",
+        // };
+
+        static string[] CastTypes = new string[]
+        {
+            "LPWSTR",
+            "ULONG_PTR",
+            "HWND",
+            "HBITMAP",
+            "HANDLE",
+            "DWORD",
+            "LONG",
+        };
+
+        IEnumerable<(int, int)> GetParenthesis()
+        {
+            var stack = new Stack<int>();
+            for (int i = 0; i < Values.Count; ++i)
             {
-                // skip prefix. keep underscore for digits starts
-                return src.Substring(prefix.Length - 1);
-            }
-            else
-            {
-                if (exception)
+                switch (Values[i])
                 {
-                    throw new Exception();
+                    case "(":
+                        stack.Push(i);
+                        break;
+
+                    case ")":
+                        yield return (stack.Pop(), i);
+                        break;
                 }
-                return src;
             }
         }
+
+        bool IsMacrofunctionCall(int open, int close)
+        {
+            if(open==0)
+            {
+                return false;
+            }
+            var name = Values[open-1];
+            if(name=="sizeof")
+            {
+                return false;
+            }
+
+            var result = name.All(IsAlphabet);
+            return result;
+        }
+
+        bool IsCast(int open, int close)
+        {
+            // ( Axxx )
+            return open + 2 == close && CastTypes.Contains(Values[open + 1]);
+        }
+
+        void RemoveCastOrMacroFunction()
+        {
+            while (true)
+            {
+                var found = false;
+                foreach (var (open, close) in GetParenthesis())
+                {
+                    if (IsMacrofunctionCall(open, close))
+                    {
+                        Values.RemoveAt(close);
+                        Values.RemoveRange(open - 1, 2);
+                        found = true;
+                        break;
+                    }
+                    if (IsCast(open, close))
+                    {
+                        Values.RemoveRange(open, 3);
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    break;
+                }
+            }
+        }
+
+        static Dictionary<string, string> s_ReplaceMap = new Dictionary<string, string>{
+            {"SHORT", "short"},
+            {"UINT_MAX", "4294967295"},
+        };
 
         /// <summary>
         /// 前処理
         /// </summary>
-        public void Prepare(string prefix)
+        public void Prepare()
         {
-            Name = SkipPrefix(Name, prefix, true);
+            // Name = SkipPrefix(Name, prefix, true);
 
-            if (Values.Count >= 4)
-            {
-                if (Values[0] == "_HRESULT_TYPEDEF_" && Values[1] == "(" && Values.Last() == ")")
-                {
-                    Values.RemoveRange(0, 2);
-                    Values.RemoveAt(Values.Count - 1);
-                }
-            }
+            RemoveCastOrMacroFunction();
 
             if (Values.Count == 1)
             {
@@ -103,25 +177,24 @@ namespace ClangAggregator
                 }
             }
 
-            // skip prefix
             for (int i = 0; i < Values.Count; ++i)
             {
-                Values[i] = SkipPrefix(Values[i], prefix, false);
+                // Values[i] = SkipPrefix(Values[i], prefix, false);
 
-                if (Values[i] == "SHORT")
+                if (s_ReplaceMap.TryGetValue(Values[i], out string replace))
                 {
-                    Values[i] = "short";
+                    Values[i] = replace;
                 }
 
-                // split
-                foreach (var p in UseConstantPrefixies)
-                {
-                    if (Values[i].StartsWith(p))
-                    {
-                        // split
-                        Values[i] = $"{Values[i][0..p.Length]}.{Values[i][(p.Length - 1)..^0]}";
-                    }
-                }
+                // // split
+                // foreach (var p in UseConstantPrefixies)
+                // {
+                //     if (Values[i].StartsWith(p))
+                //     {
+                //         // split
+                //         Values[i] = $"{Values[i][0..p.Length]}.{Values[i][(p.Length - 1)..^0]}";
+                //     }
+                // }
             }
         }
     }

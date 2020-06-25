@@ -44,14 +44,14 @@ namespace ClangAggregator
             return sb.ToString();
         }
 
-        bool IsContainedInRootHeaders(TypeReference reference)
+        bool IsContainedInRootHeaders(FileLocation location)
         {
-            return m_rootHeaders.Any(x => x.Equals(reference.Location.Path));
+            return m_rootHeaders.Any(x => x.Equals(location.Path));
         }
 
         bool IsComInterface(TypeReference reference)
         {
-            if (!IsContainedInRootHeaders(reference))
+            if (!IsContainedInRootHeaders(reference.Location))
             {
                 return false;
             }
@@ -90,7 +90,24 @@ namespace ClangAggregator
             return export;
         }
 
-        public void PushConstant(string prefix, ConstantDefinition constant)
+        public static string[] UseConstantPrefixies = new string[]
+        {
+            "WS_S_",
+            "WS_E_",
+            "WS_",
+            "MSG_",
+            "SW_",
+            "CW_",
+            "WM_",
+            "COLOR_",
+            "QS_",
+            "PM_",
+            "CS_",
+            "IDC_",
+            "SM_",
+        };
+
+        public void PushConstant(ConstantDefinition constant)
         {
             // ensure ExportSource
             if (string.IsNullOrEmpty(constant.Location.Path.Path))
@@ -98,8 +115,20 @@ namespace ClangAggregator
                 return;
             }
 
-            var export = GetOrCreateSource(constant.Location.Path);
-            export.PushConstant(prefix, constant);
+            // function rename ?
+            if (constant.IsRename)
+            {
+                return;
+            }
+
+            // root か prefix が明示されているものだけ
+            if (IsContainedInRootHeaders(constant.Location)
+            || UseConstantPrefixies.Any(x => constant.Name.StartsWith(x))
+            )
+            {
+                var export = GetOrCreateSource(constant.Location.Path);
+                export.PushConstant(constant);
+            }
         }
 
         /// <summary>
@@ -108,7 +137,7 @@ namespace ClangAggregator
         /// <param name="reference"></param>
         public void PushIf(TypeReference reference)
         {
-            if (IsContainedInRootHeaders(reference))
+            if (IsContainedInRootHeaders(reference.Location))
             {
                 if (reference.Type is FunctionType)
                 {
@@ -139,10 +168,16 @@ namespace ClangAggregator
             }
 
             var t = reference.Type;
+
+            // dereference
             if (t is PointerType pointerType)
             {
-                // pointer
                 Add(pointerType.Pointee, stack);
+                return;
+            }
+            if (t is ArrayType arrayType)
+            {
+                Add(arrayType.Element, stack);
                 return;
             }
 

@@ -49,14 +49,7 @@ namespace ClangCaster
             }
             foreach (var constant in map.Constants)
             {
-                foreach (var prefix in ConstantDefinition.UseConstantPrefixies)
-                {
-                    if (constant.Name.StartsWith(prefix))
-                    {
-                        sorter.PushConstant(prefix, constant);
-                        break;
-                    }
-                }
+                sorter.PushConstant(constant);
             }
 
             // export
@@ -163,28 +156,29 @@ namespace ClangCaster
                     }
                 }
 
-                if (exportSource.ConstantMap.Any())
+                if (exportSource.Constants.Any())
                 {
-                    var constantsDir = new DirectoryInfo(Path.Combine(dir, $"constants"));
-                    constantsDir.Create();
-                    foreach (var (prefix, list) in exportSource.ConstantMap)
+                    using (var s = NamespaceOpener.Open(new DirectoryInfo(dir), $"constants.cs", ns))
                     {
-                        using (var s = NamespaceOpener.Open(constantsDir, $"{prefix}.cs", ns))
-                        {
-                            // open static class
-                            s.Writer.Write($@"    public static partial class {prefix}
+                        // open static class
+                        s.Writer.Write($@"    public static partial class _
     {{
 ");
-
-                            foreach (var constant in list)
+                        foreach (var constant in exportSource.Constants)
+                        {
+                            constant.Prepare();
+                            
+                            // TODO:
+                            if (constant.Values.Contains("sizeof"))
                             {
-                                constant.Prepare(prefix);
-                                s.Writer.WriteLine(CSConstantTemplate.Render(constant));
+                                continue;
                             }
 
-                            // close constants
-                            s.Writer.WriteLine("    }");
+                            s.Writer.WriteLine(CSConstantTemplate.Render(constant));
                         }
+
+                        // close constants
+                        s.Writer.WriteLine("    }");
                     }
                 }
             }
