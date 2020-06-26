@@ -153,6 +153,14 @@ namespace ClangAggregator
             }
         }
 
+        static bool IsTagName(string name)
+        {
+            if (name.StartsWith("tag")) return true;
+            if (name.StartsWith("_")) return true;
+            if (name.EndsWith("_tag")) return true;
+            return false;
+        }
+
         /// <summary>
         /// Enum, Struct, Function, Typedef を登録する。
         /// Struct, Function, Typedef から間接的に参照されている型を再帰的に登録する。
@@ -235,7 +243,7 @@ namespace ClangAggregator
                     //     // struct の tag 名と typedef名を同じにする
                     //     userType.Name = typedefType.Name;
                     // }
-                    else if (userType.Name.StartsWith("tag") || userType.Name.StartsWith("_"))
+                    else if (IsTagName(userType.Name))
                     {
                         // replace tagName
                         userType.Name = typedefType.Name;
