@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace ClangAggregator
 {
@@ -72,30 +71,6 @@ namespace ClangAggregator
         }
 
         public bool IsRename => Values.Count == 1 && IsAlphabet(Values[0][0]);
-
-        // static string SkipPrefix(string src, string prefix, bool exception)
-        // {
-        //     if (src.StartsWith(prefix))
-        //     {
-        //         // skip prefix. keep underscore for digits starts
-        //         return src.Substring(prefix.Length - 1);
-        //     }
-        //     else
-        //     {
-        //         if (exception)
-        //         {
-        //             throw new Exception();
-        //         }
-        //         return src;
-        //     }
-        // }
-
-        // public static string[] RemoveMacroFunctions = new string[]
-        // {
-        //     "_HRESULT_TYPEDEF_",
-        //     "MAKEINTRESOURCE",
-        //     "MAKEINTATOM",
-        // };
 
         static string[] CastTypes = new string[]
         {
@@ -200,41 +175,50 @@ namespace ClangAggregator
         };
 
         /// <summary>
+        /// 0x1234L => 0x1234
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="dst"></param>
+        /// <returns></returns>
+        static bool TryDropL(string src, out string dst)
+        {
+            if (src.Last() == 'l' || src.Last() == 'L')
+            {
+                if (src.StartsWith("0x") || src.StartsWith("0X"))
+                {
+                    dst = src.Substring(0, src.Length - 1);
+                    return true;
+                }
+
+                if (src.Take(src.Length - 1).All(x => Char.IsDigit(x)))
+                {
+                    dst = src.Substring(0, src.Length - 1);
+                    return true;
+                }
+            }
+
+            dst = default;
+            return false;
+        }
+
+        /// <summary>
         /// 前処理
         /// </summary>
         public void Prepare()
         {
-            // Name = SkipPrefix(Name, prefix, true);
-
             RemoveCastOrMacroFunction();
-
-            if (Values.Count == 1)
-            {
-                if (Values[0].Last() == 'L')
-                {
-                    // drop L
-                    Values[0] = Values[0].Substring(0, Values[0].Length - 1);
-                }
-            }
 
             for (int i = 0; i < Values.Count; ++i)
             {
-                // Values[i] = SkipPrefix(Values[i], prefix, false);
-
                 if (s_ReplaceMap.TryGetValue(Values[i], out string replace))
                 {
                     Values[i] = replace;
                 }
 
-                // // split
-                // foreach (var p in UseConstantPrefixies)
-                // {
-                //     if (Values[i].StartsWith(p))
-                //     {
-                //         // split
-                //         Values[i] = $"{Values[i][0..p.Length]}.{Values[i][(p.Length - 1)..^0]}";
-                //     }
-                // }
+                if (TryDropL(Values[i], out string dropped))
+                {
+                    Values[i] = dropped;
+                }
             }
         }
     }
