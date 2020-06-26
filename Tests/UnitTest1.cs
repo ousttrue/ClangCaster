@@ -74,7 +74,7 @@ struct Hoge
     int Value;
 };
 ";
-            var tu = ClangTU.Parse(source);
+            var tu = ClangTU.ParseSource(source);
             var aggregator = new TypeAggregator();
             var map = aggregator.Process(tu.GetCursor());
 

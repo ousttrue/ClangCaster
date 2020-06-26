@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClangCaster", "ClangCaster\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{B9E13FD3-1E3C-4375-A015-6C801BE25B75}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClangTree", "ClangTree\ClangTree.csproj", "{B4614BF4-9E22-4D23-80BB-D87F36241CE7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,5 +46,17 @@ Global
 		{B9E13FD3-1E3C-4375-A015-6C801BE25B75}.Release|x64.Build.0 = Release|Any CPU
 		{B9E13FD3-1E3C-4375-A015-6C801BE25B75}.Release|x86.ActiveCfg = Release|Any CPU
 		{B9E13FD3-1E3C-4375-A015-6C801BE25B75}.Release|x86.Build.0 = Release|Any CPU
+		{B4614BF4-9E22-4D23-80BB-D87F36241CE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4614BF4-9E22-4D23-80BB-D87F36241CE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4614BF4-9E22-4D23-80BB-D87F36241CE7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B4614BF4-9E22-4D23-80BB-D87F36241CE7}.Debug|x64.Build.0 = Debug|Any CPU
+		{B4614BF4-9E22-4D23-80BB-D87F36241CE7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B4614BF4-9E22-4D23-80BB-D87F36241CE7}.Debug|x86.Build.0 = Debug|Any CPU
+		{B4614BF4-9E22-4D23-80BB-D87F36241CE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4614BF4-9E22-4D23-80BB-D87F36241CE7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B4614BF4-9E22-4D23-80BB-D87F36241CE7}.Release|x64.ActiveCfg = Release|Any CPU
+		{B4614BF4-9E22-4D23-80BB-D87F36241CE7}.Release|x64.Build.0 = Release|Any CPU
+		{B4614BF4-9E22-4D23-80BB-D87F36241CE7}.Release|x86.ActiveCfg = Release|Any CPU
+		{B4614BF4-9E22-4D23-80BB-D87F36241CE7}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

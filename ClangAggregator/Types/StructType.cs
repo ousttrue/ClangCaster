@@ -27,7 +27,7 @@ namespace ClangAggregator.Types
         public bool IsUnion { get; private set; }
         public List<StructField> Fields { get; private set; }
         public StructType AnonymousParent;
-
+        public List<TypeReference> AnonymousTypes;
         List<FunctionType> m_methods;
         public List<FunctionType> Methods
         {

@@ -218,21 +218,26 @@ namespace ClangAggregator
                     return;
                 }
 
-                if (typedefType.Ref.Type is UserType userType)
+                if (typedefType.TryDereference<UserType>(out UserType userType))
                 {
                     if (string.IsNullOrEmpty(userType.Name))
                     {
                         // 名無しの宣言に名前を付ける
                         userType.Name = typedefType.Name;
                     }
-                    else if (userType is EnumType)
+                    // else if (userType is EnumType)
+                    // {
+                    //     // enum の tag 名と typedef名を同じにする
+                    //     userType.Name = typedefType.Name;
+                    // }
+                    // else if (userType is StructType)
+                    // {
+                    //     // struct の tag 名と typedef名を同じにする
+                    //     userType.Name = typedefType.Name;
+                    // }
+                    else if (userType.Name.StartsWith("tag") || userType.Name.StartsWith("_"))
                     {
-                        // enum の tag 名と typedef名を同じにする
-                        userType.Name = typedefType.Name;
-                    }
-                    else if (userType is StructType)
-                    {
-                        // struct の tag 名と typedef名を同じにする
+                        // replace tagName
                         userType.Name = typedefType.Name;
                     }
                 }

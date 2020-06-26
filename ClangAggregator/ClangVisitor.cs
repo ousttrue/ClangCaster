@@ -4,7 +4,7 @@ using CIndex;
 
 namespace ClangAggregator
 {
-    static class ClangVisitor
+    public static class ClangVisitor
     {
         public delegate CXChildVisitResult CallbackFunc(in CXCursor cursor);
 

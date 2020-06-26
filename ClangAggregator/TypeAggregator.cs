@@ -153,7 +153,8 @@ namespace ClangAggregator
                         reference.Type = structType;
                         var nested = context.Enter(structType);
                         TraverseChildren(cursor, nested);
-                        if (libclang.clang_Cursor_isAnonymousRecordDecl(cursor) != 0)
+                        // if (libclang.clang_Cursor_isAnonymousRecordDecl(cursor) != 0)
+                        if (libclang.clang_Cursor_isAnonymous(cursor) != 0)
                         {
                             // anonymous type decl add field to current struct.
                             structType.AnonymousParent = context.Current;
@@ -161,7 +162,14 @@ namespace ClangAggregator
                             var current = context.Current;
                             // var fieldName = cursor.Spelling();
                             // FIXME: anonymous type field offset ?
-                            current.Fields.Add(new StructField(current.Fields.Count, "", reference, 0));
+                            if (current != null)
+                            {
+                                current.Fields.Add(new StructField(current.Fields.Count, "", reference, 0));
+                            }
+                            else
+                            {
+                                var a = 0;
+                            }
                         }
                     }
                     break;

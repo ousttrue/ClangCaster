@@ -5,6 +5,23 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "debug",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/ClangTree/bin/Debug/netcoreapp3.1/ClangTree.dll",
+            "args": [
+                "C:/Program Files (x86)/Windows Kits/10/Include/10.0.18362.0/um/winnt.h",
+                "_LARGE_INTEGER",
+            ],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PATH": "C:\\Program Files\\LLVM\\bin", // path for libclang.dll
+            },
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
             "name": "generate libclang",
             "type": "coreclr",
             "request": "launch",

@@ -108,12 +108,33 @@ namespace ClangAggregator
                 else
                 {
                     // struct
-                    if (m_structTypes.Any(x => x.Hash == reference.Hash))
-                    {
-                        return false;
-                    }
 
-                    m_structTypes.Add(reference);
+                    if (structType.AnonymousParent != null)
+                    {
+                        var parent = structType.AnonymousParent;
+                        while (parent.AnonymousParent != null)
+                        {
+                            parent = parent.AnonymousParent;
+                        }
+                        if (parent.AnonymousTypes is null)
+                        {
+                            parent.AnonymousTypes = new List<TypeReference>();
+                        }
+
+                        if(parent.AnonymousTypes.Any(x => x.Hash == reference.Hash))
+                        {
+                            return false;
+                        }
+                        parent.AnonymousTypes.Add(reference);
+                    }
+                    else
+                    {
+                        if (m_structTypes.Any(x => x.Hash == reference.Hash))
+                        {
+                            return false;
+                        }
+                        m_structTypes.Add(reference);
+                    }
                 }
             }
             else if (type is FunctionType functionType)

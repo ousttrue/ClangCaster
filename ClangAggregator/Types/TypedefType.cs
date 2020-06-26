@@ -26,7 +26,7 @@ namespace ClangAggregator.Types
     public static class TypedefExtensions
     {
         /// <summary>
-        /// HWND など
+        /// HWND, HMODULE, HBITMAP etc...
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
@@ -46,6 +46,27 @@ namespace ClangAggregator.Types
             }
 
             dst = default;
+            return false;
+        }
+
+        public static bool TryDereference<T>(this TypedefType typedef, out T value) where T : BaseType
+        {
+            if (typedef.Ref.Type is T)
+            {
+                value = typedef.Ref.Type as T;
+                return true;
+            }
+
+            if(typedef.Ref.Type is PointerType pointerType)
+            {
+                if(pointerType.Pointee.Type is T)
+                {
+                    value = pointerType.Pointee.Type as T;
+                    return true;
+                }
+            }
+
+            value = default;
             return false;
         }
     }

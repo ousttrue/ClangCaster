@@ -69,6 +69,16 @@ namespace ClangAggregator
             }
         }
 
+        public static bool operator ==(NormalizedFilePath lhs, NormalizedFilePath rhs)
+        {
+            return lhs.Equals(rhs);
+        }
+
+        public static bool operator !=(NormalizedFilePath lhs, NormalizedFilePath rhs)
+        {
+            return !(lhs == rhs);
+        }
+
         public override int GetHashCode()
         {
             return m_hash;

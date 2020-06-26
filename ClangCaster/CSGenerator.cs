@@ -61,15 +61,12 @@ namespace ClangCaster
                     var structType = reference.Type as StructType;
                     if (string.IsNullOrEmpty(structType.Name))
                     {
-                        if (structType.AnonymousParent is null)
-                        {
-                            var a = 0;
-                        }
                         // 無名型に名前を付ける(unionによくある)
-                        structType.Name = $"__Anonymous__{anonymous++}";
+                        structType.Name = $"__Global__{anonymous++}";
                     }
                 }
             }
+            Console.WriteLine($"AnonymousCount: {anonymous}");
 
             // export
             DotLiquid.Template.RegisterSafeType(typeof(TypeReference), new string[] { "Type" });
@@ -78,7 +75,6 @@ namespace ClangCaster
 
             var enumTemplate = new CSEnumTemplate();
             var structTemplate = new CSStructTemplate();
-            var unionTemplate = new CSUnionTemplate();
             var interfaceTemplate = new CSComInterfaceTemplate();
             var delegateTemplate = new CSDelegateTemplate();
             var functionTemplate = new CSFunctionTemplate();
@@ -119,12 +115,12 @@ namespace ClangCaster
                     {
                         var structType = reference.Type as StructType;
                         using (var s = NamespaceOpener.Open(structsDir, $"{structType.Name}.cs", ns, CSStructTemplate.Using))
-                        {
-                            if (structType.IsUnion)
-                            {
-                                s.Writer.Write(unionTemplate.Render(reference));
-                            }
-                            else
+                        {                           
+                            // if (structType.IsUnion)
+                            // {
+                            //     s.Writer.Write(unionTemplate.Render(reference));
+                            // }
+                            // else
                             {
                                 s.Writer.Write(structTemplate.Render(reference));
                             }

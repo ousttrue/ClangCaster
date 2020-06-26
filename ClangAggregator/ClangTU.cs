@@ -32,7 +32,7 @@ namespace ClangAggregator
             }
         }
 
-        public static ClangTU Parse(
+        public static ClangTU ParseSource(
             string source)
         {
             var args = new List<string>{
@@ -45,6 +45,11 @@ namespace ClangAggregator
                 "-fms-compatibility"
             };
             return Parse(args, "tmp.h", source);
+        }
+
+        public static ClangTU Parse(string header)
+        {
+            return Parse(new string[] { header }, new string[] { }, new string[] { });
         }
 
         public static ClangTU Parse(
