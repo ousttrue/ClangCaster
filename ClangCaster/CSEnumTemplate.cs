@@ -5,7 +5,7 @@ namespace ClangCaster
     class CSEnumTemplate : CSTemplateBase
     {
         protected override string TemplateSource => @"    // {{ type.Location.Path.Path }}:{{ type.Location.Line }}
-    public enum {{ type.Name }} // {{ type.Count }}
+    public enum {{ type.Name }}
     {
 {% for value in type.Values -%}
         {{ value.Name }} = {{ value.Hex }},

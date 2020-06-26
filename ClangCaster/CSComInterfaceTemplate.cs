@@ -14,7 +14,7 @@ namespace ClangCaster
         };
 
         protected override string TemplateSource => @"    // {{ type.Location.Path.Path }}:{{ type.Location.Line }}
-    public class {{ type.Name }} : {{ type.Base }} // {{ type.Count }}
+    public class {{ type.Name }} : {{ type.Base }}
     {
         static Guid s_uuid = new Guid(""{{ type.IID }}"");
         public static new ref Guid IID => ref s_uuid;
