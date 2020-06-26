@@ -15,7 +15,7 @@ namespace ClangCaster
 
         protected string StructTemplate => @"    // {{ type.Location.Path.Path }}:{{ type.Location.Line }}
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-    public struct {{ type.Name }} // {{ type.Count }}
+    public struct {{ type.Name }}
     {
 {% for anonymous in type.AnonymousTypes -%}
 {{ anonymous.Render }}
@@ -30,7 +30,7 @@ namespace ClangCaster
 
         protected string UnionTemplate => @"    // {{ type.Location.Path.Path }}:{{ type.Location.Line }}
     [StructLayout(LayoutKind.Explicit, CharSet = CharSet.Unicode)]
-    public struct {{ type.Name }} // {{ type.Count }}
+    public struct {{ type.Name }}
     {
 {% for anonymous in type.AnonymousTypes -%}
 {{ anonymous.Render }}
