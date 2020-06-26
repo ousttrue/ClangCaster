@@ -27,7 +27,6 @@ namespace ClangCaster
                 var fp = GetFunctionPointer({{method.VTableIndex}});
                 m_{{ method.Name }}Func = ({{ method.Name }}Func)Marshal.GetDelegateForFunctionPointer(fp, typeof({{ Method.Name }}Func));
             } 
-            
             {{ method.ReturnNorVoid }} m_{{ method.Name }}Func(m_ptr{{method.Comma}}{{method.Call}});
         }
         delegate {{ method.Return }} {{ method.Name }}Func(IntPtr self{{method.Comma}}{{method.ParamsWithName}});
