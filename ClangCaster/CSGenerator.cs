@@ -115,7 +115,7 @@ namespace ClangCaster
                     {
                         var structType = reference.Type as StructType;
                         using (var s = NamespaceOpener.Open(structsDir, $"{structType.Name}.cs", ns, CSStructTemplate.Using))
-                        {                           
+                        {
                             // if (structType.IsUnion)
                             // {
                             //     s.Writer.Write(unionTemplate.Render(reference));
@@ -220,20 +220,9 @@ namespace ClangCaster
                                 var a = 0;
                             }
 
-                            constant.Prepare();
-
-                            // TODO:
-                            if (constant.Name == "CINDEX_VERSION_STRING")
+                            if (!constant.Prepare())
                             {
-                                continue;
-                            }
-                            if (constant.Values.Contains("sizeof"))
-                            {
-                                continue;
-                            }
-                            if (constant.Values.Any(x => x.Contains('"')))
-                            {
-                                // non int
+                                // skip
                                 continue;
                             }
 

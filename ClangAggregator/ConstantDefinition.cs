@@ -83,6 +83,7 @@ namespace ClangAggregator
             "DWORD",
             "LONG",
             "ID3DInclude",
+            "ImDrawCallback",
         };
 
         IEnumerable<(int, int)> GetParenthesis()
@@ -204,8 +205,31 @@ namespace ClangAggregator
         /// <summary>
         /// 前処理
         /// </summary>
-        public void Prepare()
+        public bool Prepare()
         {
+            // black list
+            if (Name == "CINDEX_VERSION_STRING")
+            {
+                return false;
+            }
+            if (Values.Contains("IM_COL32"))
+            {
+                return false;
+            }
+
+            // compile time
+            if (Values.Contains("sizeof"))
+            {
+                return false;
+            }
+
+            // string
+            if (Values.Any(x => x.Contains('"')))
+            {
+                // non int
+                return false;
+            }
+
             RemoveCastOrMacroFunction();
 
             for (int i = 0; i < Values.Count; ++i)
@@ -220,6 +244,8 @@ namespace ClangAggregator
                     Values[i] = dropped;
                 }
             }
+
+            return true;
         }
     }
 }
