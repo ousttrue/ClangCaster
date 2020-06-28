@@ -107,8 +107,8 @@ namespace ClangAggregator
                         //     decl = Namespace::create(hash, location.path(), location.line, spelling.str_view());
                         //     pushDecl(cursor, decl);
                         // }
-                        // var child = context.EnterNamespace(decl);
-                        // TraverseChildren(cursor, child);
+                        var nested = context.Child();
+                        TraverseChildren(cursor, nested);
                     }
                     break;
 
