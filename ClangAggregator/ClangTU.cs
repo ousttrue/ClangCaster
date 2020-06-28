@@ -157,11 +157,14 @@ namespace ClangAggregator
             uint unsavedFiles = default;
             if (string.IsNullOrEmpty(unsaved))
             {
+                Console.WriteLine($"args: {string.Join(" ", args)} {filename}");
                 unsavedFiles = 0;
             }
             else
             {
                 // use unsaved files
+                Console.WriteLine($"args: {string.Join(" ", args)}");
+                
                 unsavedFiles = 1;
                 var contentsBytes = Encoding.UTF8.GetBytes(unsaved);
                 var contentsHandle = GCHandle.Alloc(contentsBytes, GCHandleType.Pinned);

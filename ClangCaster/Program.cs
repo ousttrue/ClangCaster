@@ -34,9 +34,15 @@ namespace ClangCaster
                         ++i;
                         break;
 
-                    case "-d":
+                    case "-out":
                         // dst
                         cmd.Dst = args[i + 1];
+                        ++i;
+                        break;
+
+                    case "-D":
+                        // dst
+                        cmd.Defines.Add(args[i + 1]);
                         ++i;
                         break;
 

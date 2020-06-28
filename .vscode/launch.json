@@ -82,5 +82,29 @@
             "console": "internalConsole",
             "stopAtEntry": false
         },
+        {
+            "name": "generate imgui",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/ClangCaster/bin/Debug/netcoreapp3.1/ClangCaster.dll",
+            "args": [
+                "-exportonly",
+                "-ns",
+                "Imgui",
+                "-out",
+                "${workspaceFolder}/Imgui",
+                "-D",
+                "IMGUI_API=__declspec(dllexport)",
+                "-h",
+                "${workspaceFolder}/../imgui/imgui.h,imgui.dll",
+            ],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PATH": "C:\\Program Files\\LLVM\\bin", // path for libclang.dll
+            },
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
     ]
 }
