@@ -10,23 +10,25 @@ namespace ClangAggregator.Types
         public readonly int Index;
         public readonly string Name;
         public readonly TypeReference Ref;
+        public bool IsConst;
 
         public bool IsLast { get; private set; }
 
         public string[] DefaultParamTokens;
 
-        public FunctionParam(int index, string name, TypeReference typeRef, string[] defaultParamTokens)
+        public FunctionParam(int index, string name, TypeReference typeRef, bool isConst, string[] defaultParamTokens)
         {
             Index = index;
             Name = name;
             Ref = typeRef;
+            IsConst = isConst;
             IsLast = false;
             DefaultParamTokens = defaultParamTokens;
         }
 
         public FunctionParam MakeLast()
         {
-            return new FunctionParam(Index, Name, Ref, DefaultParamTokens)
+            return new FunctionParam(Index, Name, Ref, IsConst, DefaultParamTokens)
             {
                 IsLast = true
             };
@@ -63,7 +65,7 @@ namespace ClangAggregator.Types
         {
             var type = new FunctionType(cursor.Spelling());
 
-            type.Result = typeMap.CxTypeToType(resultType, cursor);
+            type.Result = typeMap.CxTypeToType(resultType, cursor).Item1;
 
             ClangVisitor.ProcessChildren(cursor, (in CXCursor child) =>
             {
@@ -84,9 +86,9 @@ namespace ClangAggregator.Types
                     case CXCursorKind._ParmDecl:
                         {
                             var childType = libclang.clang_getCursorType(child);
-                            var typeRef = typeMap.CxTypeToType(childType, child);
+                            var (typeRef, isConst) = typeMap.CxTypeToType(childType, child);
                             var values = getDefaultValue(child);
-                            type.Params.Add(new FunctionParam(type.Params.Count, childName, typeRef, values));
+                            type.Params.Add(new FunctionParam(type.Params.Count, childName, typeRef, isConst, values));
                         }
                         break;
 

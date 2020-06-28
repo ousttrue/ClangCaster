@@ -53,40 +53,40 @@ namespace ClangAggregator
         /// <param name="cxType"></param>
         /// <param name="cursor"></param>
         /// <returns></returns>
-        public Types.TypeReference CxTypeToType(in CXType cxType, in CXCursor cursor)
+        public (Types.TypeReference, bool) CxTypeToType(in CXType cxType, in CXCursor cursor)
         {
-            var isConst = libclang.clang_isConstQualifiedType(cxType);
+            var isConst = libclang.clang_isConstQualifiedType(cxType) != 0;
             if (Types.PrimitiveType.TryGetPrimitiveType(cxType, out Types.PrimitiveType primitive))
             {
-                return TypeReference.FromPrimitive(primitive);
+                return (TypeReference.FromPrimitive(primitive), isConst);
             }
 
             if (cxType.kind == CXTypeKind._Unexposed)
             {
                 // nullptr_t
-                return TypeReference.FromPointer(new PointerType(TypeReference.FromPrimitive(VoidType.Instance)));
+                return (TypeReference.FromPointer(new PointerType(TypeReference.FromPrimitive(VoidType.Instance))), isConst);
             }
 
             if (cxType.kind == CXTypeKind._Pointer)
             {
-                return TypeReference.FromPointer(new PointerType(CxTypeToType(libclang.clang_getPointeeType(cxType), cursor)));
+                return (TypeReference.FromPointer(new PointerType(CxTypeToType(libclang.clang_getPointeeType(cxType), cursor).Item1)), isConst);
             }
 
             if (cxType.kind == CXTypeKind._LValueReference)
             {
-                return TypeReference.FromPointer(new PointerType(CxTypeToType(libclang.clang_getPointeeType(cxType), cursor)));
+                return (TypeReference.FromPointer(new PointerType(CxTypeToType(libclang.clang_getPointeeType(cxType), cursor).Item1, true)), isConst);
             }
 
             if (cxType.kind == CXTypeKind._IncompleteArray)
             {
-                return TypeReference.FromPointer(new PointerType(CxTypeToType(libclang.clang_getArrayElementType(cxType), cursor)));
+                return (TypeReference.FromPointer(new PointerType(CxTypeToType(libclang.clang_getArrayElementType(cxType), cursor).Item1)), isConst);
             }
 
             if (cxType.kind == CXTypeKind._ConstantArray)
             {
                 var arraySize = (int)libclang.clang_getArraySize(cxType);
-                var elementType = CxTypeToType(libclang.clang_getArrayElementType(cxType), cursor);
-                return TypeReference.FromArray(new ArrayType(elementType, arraySize));
+                var elementType = CxTypeToType(libclang.clang_getArrayElementType(cxType), cursor).Item1;
+                return (TypeReference.FromArray(new ArrayType(elementType, arraySize)), isConst);
             }
 
             if (cxType.kind == CXTypeKind._Typedef || cxType.kind == CXTypeKind._Record)
@@ -117,7 +117,7 @@ namespace ClangAggregator
                 }
                 else
                 {
-                    return reference;
+                    return (reference, isConst);
                 }
             }
 
@@ -173,14 +173,14 @@ namespace ClangAggregator
                     var children = cursor.Children();
                     throw new NotImplementedException("Elaborated not found");
                 }
-                return reference;
+                return (reference, isConst);
             }
 
             if (cxType.kind == CXTypeKind._FunctionProto)
             {
                 var resultType = libclang.clang_getResultType(cxType);
                 var functionType = FunctionType.Parse(cursor, this, resultType);
-                return new TypeReference(cursor.CursorHashLocation(), functionType);
+                return (new TypeReference(cursor.CursorHashLocation(), functionType), isConst);
             }
 
             throw new NotImplementedException("type not found");

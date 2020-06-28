@@ -18,7 +18,7 @@ namespace ClangAggregator.Types
         {
             var type = new TypedefType(cursor.Spelling());
             var underlying = libclang.clang_getTypedefDeclUnderlyingType(cursor);
-            type.Ref = typeMap.CxTypeToType(underlying, cursor);
+            type.Ref = typeMap.CxTypeToType(underlying, cursor).Item1;
             return type;
         }
     }

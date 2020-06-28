@@ -14,9 +14,12 @@ namespace ClangAggregator.Types
     {
         public TypeReference Pointee;
 
-        public PointerType(TypeReference pointee) : base("Pointer")
+        public bool IsReference;
+
+        public PointerType(TypeReference pointee, bool isReference = false) : base("Pointer")
         {
             Pointee = pointee;
+            IsReference = isReference;
         }
     }
 

@@ -184,7 +184,7 @@ namespace ClangAggregator
                         {
                             throw new Exception();
                         }
-                        current.Fields.Add(new StructField(current.Fields.Count, fieldName, m_typeMap.CxTypeToType(fieldType, cursor), fieldOffset));
+                        current.Fields.Add(new StructField(current.Fields.Count, fieldName, m_typeMap.CxTypeToType(fieldType, cursor).Item1, fieldOffset));
                         break;
                     }
 
