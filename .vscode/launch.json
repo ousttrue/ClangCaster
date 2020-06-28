@@ -96,6 +96,8 @@
                 "Imgui",
                 "-out",
                 "${workspaceFolder}/Imgui",
+                "-I",
+                "${workspaceFolder}/../imgui",
                 "-h",
                 "${workspaceFolder}/../imgui/imgui.h,imgui.dll",
                 "-h",
