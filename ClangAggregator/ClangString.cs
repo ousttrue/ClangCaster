@@ -32,6 +32,14 @@ namespace ClangAggregator
             };
         }
 
+        public static ClangString ManglingName(in CXCursor cursor)
+        {
+            return new ClangString
+            {
+                m_str = libclang.clang_Cursor_getMangling(cursor)
+            };
+        }
+
         public override string ToString()
         {
             var p = libclang.clang_getCString(m_str);

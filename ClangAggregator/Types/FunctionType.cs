@@ -51,6 +51,8 @@ namespace ClangAggregator.Types
 
         public bool IsDelegate;
 
+        public string MangledName;
+
         FunctionType(string name) : base(name)
         {
         }
@@ -64,6 +66,14 @@ namespace ClangAggregator.Types
         public static FunctionType Parse(in CXCursor cursor, TypeMap typeMap, in CXType resultType)
         {
             var type = new FunctionType(cursor.Spelling());
+
+            // affected platform option: -target x86_64-windows-msvc
+            using var mangling = ClangString.ManglingName(cursor);
+            var mangledName = mangling.ToString();
+            if (type.Name != mangledName)
+            {
+                type.MangledName = mangledName;
+            }
 
             type.Result = typeMap.CxTypeToType(resultType, cursor).Item1;
 
