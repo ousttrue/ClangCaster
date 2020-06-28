@@ -13,17 +13,20 @@ namespace ClangAggregator.Types
 
         public bool IsLast { get; private set; }
 
-        public FunctionParam(int index, string name, TypeReference typeRef)
+        public string[] DefaultParamTokens;
+
+        public FunctionParam(int index, string name, TypeReference typeRef, string[] defaultParamTokens)
         {
             Index = index;
             Name = name;
             Ref = typeRef;
             IsLast = false;
+            DefaultParamTokens = defaultParamTokens;
         }
 
         public FunctionParam MakeLast()
         {
-            return new FunctionParam(Index, Name, Ref)
+            return new FunctionParam(Index, Name, Ref, DefaultParamTokens)
             {
                 IsLast = true
             };
@@ -82,7 +85,8 @@ namespace ClangAggregator.Types
                         {
                             var childType = libclang.clang_getCursorType(child);
                             var typeRef = typeMap.CxTypeToType(childType, child);
-                            type.Params.Add(new FunctionParam(type.Params.Count, childName, typeRef));
+                            var values = getDefaultValue(child);
+                            type.Params.Add(new FunctionParam(type.Params.Count, childName, typeRef, values));
                         }
                         break;
 
@@ -106,6 +110,57 @@ namespace ClangAggregator.Types
                 type.Params[type.Params.Count - 1] = type.Params[type.Params.Count - 1].MakeLast();
             }
             return type;
+        }
+
+        static string[] getDefaultValue(in CXCursor cursor)
+        {
+            var tu = libclang.clang_Cursor_getTranslationUnit(cursor);
+            using (var token = new ClangToken(cursor))
+            {
+                var tokenSpellings = token.Select(x => x.Spelling(token.TU)).ToArray();
+                for (int i = 0; i < tokenSpellings.Length; ++i)
+                {
+                    if (tokenSpellings[i] == "=")
+                    {
+                        return tokenSpellings.Skip(i + 1).ToArray();
+                    }
+                }
+            }
+
+            // ClangVisitor.ProcessChildren(cursor, (in CXCursor child) =>
+            // {
+            //     switch (child.kind)
+            //     {
+            //         case CXCursorKind._TypeRef:
+            //             {
+            //                 // null ?
+            //                 // auto referenced = clang_getCursorReferenced(child);
+            //                 // debug auto a = 0;
+            //                 break;
+            //             }
+
+            //         case CXCursorKind._FirstExpr:
+            //             {
+            //                 // default value. ex: void func(int a = 0);
+            //                 // return FirstExpr(child);
+            //                 break;
+            //             }
+
+            //         case CXCursorKind._IntegerLiteral:
+            //             {
+            //                 // array length. ex: void func(int a[4]);
+            //                 // debug auto a = 0;
+            //                 break;
+            //             }
+
+            //         default:
+            //             throw new NotImplementedException();
+            //     }
+
+            //     return CXChildVisitResult._Continue;
+            // });
+
+            return default;
         }
 
         public static FunctionType Parse(in CXCursor cursor, TypeMap typeMap)

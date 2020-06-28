@@ -39,9 +39,16 @@ namespace ClangCaster
                 {
                     csType = $"{csAttr} {csType}";
                 }
+
+                var defaultValue = "";
+                if (param.DefaultParamTokens != null && param.DefaultParamTokens.Length > 0)
+                {
+                    defaultValue = " = " + string.Join(" ", param.DefaultParamTokens);
+                }
+
                 return new
                 {
-                    Render = $"{csType} {name}{comma}",
+                    Render = $"{csType} {name}{defaultValue}{comma}",
                 };
             };
             DotLiquid.Template.RegisterSafeType(typeof(FunctionParam), ParamFunc);
