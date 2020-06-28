@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using ClangAggregator.Types;
 
@@ -62,6 +63,12 @@ namespace CSType
             value = null;
             return false;
         }
+
+        static Dictionary<string, string> s_userTypeMap = new Dictionary<string, string>()
+        {
+            {"ImVec2", "System.Numerics.Vector2"},
+            {"ImVec4", "System.Numerics.Vector4"},
+        };
 
         static bool TryGetString(TypeContext context, BaseType baseType, out (string, string) value)
         {
@@ -154,6 +161,11 @@ namespace CSType
                 return guidTypeWithAttribute;
             }
 
+            if (s_userTypeMap.TryGetValue(type.Name, out string hardCoding))
+            {
+                return (hardCoding, null);
+            }
+
             if (type is EnumType enumType)
             {
                 return (enumType.Name, null);
@@ -223,7 +235,12 @@ namespace CSType
 
                 if (structPointee.Fields.Any())
                 {
-                    return (context.PointerType(structPointee.Name), null);
+                    var name = structPointee.Name;
+                    if (s_userTypeMap.TryGetValue(name, out string hardCoding))
+                    {
+                        name = hardCoding;
+                    }
+                    return (context.PointerType(name), null);
                 }
                 else
                 {
