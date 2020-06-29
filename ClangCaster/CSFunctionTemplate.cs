@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using ClangAggregator.Types;
 using CSType;
+
 
 namespace ClangCaster
 {
@@ -17,40 +19,34 @@ namespace ClangCaster
         );
 ";
 
-        static string[] s_defaultValue = new string[]
-        {
-            "NULL", "0", "false", "0.0f"
-        };
-
         static Dictionary<string, string> s_defaultValueReplaceMap = new Dictionary<string, string>
         {
             {"FLT_MAX", "float.MaxValue"},
         };
 
-        static string DefaultParam(string[] values)
+        static bool HasDefaultParam(in FunctionParam param)
         {
-            if (values.Length == 1 && s_defaultValue.Contains(values[0]))
+            if (param.DefaultParamTokens is null)
             {
-                return "default";
+                return false;
             }
+
+            if (param.HasDefaultOptionalValue)
+            {
+                return true;
+            }
+
+            var values = param.DefaultParamTokens;
             if (values.SequenceEqual(new[] { "ImVec2", "(", "0", ",", "0", ")" }))
             {
-                return "default";
+                return true;
             }
             if (values.SequenceEqual(new[] { "ImVec4", "(", "0", ",", "0", ",", "0", ",", "0", ")" }))
             {
-                return "default";
+                return true;
             }
 
-            for (int i = 0; i < values.Length; ++i)
-            {
-                if (s_defaultValueReplaceMap.TryGetValue(values[i], out string replace))
-                {
-                    values[i] = replace;
-                }
-            }
-
-            return string.Join("", values);
+            return false;
         }
 
         public CSFunctionTemplate()
@@ -66,10 +62,26 @@ namespace ClangCaster
                 }
                 name = CSType.CSSymbole.Escape(name);
 
-                var defaultValue = "";
-                if (param.DefaultParamTokens != null && param.DefaultParamTokens.Length > 0)
+                // replace
+                if (param.DefaultParamTokens != null)
                 {
-                    defaultValue = DefaultParam(param.DefaultParamTokens);
+                    for (int i = 0; i < param.DefaultParamTokens.Length; ++i)
+                    {
+                        if (s_defaultValueReplaceMap.TryGetValue(param.DefaultParamTokens[i], out string replace))
+                        {
+                            param.DefaultParamTokens[i] = replace;
+                        }
+                    }
+                }
+
+                var defaultValue = "";
+                if (HasDefaultParam(param))
+                {
+                    defaultValue = "default";
+                }
+                else if (param.DefaultParamTokens != null && param.DefaultParamTokens.Length > 0)
+                {
+                    defaultValue = string.Join("", param.DefaultParamTokens);
                 }
 
                 var (csType, csAttr) = Converter.Convert(TypeContext.Param, param.Ref);
@@ -108,24 +120,73 @@ namespace ClangCaster
             DotLiquid.Template.RegisterSafeType(typeof(FunctionParam), ParamFunc);
         }
 
+        public static bool HasNonDefaultOptionalValue(in FunctionParam param)
+        {
+            if (param.DefaultParamTokens is null)
+            {
+                return false;
+            }
+            if (param.DefaultParamTokens.Length == 0)
+            {
+                return false;
+            }
+            if (HasDefaultParam(param))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public static IEnumerable<FunctionType> GetOverloads(FunctionType functionType)
+        {
+            if (functionType.Params.Any(x => HasNonDefaultOptionalValue(x)))
+            {
+                // 省略無い版
+
+                // 1
+
+                // ... N
+
+                throw new NotImplementedException();
+            }
+            else
+            {
+                yield return functionType;
+            }
+        }
+
         public string Render(TypeReference reference, string dll)
         {
             var functionType = reference.Type as FunctionType;
-            return m_template.Render(DotLiquid.Hash.FromAnonymousObject(
-                new
+            var sb = new StringBuilder();
+            foreach (var f in GetOverloads(functionType))
+            {
+                if (sb.Length != 0)
                 {
-                    function = new
-                    {
-                        Hash = reference.Hash,
-                        Location = reference.Location,
-                        Count = reference.Count,
-                        Name = functionType.Name,
-                        Params = functionType.Params,
-                        Return = Converter.Convert(TypeContext.Return, functionType.Result).Item1,
-                    },
-                    dll = dll,
+                    sb.AppendLine();
                 }
-            ));
+
+                // オーバーロードがある場合に複数出力する
+                var render = m_template.Render(DotLiquid.Hash.FromAnonymousObject(
+                    new
+                    {
+                        function = new
+                        {
+                            Hash = reference.Hash,
+                            Location = reference.Location,
+                            Count = reference.Count,
+                            Name = f.Name,
+                            Params = f.Params,
+                            Return = Converter.Convert(TypeContext.Return, f.Result).Item1,
+                        },
+                        dll = dll,
+                    }
+                ));
+                sb.Append(render);
+            }
+
+            return sb.ToString();
         }
     }
 }
