@@ -73,8 +73,8 @@ namespace ClangCaster
 
             // export
             DotLiquid.Template.RegisterSafeType(typeof(TypeReference), new string[] { "Type" });
-            DotLiquid.Template.RegisterSafeType(typeof(FileLocation), new string[] { "Path", "Line" });
-            DotLiquid.Template.RegisterSafeType(typeof(NormalizedFilePath), new string[] { "Path" });
+            // DotLiquid.Template.RegisterSafeType(typeof(FileLocation), new string[] { "Path", "Line" });
+            // DotLiquid.Template.RegisterSafeType(typeof(NormalizedFilePath), new string[] { "Path" });
 
             var enumTemplate = new CSEnumTemplate();
             var structTemplate = new CSStructTemplate();
@@ -195,7 +195,7 @@ namespace ClangCaster
                                     {
                                         continue;
                                     }
-                                    s.Writer.WriteLine(functionTemplate.Render(reference, exportSource.Dll));
+                                    s.Writer.WriteLine(functionTemplate.Render(path, reference, exportSource.Dll));
                                 }
 
                                 // close partial class

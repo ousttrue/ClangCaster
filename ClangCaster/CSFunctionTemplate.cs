@@ -10,7 +10,7 @@ namespace ClangCaster
 {
     class CSFunctionTemplate
     {
-        string EntryPointTemplate => @"        // {{ function.Location.Path.Path }}:{{ function.Location.Line }}
+        string EntryPointTemplate => @"        // {{ function.Path }}:{{ function.Line }}
         {{ function.Attribute }}
         public static extern {{ function.Return }} {{function.Name}}(
 {% for param in function.Params -%}
@@ -209,7 +209,7 @@ namespace ClangCaster
             return false;
         }
 
-        public string Render(TypeReference reference, string dll)
+        public string Render(string path, TypeReference reference, string dll)
         {
             var functionType = reference.Type as FunctionType;
 
@@ -261,7 +261,8 @@ namespace ClangCaster
                             function = new
                             {
                                 Attribute = attribute,
-                                Location = reference.Location,
+                                Path = path,
+                                Line = reference.Location.Line,
                                 Count = reference.Count,
                                 Name = functionType.Name,
                                 Params = functionType.Params,

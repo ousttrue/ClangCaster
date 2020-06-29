@@ -39,10 +39,14 @@ namespace ClangAggregator
             return value;
         }
 
+        public readonly string Original;
+
         public string Path { get; private set; }
         readonly int m_hash;
         public NormalizedFilePath(string pathString)
         {
+            Original = pathString;
+            
             Path = Normalize(pathString);
 
             m_hash = Path.ToLower().GetHashCode();
