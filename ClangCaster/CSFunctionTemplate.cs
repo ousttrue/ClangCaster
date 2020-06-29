@@ -83,8 +83,42 @@ namespace ClangCaster
 
             defaultValue = defaultValue.Replace("ImVec2", "new Vector2");
             defaultValue = defaultValue.Replace("ImVec4", "new Vector4");
+            defaultValue = defaultValue.Replace("FLT_MAX", "float.MaxValue");
 
             return defaultValue;
+        }
+
+        static (string, string) ParamValue(in FunctionParam param, string defaultValue)
+        {
+            var (csType, csAttr) = Converter.Convert(TypeContext.Param, param.Ref);
+            if (csType == "ref sbyte" && param.IsConst)
+            {
+                // const char *
+                csType = "string";
+                csAttr = "[MarshalAs(UnmanagedType.LPUTF8Str), In]";
+            }
+            else if (csType.StartsWith("ref ") && param.IsConst)
+            {
+                // const &
+                csType = $"in {csType.Substring(4)}";
+            }
+            else if (csType.StartsWith("ref ") && defaultValue == "default")
+            {
+                // null_ptr を渡せるようにとりあえず IntPtr にする。
+                csType = "IntPtr";
+            }
+            return (csType, csAttr);
+        }
+
+        static string ParamCall(in FunctionParam param)
+        {
+            var (csType, csAttr) = ParamValue(param, "");
+            var value = param.Name;
+            if (csType.StartsWith("ref "))
+            {
+                value = "ref " + value;
+            }
+            return value;
         }
 
         public CSFunctionTemplate()
@@ -117,23 +151,7 @@ namespace ClangCaster
 
                 var defaultValue = MakeOptionValue(param.DefaultParamTokens);
 
-                var (csType, csAttr) = Converter.Convert(TypeContext.Param, param.Ref);
-                if (csType == "ref sbyte" && param.IsConst)
-                {
-                    // const char *
-                    csType = "string";
-                    csAttr = "[MarshalAs(UnmanagedType.LPUTF8Str), In]";
-                }
-                else if (csType.StartsWith("ref ") && param.IsConst)
-                {
-                    // const &
-                    csType = $"in {csType.Substring(4)}";
-                }
-                else if (csType.StartsWith("ref ") && defaultValue == "default")
-                {
-                    // null_ptr を渡せるようにとりあえず IntPtr にする。
-                    csType = "IntPtr";
-                }
+                var (csType, csAttr) = ParamValue(param, defaultValue);
 
                 // attribute
                 if (!string.IsNullOrEmpty(csAttr))
@@ -289,7 +307,7 @@ namespace ClangCaster
                         }
 
                         {
-                            var args = functionType.Params.Take(i).Select(x => x.Name).Concat(new string[]{
+                            var args = functionType.Params.Take(i).Select(x => ParamCall(x)).Concat(new string[]{
                                 MakeOptionValue(copy[i].DefaultParamTokens)
                             });
                             var body = $"{functionType.Name}({string.Join(", ", args)});";
