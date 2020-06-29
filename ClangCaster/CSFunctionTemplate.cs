@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using ClangAggregator.Types;
 using CSType;
 
@@ -20,6 +21,30 @@ namespace ClangCaster
 {%- endfor -%}
         );
 ";
+
+        static string[] s_defaultValue = new string[]
+        {
+            "NULL", "0", "false", "0.0f"
+        };
+
+
+        static string DefaultParam(string[] values)
+        {
+            if (values.Length == 1 && s_defaultValue.Contains(values[0]))
+            {
+                return "default";
+            }
+            if (values.SequenceEqual(new[] { "ImVec2", "(", "0", ",", "0", ")" }))
+            {
+                return "default";
+            }
+            if (values.SequenceEqual(new[] { "ImVec4", "(", "0", ",", "0", ",", "0", ",", "0", ")" }))
+            {
+                return "default";
+            }
+
+            return string.Join("", values);
+        }
 
         public CSFunctionTemplate()
         {
@@ -43,7 +68,7 @@ namespace ClangCaster
                 var defaultValue = "";
                 if (param.DefaultParamTokens != null && param.DefaultParamTokens.Length > 0)
                 {
-                    defaultValue = " = " + string.Join(" ", param.DefaultParamTokens);
+                    defaultValue = " = " + DefaultParam(param.DefaultParamTokens);
                 }
 
                 return new
