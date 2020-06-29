@@ -69,24 +69,27 @@ namespace ClangAggregator
 
             if (cxType.kind == CXTypeKind._Pointer)
             {
-                return (TypeReference.FromPointer(new PointerType(CxTypeToType(libclang.clang_getPointeeType(cxType), cursor).Item1)), isConst);
+                var (pointeeType, pointeeConst) = CxTypeToType(libclang.clang_getPointeeType(cxType), cursor);
+                return (TypeReference.FromPointer(new PointerType(pointeeType)), isConst || pointeeConst);
             }
 
             if (cxType.kind == CXTypeKind._LValueReference)
             {
-                return (TypeReference.FromPointer(new PointerType(CxTypeToType(libclang.clang_getPointeeType(cxType), cursor).Item1, true)), isConst);
+                var (pointeeType, pointeeConst) = CxTypeToType(libclang.clang_getPointeeType(cxType), cursor);
+                return (TypeReference.FromPointer(new PointerType(pointeeType, true)), isConst || pointeeConst);
             }
 
             if (cxType.kind == CXTypeKind._IncompleteArray)
             {
-                return (TypeReference.FromPointer(new PointerType(CxTypeToType(libclang.clang_getArrayElementType(cxType), cursor).Item1)), isConst);
+                var (pointeeType, pointeeConst) = CxTypeToType(libclang.clang_getArrayElementType(cxType), cursor);
+                return (TypeReference.FromPointer(new PointerType(pointeeType)), isConst || pointeeConst);
             }
 
             if (cxType.kind == CXTypeKind._ConstantArray)
             {
                 var arraySize = (int)libclang.clang_getArraySize(cxType);
-                var elementType = CxTypeToType(libclang.clang_getArrayElementType(cxType), cursor).Item1;
-                return (TypeReference.FromArray(new ArrayType(elementType, arraySize)), isConst);
+                var (pointeeType, pointeeConst) = CxTypeToType(libclang.clang_getArrayElementType(cxType), cursor);
+                return (TypeReference.FromArray(new ArrayType(pointeeType, arraySize)), isConst || pointeeConst);
             }
 
             if (cxType.kind == CXTypeKind._Typedef || cxType.kind == CXTypeKind._Record)

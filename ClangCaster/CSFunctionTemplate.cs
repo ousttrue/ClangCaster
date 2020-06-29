@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using ClangAggregator.Types;
 using CSType;
@@ -7,12 +8,6 @@ namespace ClangCaster
 {
     class CSFunctionTemplate : CSTemplateBase
     {
-        public static string[] Using = new string[]
-        {
-            "System",
-            "System.Runtime.InteropServices",
-        };
-
         protected override string TemplateSource => @"        // {{ function.Location.Path.Path }}:{{ function.Location.Line }}
         [DllImport(""{{ dll }}.dll"")]
         public static extern {{ function.Return }} {{function.Name}}(
@@ -27,6 +22,10 @@ namespace ClangCaster
             "NULL", "0", "false", "0.0f"
         };
 
+        static Dictionary<string, string> s_defaultValueReplaceMap = new Dictionary<string, string>
+        {
+            {"FLT_MAX", "float.MaxValue"},
+        };
 
         static string DefaultParam(string[] values)
         {
@@ -41,6 +40,14 @@ namespace ClangCaster
             if (values.SequenceEqual(new[] { "ImVec4", "(", "0", ",", "0", ",", "0", ",", "0", ")" }))
             {
                 return "default";
+            }
+
+            for (int i = 0; i < values.Length; ++i)
+            {
+                if (s_defaultValueReplaceMap.TryGetValue(values[i], out string replace))
+                {
+                    values[i] = replace;
+                }
             }
 
             return string.Join("", values);
@@ -59,16 +66,38 @@ namespace ClangCaster
                 }
                 name = CSType.CSSymbole.Escape(name);
 
+                var defaultValue = "";
+                if (param.DefaultParamTokens != null && param.DefaultParamTokens.Length > 0)
+                {
+                    defaultValue = DefaultParam(param.DefaultParamTokens);
+                }
+
                 var (csType, csAttr) = Converter.Convert(TypeContext.Param, param.Ref);
+                if (csType == "ref sbyte" && param.IsConst)
+                {
+                    // const char *
+                    csType = "string";
+                    csAttr = "[MarshalAs(UnmanagedType.LPUTF8Str), In]";
+                }
+                else if (csType.StartsWith("ref ") && param.IsConst)
+                {
+                    // const &
+                    csType = $"in {csType.Substring(4)}";
+                }
+                else if (csType.StartsWith("ref ") && defaultValue == "default")
+                {
+                    // null_ptr を渡せるようにとりあえず IntPtr にする。
+                    csType = "IntPtr";
+                }
+
+                // attribute
                 if (!string.IsNullOrEmpty(csAttr))
                 {
                     csType = $"{csAttr} {csType}";
                 }
-
-                var defaultValue = "";
-                if (param.DefaultParamTokens != null && param.DefaultParamTokens.Length > 0)
+                if (!string.IsNullOrEmpty(defaultValue))
                 {
-                    defaultValue = " = " + DefaultParam(param.DefaultParamTokens);
+                    defaultValue = $" = {defaultValue}";
                 }
 
                 return new

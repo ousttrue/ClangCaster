@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using ClangAggregator.Types;
 using CSType;
@@ -7,12 +8,6 @@ namespace ClangCaster
 {
     class CSStructTemplate
     {
-        public static string[] Using = new string[]
-        {
-            "System",
-            "System.Runtime.InteropServices",
-        };
-
         protected string StructTemplate => @"    // {{ type.Location.Path.Path }}:{{ type.Location.Line }}
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     public struct {{ type.Name }}

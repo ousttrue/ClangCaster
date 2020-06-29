@@ -18,6 +18,10 @@ namespace ClangCaster
 
         public bool DllExportOnly;
 
+        public string TargetFramework = "netstandard2.0";
+
+        public List<string> Using = new List<string>();
+
         public static CommandLine Parse(string[] args)
         {
             var cmd = new CommandLine();
@@ -25,6 +29,16 @@ namespace ClangCaster
             {
                 switch (args[i])
                 {
+                    case "-target":
+                        cmd.TargetFramework = args[i + 1];
+                        ++i;
+                        break;
+
+                    case "-using":
+                        cmd.Using.Add(args[i + 1]);
+                        ++i;
+                        break;
+
                     case "-exportonly":
                         cmd.DllExportOnly = true;
                         break;
@@ -109,7 +123,7 @@ namespace ClangCaster
                 Directory.CreateDirectory(dst.FullName);
 
                 var exporter = new CSGenerator();
-                exporter.Export(map, dst, cmd.Headers, cmd.Namespace, cmd.DllExportOnly);
+                exporter.Export(map, dst, cmd.Headers, cmd.Namespace, cmd.DllExportOnly, "C", cmd.Using, cmd.TargetFramework);
             }
         }
     }

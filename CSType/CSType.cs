@@ -66,8 +66,8 @@ namespace CSType
 
         static Dictionary<string, string> s_userTypeMap = new Dictionary<string, string>()
         {
-            {"ImVec2", "System.Numerics.Vector2"},
-            {"ImVec4", "System.Numerics.Vector4"},
+            {"ImVec2", "Vector2"}, // require using System.Numerics;
+            {"ImVec4", "Vector4"}, // require using System.Numerics;
         };
 
         static bool TryGetString(TypeContext context, BaseType baseType, out (string, string) value)
@@ -206,11 +206,11 @@ namespace CSType
                 // double pointer
                 return (context.PointerType("IntPtr"), null);
             }
-            if (pointerType.Pointee.Type is Int8Type)
-            {
-                // avoid ref sbyte
-                return (context.PointerType("byte"), null);
-            }
+            // if (pointerType.Pointee.Type is Int8Type)
+            // {
+            //     // avoid ref sbyte
+            //     return (context.PointerType("byte"), null);
+            // }
             if (pointerType.Pointee.Type is TypedefType pointeeType)
             {
                 if (pointeeType.Name == "IID")

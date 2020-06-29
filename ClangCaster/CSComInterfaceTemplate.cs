@@ -7,12 +7,6 @@ namespace ClangCaster
 {
     class CSComInterfaceTemplate : CSTemplateBase
     {
-        public static string[] Using = new string[]
-        {
-            "System",
-            "System.Runtime.InteropServices",
-        };
-
         protected override string TemplateSource => @"    // {{ type.Location.Path.Path }}:{{ type.Location.Line }}
     public class {{ type.Name }} : {{ type.Base }}
     {

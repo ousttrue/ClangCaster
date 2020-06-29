@@ -172,7 +172,7 @@ namespace ClangAggregator
 
         static Dictionary<string, string> s_ReplaceMap = new Dictionary<string, string>{
             {"SHORT", "short"},
-            {"UINT_MAX", "4294967295"},
+            {"UINT_MAX", "uint.MaxValue"},
         };
 
         /// <summary>

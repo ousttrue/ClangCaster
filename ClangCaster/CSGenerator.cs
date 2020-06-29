@@ -39,8 +39,11 @@ namespace ClangCaster
         public void Export(
             TypeMap map,
             DirectoryInfo dst,
-            List<HeaderWithDll> headers, string ns, bool dllExportOnly, string constantsClassName = "C")
+            List<HeaderWithDll> headers, string ns, bool dllExportOnly, string constantsClassName,
+            List<string> additionalUsing, string targetFramework)
         {
+            NamespaceOpener.Using.AddRange(additionalUsing);
+
             // organize types
             var sorter = new ExportSorter(headers);
             foreach (var kv in map)
@@ -97,7 +100,7 @@ namespace ClangCaster
                         {
                             continue;
                         }
-                        using (var s = NamespaceOpener.Open(enumsDir, $"{enumType.Name}.cs", ns))
+                        using (var s = NamespaceOpener.Open(enumsDir, $"{enumType.Name}.cs", ns, null))
                         {
                             s.Writer.Write(enumTemplate.Render(reference));
                         }
@@ -114,7 +117,7 @@ namespace ClangCaster
                     foreach (var reference in exportSource.StructTypes)
                     {
                         var structType = reference.Type as StructType;
-                        using (var s = NamespaceOpener.Open(structsDir, $"{structType.Name}.cs", ns, CSStructTemplate.Using))
+                        using (var s = NamespaceOpener.Open(structsDir, $"{structType.Name}.cs", ns, NamespaceOpener.Using))
                         {
                             // if (structType.IsUnion)
                             // {
@@ -140,7 +143,7 @@ namespace ClangCaster
                     {
                         var structType = reference.Type as StructType;
                         structType.CalcVTable();
-                        using (var s = NamespaceOpener.Open(interfacesDir, $"{structType.Name}.cs", ns, CSComInterfaceTemplate.Using))
+                        using (var s = NamespaceOpener.Open(interfacesDir, $"{structType.Name}.cs", ns, NamespaceOpener.Using))
                         {
                             s.Writer.Write(interfaceTemplate.Render(reference));
                         }
@@ -154,7 +157,7 @@ namespace ClangCaster
                 || exportSource.TypedefTypes.Where(x => x.Type.GetFunctionTypeFromTypedef().Item2 != null).Any())
                 {
                     var path = ExportFile(dst, sourcePath);
-                    using (var s = new NamespaceOpener(new FileInfo(path), ns, CSFunctionTemplate.Using))
+                    using (var s = new NamespaceOpener(new FileInfo(path), ns, NamespaceOpener.Using))
                     {
                         // delegates
                         foreach (var reference in exportSource.TypedefTypes)
@@ -207,7 +210,7 @@ namespace ClangCaster
                 //
                 if (exportSource.Constants.Any())
                 {
-                    using (var s = NamespaceOpener.Open(new DirectoryInfo(dir), $"constants.cs", ns))
+                    using (var s = NamespaceOpener.Open(new DirectoryInfo(dir), $"constants.cs", ns, null))
                     {
                         // open static class
                         s.Writer.Write($@"    public static partial class {constantsClassName}
@@ -251,10 +254,10 @@ namespace ClangCaster
                 using (var s = new FileStream(csproj, FileMode.Create))
                 using (var w = new StreamWriter(s))
                 {
-                    w.WriteLine(@"<Project Sdk=""Microsoft.NET.Sdk"">
+                    w.WriteLine($@"<Project Sdk=""Microsoft.NET.Sdk"">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>{targetFramework}</TargetFramework>
   </PropertyGroup>
 
 </Project>");
