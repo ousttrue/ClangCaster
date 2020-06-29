@@ -8,10 +8,10 @@ using CSType;
 
 namespace ClangCaster
 {
-    class CSFunctionTemplate : CSTemplateBase
+    class CSFunctionTemplate
     {
-        protected override string TemplateSource => @"        // {{ function.Location.Path.Path }}:{{ function.Location.Line }}
-        [DllImport(""{{ dll }}.dll"")]
+        string EntryPointTemplate => @"        // {{ function.Location.Path.Path }}:{{ function.Location.Line }}
+        {{ function.Attribute }}
         public static extern {{ function.Return }} {{function.Name}}(
 {% for param in function.Params -%}
             {{ param.Render }}
@@ -19,24 +19,44 @@ namespace ClangCaster
         );
 ";
 
+        DotLiquid.Template m_entrypoint;
+
+        string OverloadTemplate => @"        // overload
+        public static {{ function.Return }} {{function.Name}}(
+{% for param in function.Params -%}
+            {{ param.Render }}
+{%- endfor -%}
+        )
+        {
+            {{ function.Body }}
+        }
+";
+
+        DotLiquid.Template m_overload;
+
         static Dictionary<string, string> s_defaultValueReplaceMap = new Dictionary<string, string>
         {
             {"FLT_MAX", "float.MaxValue"},
         };
 
-        static bool HasDefaultParam(in FunctionParam param)
+        static string[] s_defaultValue = new string[]
         {
-            if (param.DefaultParamTokens is null)
+            "NULL", "0", "false", "0.0", "0.0f"
+        };
+
+        static bool HasDefaultParam(string[] values)
+        {
+            if (values is null)
             {
                 return false;
             }
 
-            if (param.HasDefaultOptionalValue)
+            if (values.Length == 1
+            && s_defaultValue.Contains(values[0]))
             {
                 return true;
             }
 
-            var values = param.DefaultParamTokens;
             if (values.SequenceEqual(new[] { "ImVec2", "(", "0", ",", "0", ")" }))
             {
                 return true;
@@ -49,8 +69,29 @@ namespace ClangCaster
             return false;
         }
 
+        static string MakeOptionValue(string[] values)
+        {
+            var defaultValue = "";
+            if (HasDefaultParam(values))
+            {
+                defaultValue = "default";
+            }
+            else if (values != null && values.Length > 0)
+            {
+                defaultValue = string.Join("", values);
+            }
+
+            defaultValue = defaultValue.Replace("ImVec2", "new Vector2");
+            defaultValue = defaultValue.Replace("ImVec4", "new Vector4");
+
+            return defaultValue;
+        }
+
         public CSFunctionTemplate()
         {
+            m_entrypoint = DotLiquid.Template.Parse(EntryPointTemplate);
+            m_overload = DotLiquid.Template.Parse(OverloadTemplate);
+
             Func<Object, Object> ParamFunc = (Object src) =>
             {
                 var param = (FunctionParam)src;
@@ -74,15 +115,7 @@ namespace ClangCaster
                     }
                 }
 
-                var defaultValue = "";
-                if (HasDefaultParam(param))
-                {
-                    defaultValue = "default";
-                }
-                else if (param.DefaultParamTokens != null && param.DefaultParamTokens.Length > 0)
-                {
-                    defaultValue = string.Join("", param.DefaultParamTokens);
-                }
+                var defaultValue = MakeOptionValue(param.DefaultParamTokens);
 
                 var (csType, csAttr) = Converter.Convert(TypeContext.Param, param.Ref);
                 if (csType == "ref sbyte" && param.IsConst)
@@ -120,67 +153,189 @@ namespace ClangCaster
             DotLiquid.Template.RegisterSafeType(typeof(FunctionParam), ParamFunc);
         }
 
-        public static bool HasNonDefaultOptionalValue(in FunctionParam param)
+        /// <summary>
+        /// C# の OptionalValue で表現できる値
+        /// </summary>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        public static bool CanCSOptionalValue(string[] values)
         {
-            if (param.DefaultParamTokens is null)
+            if (values is null || values.Length == 0)
             {
-                return false;
+                return true;
             }
-            if (param.DefaultParamTokens.Length == 0)
+            if (HasDefaultParam(values))
             {
-                return false;
-            }
-            if (HasDefaultParam(param))
-            {
-                return false;
+                return true;
             }
 
-            return true;
-        }
-
-        public static IEnumerable<FunctionType> GetOverloads(FunctionType functionType)
-        {
-            if (functionType.Params.Any(x => HasNonDefaultOptionalValue(x)))
             {
-                // 省略無い版
-
-                // 1
-
-                // ... N
-
-                throw new NotImplementedException();
+                var joined = string.Join("", values);
+                if (int.TryParse(joined, out _))
+                {
+                    return true;
+                }
+                if (float.TryParse(joined, out _))
+                {
+                    return true;
+                }
+                if (joined.Last() == 'f')
+                {
+                    if (float.TryParse(joined.Substring(0, joined.Length - 1), out _))
+                    {
+                        return true;
+                    }
+                }
             }
-            else
-            {
-                yield return functionType;
-            }
+
+            return false;
         }
 
         public string Render(TypeReference reference, string dll)
         {
             var functionType = reference.Type as FunctionType;
+
             var sb = new StringBuilder();
-            foreach (var f in GetOverloads(functionType))
+            if (functionType.Name == "Image")
             {
-                if (sb.Length != 0)
+                var a = 0;
+            }
+            var ret = Converter.Convert(TypeContext.Return, functionType.Result).Item1;
+
+            if (functionType.Params.Any(x => !CanCSOptionalValue(x.DefaultParamTokens)))
+            {
+                // clear
+                var copy = new List<FunctionParam>();
+                for (int i = 0; i < functionType.Params.Count; ++i)
                 {
-                    sb.AppendLine();
+                    var param = functionType.Params[i];
+                    copy.Add(param);
                 }
 
-                // オーバーロードがある場合に複数出力する
-                var render = m_template.Render(DotLiquid.Hash.FromAnonymousObject(
+                //
+                // entry point
+                //
+                var found = -1;
+                for (int i = 0; i < functionType.Params.Count; ++i)
+                {
+                    if (!CanCSOptionalValue(copy[i].DefaultParamTokens))
+                    {
+                        found = i;
+                    }
+                }
+                for (int i = 0; i <= found; ++i)
+                {
+                    // remove optional value before last !CanCSOptionalValue
+                    var param = functionType.Params[i];
+                    param.DefaultParamTokens = null;
+                    functionType.Params[i] = param;
+                }
+                {
+                    var entryPoint = "";
+                    if (!string.IsNullOrEmpty(functionType.MangledName) && functionType.MangledName != functionType.Name)
+                    {
+                        entryPoint = $", EntryPoint = \"{functionType.MangledName}\"";
+                    }
+                    var attribute = $"[DllImport(\"{dll}.dll\"{entryPoint})]";
+                    var render = m_entrypoint.Render(DotLiquid.Hash.FromAnonymousObject(
+                        new
+                        {
+                            function = new
+                            {
+                                Attribute = attribute,
+                                Location = reference.Location,
+                                Count = reference.Count,
+                                Name = functionType.Name,
+                                Params = functionType.Params,
+                                Return = ret,
+                            },
+                        }
+                    ));
+                    sb.Append(render);
+                }
+
+                //
+                // overload
+                //
+                for (int i = copy.Count - 1; i >= 0; --i)
+                // for (int i = 0; i < copy.Count; ++i)
+                {
+                    if (!CanCSOptionalValue(copy[i].DefaultParamTokens))
+                    {
+                        // setup params
+                        functionType.Params.Clear();
+
+                        if (i > 0)
+                        {
+                            var f = false;
+                            for (int j = 0; j < i; ++j)
+                            {
+                                functionType.Params.Add(default);
+                            }
+                            for (int j = i - 1; j >= 0; --j)
+                            {
+                                if (!CanCSOptionalValue(copy[j].DefaultParamTokens))
+                                {
+                                    f = true;
+                                }
+                                var param = copy[j];
+                                if (f)
+                                {
+                                    param.DefaultParamTokens = null;
+                                }
+                                functionType.Params[j] = param;
+                            }
+                            functionType.Params[functionType.Params.Count - 1] = functionType.Params.Last().MakeLast();
+                        }
+
+                        {
+                            var args = functionType.Params.Take(i).Select(x => x.Name).Concat(new string[]{
+                                MakeOptionValue(copy[i].DefaultParamTokens)
+                            });
+                            var body = $"{functionType.Name}({string.Join(", ", args)});";
+                            if (ret != "void")
+                            {
+                                body = "return " + body;
+                            }
+                            var render = m_overload.Render(DotLiquid.Hash.FromAnonymousObject(
+                                new
+                                {
+                                    function = new
+                                    {
+                                        Location = reference.Location,
+                                        Count = reference.Count,
+                                        Name = functionType.Name,
+                                        Params = functionType.Params,
+                                        Return = ret,
+                                        Body = body,
+                                    },
+                                }
+                            ));
+                            sb.Append(render);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                var entryPoint = "";
+                if (!string.IsNullOrEmpty(functionType.MangledName) && functionType.MangledName != functionType.Name)
+                {
+                    entryPoint = $", EntryPoint = \"{functionType.MangledName}\"";
+                }
+                var attribute = $"[DllImport(\"{dll}.dll\"{entryPoint})]";
+                var render = m_entrypoint.Render(DotLiquid.Hash.FromAnonymousObject(
                     new
                     {
                         function = new
                         {
-                            Hash = reference.Hash,
+                            Attribute = attribute,
                             Location = reference.Location,
                             Count = reference.Count,
-                            Name = f.Name,
-                            Params = f.Params,
-                            Return = Converter.Convert(TypeContext.Return, f.Result).Item1,
+                            Name = functionType.Name,
+                            Params = functionType.Params,
+                            Return = ret,
                         },
-                        dll = dll,
                     }
                 ));
                 sb.Append(render);

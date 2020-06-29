@@ -16,16 +16,6 @@ namespace ClangAggregator.Types
 
         public string[] DefaultParamTokens;
 
-        static string[] s_defaultValue = new string[]
-        {
-            "NULL", "0", "false", "0.0f"
-        };
-
-        public bool HasDefaultOptionalValue =>
-            DefaultParamTokens != null
-            && DefaultParamTokens.Length == 1
-            && s_defaultValue.Contains(DefaultParamTokens[0]);
-
         public FunctionParam(int index, string name, TypeReference typeRef, bool isConst, string[] defaultParamTokens)
         {
             Index = index;
