@@ -26,7 +26,8 @@ namespace ClangAggregator
             var length = GetLongPathNameW(path, s_buffer, s_buffer.Length);
             if (length == 0)
             {
-                throw new NotImplementedException();
+                var fullpath = System.IO.Path.GetFullPath(path);
+                throw new FileNotFoundException(fullpath);
                 // return path;
             }
             value = new String(s_buffer, 0, length);
