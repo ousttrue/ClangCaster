@@ -7,7 +7,7 @@ namespace ClangCaster
 {
     class CSComInterfaceTemplate : CSTemplateBase
     {
-        protected override string TemplateSource => @"    // {{ type.Location.Path.Path }}:{{ type.Location.Line }}
+        protected override string TemplateSource => @"    // {{ type.Path }}:{{ type.Line }}
     public class {{ type.Name }} : {{ type.Base }}
     {
         static Guid s_uuid = new Guid(""{{ type.IID }}"");
@@ -102,7 +102,7 @@ namespace ClangCaster
             DotLiquid.Template.RegisterSafeType(typeof(FunctionType), MethodFunc);
         }
 
-        public string Render(TypeReference reference)
+        public string Render(string path, TypeReference reference)
         {
             Counter += 1;
             var structType = reference.Type as StructType;
@@ -113,7 +113,8 @@ namespace ClangCaster
                     type = new
                     {
                         Hash = reference.Hash,
-                        Location = reference.Location,
+                        Path = path,
+                        Line = reference.Location.Line,
                         Count = reference.Count,
                         Name = structType.Name,
                         Fields = structType.Fields,

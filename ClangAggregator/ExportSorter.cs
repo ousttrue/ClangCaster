@@ -48,6 +48,18 @@ namespace ClangAggregator
         {
             return m_rootHeaders.Any(x => x.Equals(location.Path));
         }
+        bool IsContainedInRootHeaders(TypeReference reference)
+        {
+            foreach (var root in m_rootHeaders)
+            {
+                if (root.Equals(reference.Location.Path))
+                {
+                    reference.Location.Path.Original = root.Original;
+                    return true;
+                }
+            }
+            return false;
+        }
 
         bool IsComInterface(TypeReference reference)
         {
@@ -132,7 +144,7 @@ namespace ClangAggregator
         /// <param name="reference"></param>
         public void PushIf(TypeReference reference)
         {
-            if (IsContainedInRootHeaders(reference.Location))
+            if (IsContainedInRootHeaders(reference))
             {
                 if (reference.Type is FunctionType)
                 {

@@ -349,7 +349,8 @@ namespace ClangCaster
                         function = new
                         {
                             Attribute = attribute,
-                            Location = reference.Location,
+                            Path = path,
+                            Line = reference.Location.Line,
                             Count = reference.Count,
                             Name = functionType.Name,
                             Params = functionType.Params,

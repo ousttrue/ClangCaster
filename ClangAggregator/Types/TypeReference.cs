@@ -6,7 +6,7 @@ namespace ClangAggregator.Types
 
         public uint Hash { get; private set; }
 
-        public FileLocation Location { get; set; }
+        public FileLocation Location;
 
         public uint Count { get; set; }
 

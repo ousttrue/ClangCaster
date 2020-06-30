@@ -39,7 +39,7 @@ namespace ClangAggregator
             return value;
         }
 
-        public readonly string Original;
+        public string Original;
 
         public string Path { get; private set; }
         readonly int m_hash;
@@ -92,7 +92,7 @@ namespace ClangAggregator
 
     public struct FileLocation
     {
-        public NormalizedFilePath Path { get; private set; }
+        public NormalizedFilePath Path;
 
         public bool IsValid => !string.IsNullOrEmpty(Path.Path);
 

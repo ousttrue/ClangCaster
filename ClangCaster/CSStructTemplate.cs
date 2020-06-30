@@ -8,7 +8,7 @@ namespace ClangCaster
 {
     class CSStructTemplate
     {
-        protected string StructTemplate => @"    // {{ type.Location.Path.Path }}:{{ type.Location.Line }}
+        protected string StructTemplate => @"    // {{ type.Path }}:{{ type.Line }}
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     public struct {{ type.Name }}
     {
@@ -23,7 +23,7 @@ namespace ClangCaster
 
         DotLiquid.Template m_struct;
 
-        protected string UnionTemplate => @"    // {{ type.Location.Path.Path }}:{{ type.Location.Line }}
+        protected string UnionTemplate => @"    // {{ type.Path }}:{{ type.Line }}
     [StructLayout(LayoutKind.Explicit, CharSet = CharSet.Unicode)]
     public struct {{ type.Name }}
     {
@@ -50,7 +50,7 @@ namespace ClangCaster
             return string.Join("\n", splitted);
         }
 
-        public string Render(TypeReference reference)
+        public string Render(string path, TypeReference reference)
         {
             Func<Object, Object> FieldFunc = (Object src) =>
             {
@@ -90,7 +90,7 @@ namespace ClangCaster
             var anonymousTypes = structType.AnonymousTypes != null
                 ? structType.AnonymousTypes.Select(x =>
                 {
-                    var render = Render(x);
+                    var render = Render(path, x);
                     return new
                     {
                         Render = Indent(render, "    "),
@@ -107,7 +107,8 @@ namespace ClangCaster
                     type = new
                     {
                         Hash = reference.Hash,
-                        Location = reference.Location,
+                        Path = path,
+                        Line = reference.Location.Line,
                         Count = reference.Count,
                         Name = structType.Name,
                         Fields = structType.Fields.Select(x =>

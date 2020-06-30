@@ -6,7 +6,7 @@ namespace ClangCaster
 {
     class CSDelegateTemplate : CSTemplateBase
     {
-        protected override string TemplateSource => @"    // {{ function.Location.Path.Path }}:{{ function.Location.Line }}
+        protected override string TemplateSource => @"    // {{ function.Path }}:{{ function.Line }}
     public delegate {{ function.Return }} {{function.Name}}(
 {% for param in function.Params -%}
         {{ param.Render }}
@@ -36,7 +36,7 @@ namespace ClangCaster
             DotLiquid.Template.RegisterSafeType(typeof(FunctionParam), ParamFunc);
         }
 
-        public string Render(TypeReference reference)
+        public string Render(string path, TypeReference reference)
         {
             var (name, functionType) = reference.Type.GetFunctionTypeFromTypedef();
             return m_template.Render(DotLiquid.Hash.FromAnonymousObject(
@@ -45,7 +45,8 @@ namespace ClangCaster
                     function = new
                     {
                         Hash = reference.Hash,
-                        Location = reference.Location,
+                        Path = path,
+                        Line = reference.Location.Line,
                         Count = reference.Count,
                         Name = name,
                         Params = functionType.Params,

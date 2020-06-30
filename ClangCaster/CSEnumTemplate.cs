@@ -4,7 +4,7 @@ namespace ClangCaster
 {
     class CSEnumTemplate : CSTemplateBase
     {
-        protected override string TemplateSource => @"    // {{ type.Location.Path.Path }}:{{ type.Location.Line }}
+        protected override string TemplateSource => @"    // {{ type.Path }}:{{ type.Line }}
     public enum {{ type.Name }}
     {
 {% for value in type.Values -%}
@@ -18,7 +18,7 @@ namespace ClangCaster
             DotLiquid.Template.RegisterSafeType(typeof(EnumValue), new string[] { "Name", "Value", "Hex" });
         }
 
-        public string Render(TypeReference reference)
+        public string Render(string path, TypeReference reference)
         {
             var enumType = reference.Type as EnumType;
             return m_template.Render(DotLiquid.Hash.FromAnonymousObject(
@@ -27,7 +27,8 @@ namespace ClangCaster
                     type = new
                     {
                         Hash = reference.Hash,
-                        Location = reference.Location,
+                        Path = path,
+                        Line = reference.Location.Line,
                         Count = reference.Count,
                         Name = enumType.Name,
                         Values = enumType.Values,

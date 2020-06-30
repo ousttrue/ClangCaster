@@ -102,7 +102,7 @@ namespace ClangCaster
                         }
                         using (var s = NamespaceOpener.Open(enumsDir, $"{enumType.Name}.cs", ns, null))
                         {
-                            s.Writer.Write(enumTemplate.Render(reference));
+                            s.Writer.Write(enumTemplate.Render(sourcePath.Original, reference));
                         }
                     }
                 }
@@ -125,7 +125,7 @@ namespace ClangCaster
                             // }
                             // else
                             {
-                                s.Writer.Write(structTemplate.Render(reference));
+                                s.Writer.Write(structTemplate.Render(sourcePath.Original, reference));
                             }
                         }
                     }
@@ -145,7 +145,7 @@ namespace ClangCaster
                         structType.CalcVTable();
                         using (var s = NamespaceOpener.Open(interfacesDir, $"{structType.Name}.cs", ns, NamespaceOpener.Using))
                         {
-                            s.Writer.Write(interfaceTemplate.Render(reference));
+                            s.Writer.Write(interfaceTemplate.Render(sourcePath.Original, reference));
                         }
                     }
                 }
@@ -164,7 +164,7 @@ namespace ClangCaster
                         {
                             if (reference.Type.GetFunctionTypeFromTypedef().Item2 != null)
                             {
-                                s.Writer.WriteLine(delegateTemplate.Render(reference));
+                                s.Writer.WriteLine(delegateTemplate.Render(sourcePath.Original, reference));
                             }
                         }
 
@@ -195,7 +195,7 @@ namespace ClangCaster
                                     {
                                         continue;
                                     }
-                                    s.Writer.WriteLine(functionTemplate.Render(path, reference, exportSource.Dll));
+                                    s.Writer.WriteLine(functionTemplate.Render(sourcePath.Original, reference, exportSource.Dll));
                                 }
 
                                 // close partial class
@@ -229,7 +229,7 @@ namespace ClangCaster
                                 continue;
                             }
 
-                            s.Writer.WriteLine(CSConstantTemplate.Render(constant));
+                            s.Writer.WriteLine(CSConstantTemplate.Render(sourcePath.Original, constant));
                         }
 
                         // close constants
